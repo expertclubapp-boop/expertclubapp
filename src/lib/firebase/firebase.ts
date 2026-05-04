@@ -5,6 +5,7 @@ import { getStorage } from 'firebase/storage'
 import { getFunctions } from 'firebase/functions'
 
 const firebaseConfig = {
+  // Configurações do Firebase — Injetadas via Vercel Env Vars
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
