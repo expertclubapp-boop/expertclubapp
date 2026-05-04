@@ -1,0 +1,12 @@
+- generic [ref=e4]:
+  - img [ref=e6]
+  - heading "PAGAMENTO em ANÁLISE" [level=1] [ref=e9]
+  - paragraph [ref=e10]: Seu pagamento está sendo processado pelo Mercado Pago. Isso pode levar alguns minutos (ou até 48h para boletos). Avisaremos você assim que for aprovado.
+  - generic [ref=e11]:
+    - button "Ver Billing Dashboard" [ref=e12] [cursor=pointer]:
+      - img [ref=e13]
+      - text: Ver Billing Dashboard
+    - button "Falar com Suporte" [ref=e18] [cursor=pointer]:
+      - img [ref=e19]
+      - text: Falar com Suporte
+  - paragraph [ref=e23]: Obrigado pela paciência.

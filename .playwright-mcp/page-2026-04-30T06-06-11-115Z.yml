@@ -1,0 +1,389 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - link "Expert Club" [ref=e6] [cursor=pointer]:
+        - /url: "#topo"
+      - link "Entrar" [ref=e8] [cursor=pointer]:
+        - /url: /app/billing/plans?ref=MARI384&utm_campaign=stories
+        - generic [ref=e9]: Entrar
+    - generic [ref=e10]: "Convite aplicado: MARI384"
+  - main [ref=e11]:
+    - generic [ref=e13]:
+      - generic [ref=e14]:
+        - img [ref=e15]
+        - text: Todo dia você abre o app e sabe o que fazer.
+      - heading "Pare de adivinhar treino e dieta toda segunda-feira." [level=1] [ref=e18]
+      - paragraph [ref=e19]: Treinos por objetivo, modelos de dieta, check-ins, água, desafios e comunidade no WhatsApp para você abrir o app e saber o que fazer hoje.
+      - generic [ref=e20]:
+        - link "Quero entrar no plano fundador" [ref=e21] [cursor=pointer]:
+          - /url: /app/billing/plans?ref=MARI384&utm_campaign=stories
+          - text: Quero entrar no plano fundador
+          - img [ref=e22]
+        - link "Ver o que tem dentro" [ref=e24] [cursor=pointer]:
+          - /url: "#recebe"
+      - paragraph [ref=e25]: "Assinatura mensal. Cancele quando quiser. Não é consultoria individual: é um plano para você executar melhor."
+      - generic [ref=e26]:
+        - generic [ref=e27]:
+          - generic [ref=e28]:
+            - paragraph [ref=e29]: Dashboard
+            - paragraph [ref=e30]: Hoje
+          - generic [ref=e31]: 4 tarefas
+        - generic [ref=e32]:
+          - generic [ref=e33]: Treino de hoje
+          - generic [ref=e34]: Dieta selecionada
+          - generic [ref=e35]: "Água: 1,5L"
+          - generic [ref=e36]: Check-in pendente
+    - generic [ref=e38]:
+      - generic [ref=e39]:
+        - generic [ref=e40]: O problema real
+        - heading "Você não está sem informação. Está sem um caminho simples para seguir." [level=2] [ref=e41]
+        - paragraph [ref=e42]: O excesso de dicas até parece ajuda, mas na prática vira mais uma decisão para tomar quando você já está cansado.
+      - generic [ref=e43]:
+        - generic [ref=e44]:
+          - img [ref=e46]
+          - paragraph [ref=e49]: Você salva vários treinos, mas na academia não sabe qual seguir.
+        - generic [ref=e50]:
+          - img [ref=e52]
+          - paragraph [ref=e55]: Você começa dieta na segunda e no sábado já se perdeu.
+        - generic [ref=e56]:
+          - img [ref=e58]
+          - paragraph [ref=e61]: Você vê dica de todo mundo e cada uma fala uma coisa.
+        - generic [ref=e62]:
+          - img [ref=e64]
+          - paragraph [ref=e67]: Você treina, mas não sabe se está progredindo.
+        - generic [ref=e68]:
+          - img [ref=e70]
+          - paragraph [ref=e73]: Você não acompanha peso, medidas, carga, fome, sono e adesão.
+        - generic [ref=e74]:
+          - img [ref=e76]
+          - paragraph [ref=e79]: Você sente que sozinho sempre acaba voltando para o mesmo lugar.
+      - paragraph [ref=e80]: "O Expert Club organiza o básico que mais trava resultado: treino, dieta, execução, check-in e constância."
+    - generic [ref=e82]:
+      - generic [ref=e83]:
+        - generic [ref=e84]: Antes e depois
+        - heading "Do improviso para uma rotina que você consegue seguir." [level=2] [ref=e85]
+      - generic [ref=e86]:
+        - generic [ref=e87]:
+          - heading "Antes do Expert Club" [level=3] [ref=e88]
+          - generic [ref=e89]:
+            - generic [ref=e90]:
+              - img [ref=e91]
+              - generic [ref=e94]: Treino perdido
+            - generic [ref=e95]:
+              - img [ref=e96]
+              - generic [ref=e99]: Dieta improvisada
+            - generic [ref=e100]:
+              - img [ref=e101]
+              - generic [ref=e104]: Água esquecida
+            - generic [ref=e105]:
+              - img [ref=e106]
+              - generic [ref=e109]: Sem check-in
+            - generic [ref=e110]:
+              - img [ref=e111]
+              - generic [ref=e114]: Sem evolução registrada
+            - generic [ref=e115]:
+              - img [ref=e116]
+              - generic [ref=e119]: Conteúdo solto
+            - generic [ref=e120]:
+              - img [ref=e121]
+              - generic [ref=e124]: Motivação que dura poucos dias
+        - generic [ref=e125]:
+          - heading "Depois do Expert Club" [level=3] [ref=e126]
+          - generic [ref=e127]:
+            - generic [ref=e128]:
+              - img [ref=e129]
+              - generic [ref=e131]: Treino escolhido no app
+            - generic [ref=e132]:
+              - img [ref=e133]
+              - generic [ref=e135]: Dieta por objetivo
+            - generic [ref=e136]:
+              - img [ref=e137]
+              - generic [ref=e139]: Check-in diário
+            - generic [ref=e140]:
+              - img [ref=e141]
+              - generic [ref=e143]: Check-in semanal
+            - generic [ref=e144]:
+              - img [ref=e145]
+              - generic [ref=e147]: Hidratação registrada
+            - generic [ref=e148]:
+              - img [ref=e149]
+              - generic [ref=e151]: Evolução acompanhada
+            - generic [ref=e152]:
+              - img [ref=e153]
+              - generic [ref=e155]: Desafio mensal
+            - generic [ref=e156]:
+              - img [ref=e157]
+              - generic [ref=e159]: Grupo para manter constância
+    - generic [ref=e161]:
+      - generic [ref=e162]:
+        - generic [ref=e163]: Na prática
+        - heading "O que você recebe dentro do Expert Club" [level=2] [ref=e164]
+        - paragraph [ref=e165]: Não é só uma biblioteca para assistir quando der. É um conjunto de telas e hábitos para você decidir menos e executar mais.
+      - generic [ref=e166]:
+        - generic [ref=e167]:
+          - img [ref=e169]
+          - heading "Treinos por objetivo" [level=3] [ref=e175]
+          - paragraph [ref=e176]: Escolha treinos para emagrecimento, hipertrofia ou recomposição e registre carga, séries e repetições.
+        - generic [ref=e177]:
+          - img [ref=e179]
+          - heading "Dietas por objetivo" [level=3] [ref=e182]
+          - paragraph [ref=e183]: Veja modelos de dieta para o seu objetivo, com refeições, quantidades, macros e substituições.
+        - generic [ref=e184]:
+          - img [ref=e186]
+          - heading "Check-in diário" [level=3] [ref=e190]
+          - paragraph [ref=e191]: Em menos de 1 minuto, registre se treinou, seguiu a dieta, bateu água, como dormiu e como está sua fome.
+        - generic [ref=e192]:
+          - img [ref=e194]
+          - heading "Check-in semanal" [level=3] [ref=e197]
+          - paragraph [ref=e198]: Registre peso, medidas, fotos e adesão para enxergar sua evolução com mais clareza.
+        - generic [ref=e199]:
+          - img [ref=e201]
+          - heading "Hidratação" [level=3] [ref=e204]
+          - paragraph [ref=e205]: Pare de adivinhar. Defina sua meta e acompanhe sua água durante o dia.
+        - generic [ref=e206]:
+          - img [ref=e208]
+          - heading "Desafios" [level=3] [ref=e214]
+          - paragraph [ref=e215]: Entre em missões mensais para manter constância, somar pontos e competir de forma saudável.
+        - generic [ref=e216]:
+          - img [ref=e218]
+          - heading "Conteúdos" [level=3] [ref=e221]
+          - paragraph [ref=e222]: Acesse aulas, protocolos e orientações para entender melhor o que fazer.
+        - generic [ref=e223]:
+          - img [ref=e225]
+          - heading "Comunidade" [level=3] [ref=e230]
+          - paragraph [ref=e231]: Use o grupo para compartilhar evolução, ver outras pessoas executando e manter o ritmo.
+    - generic [ref=e233]:
+      - generic [ref=e234]:
+        - generic [ref=e235]: Como funciona
+        - heading "Você não precisa montar tudo sozinho." [level=2] [ref=e236]
+      - generic [ref=e237]:
+        - generic [ref=e238]:
+          - generic [ref=e239]: "1"
+          - heading "Assina o Expert Club." [level=3] [ref=e240]
+          - paragraph [ref=e241]: Você entra no plano fundador e cria seu acesso.
+        - generic [ref=e242]:
+          - generic [ref=e243]: "2"
+          - heading "Faz login no app." [level=3] [ref=e244]
+          - paragraph [ref=e245]: Tudo começa dentro do seu painel.
+        - generic [ref=e246]:
+          - generic [ref=e247]: "3"
+          - heading "Responde algumas perguntas." [level=3] [ref=e248]
+          - paragraph [ref=e249]: Objetivo, nível, rotina e preferências.
+        - generic [ref=e250]:
+          - generic [ref=e251]: "4"
+          - heading "Escolhe ou recebe um treino e uma dieta." [level=3] [ref=e252]
+          - paragraph [ref=e253]: Você sai da tela já com um caminho inicial.
+        - generic [ref=e254]:
+          - generic [ref=e255]: "5"
+          - heading "Abre o dashboard Hoje." [level=3] [ref=e256]
+          - paragraph [ref=e257]: O app mostra o que fazer no dia.
+        - generic [ref=e258]:
+          - generic [ref=e259]: "6"
+          - heading "Registra treino, água e check-ins." [level=3] [ref=e260]
+          - paragraph [ref=e261]: Sua evolução deixa de ficar na memória.
+        - generic [ref=e262]:
+          - generic [ref=e263]: "7"
+          - heading "Participa dos desafios e da comunidade." [level=3] [ref=e264]
+          - paragraph [ref=e265]: Você continua vendo gente executando junto.
+    - generic [ref=e267]:
+      - generic [ref=e268]:
+        - generic [ref=e269]: Perfil
+        - heading "É para quem quer direção, mas ainda não precisa de uma consultoria individual." [level=2] [ref=e270]
+      - generic [ref=e271]:
+        - generic [ref=e272]:
+          - heading "É para você se..." [level=3] [ref=e273]
+          - generic [ref=e274]:
+            - generic [ref=e275]:
+              - img [ref=e276]
+              - paragraph [ref=e278]: Quer emagrecer, mas se perde na dieta.
+            - generic [ref=e279]:
+              - img [ref=e280]
+              - paragraph [ref=e282]: Quer ganhar massa, mas não sabe como treinar melhor.
+            - generic [ref=e283]:
+              - img [ref=e284]
+              - paragraph [ref=e286]: Treina há meses e não sabe se está evoluindo.
+            - generic [ref=e287]:
+              - img [ref=e288]
+              - paragraph [ref=e290]: Quer uma rotina mais organizada.
+            - generic [ref=e291]:
+              - img [ref=e292]
+              - paragraph [ref=e294]: Precisa de um grupo para não fazer tudo sozinho.
+            - generic [ref=e295]:
+              - img [ref=e296]
+              - paragraph [ref=e298]: Quer algo mais acessível que uma consultoria individual.
+        - generic [ref=e299]:
+          - heading "Não é para você se..." [level=3] [ref=e300]
+          - generic [ref=e301]:
+            - generic [ref=e302]:
+              - img [ref=e303]
+              - paragraph [ref=e306]: Quer plano 100% individual.
+            - generic [ref=e307]:
+              - img [ref=e308]
+              - paragraph [ref=e311]: Quer resultado sem executar.
+            - generic [ref=e312]:
+              - img [ref=e313]
+              - paragraph [ref=e316]: Precisa de acompanhamento médico ou nutricional clínico.
+            - generic [ref=e317]:
+              - img [ref=e318]
+              - paragraph [ref=e321]: Não quer registrar nada.
+            - generic [ref=e322]:
+              - img [ref=e323]
+              - paragraph [ref=e326]: Não quer seguir rotina.
+      - paragraph [ref=e328]:
+        - strong [ref=e329]: "Aviso importante:"
+        - text: O Expert Club não substitui consulta individual, avaliação médica ou prescrição personalizada. Para acompanhamento individual, existe a consultoria.
+    - generic [ref=e331]:
+      - generic [ref=e332]:
+        - generic [ref=e333]: Plano fundador
+        - heading "Entre como membro fundador por R$ 49/mês." [level=2] [ref=e334]
+        - paragraph [ref=e335]: Um valor especial para os primeiros membros que vão entrar no ciclo inicial do Expert Club.
+        - paragraph [ref=e336]: Enquanto sua assinatura continuar ativa, você mantém o valor fundador.
+      - generic [ref=e338]:
+        - generic [ref=e339]:
+          - generic [ref=e340]: Plano fundador
+          - generic [ref=e341]: "Convite: MARI384"
+        - generic [ref=e342]:
+          - paragraph [ref=e343]: Assinatura mensal
+          - generic [ref=e344]:
+            - generic [ref=e345]: R$ 49
+            - generic [ref=e346]: /mês
+        - generic [ref=e347]:
+          - generic [ref=e348]:
+            - img [ref=e349]
+            - generic [ref=e351]: App com treinos
+          - generic [ref=e352]:
+            - img [ref=e353]
+            - generic [ref=e355]: App com dietas
+          - generic [ref=e356]:
+            - img [ref=e357]
+            - generic [ref=e359]: Check-ins
+          - generic [ref=e360]:
+            - img [ref=e361]
+            - generic [ref=e363]: Controle de água
+          - generic [ref=e364]:
+            - img [ref=e365]
+            - generic [ref=e367]: Evolução
+          - generic [ref=e368]:
+            - img [ref=e369]
+            - generic [ref=e371]: Desafios
+          - generic [ref=e372]:
+            - img [ref=e373]
+            - generic [ref=e375]: Conteúdos
+          - generic [ref=e376]:
+            - img [ref=e377]
+            - generic [ref=e379]: Comunidade WhatsApp
+        - generic [ref=e380]:
+          - link "Quero meu acesso fundador" [ref=e381] [cursor=pointer]:
+            - /url: /app/billing/plans?ref=MARI384&utm_campaign=stories
+            - text: Quero meu acesso fundador
+            - img [ref=e382]
+          - paragraph [ref=e384]: Assinatura mensal. Cancele quando quiser.
+    - generic [ref=e386]:
+      - generic [ref=e387]:
+        - generic [ref=e388]: Antes da dúvida virar desistência
+        - heading "Três objeções comuns, respondidas sem enrolar." [level=2] [ref=e389]
+      - generic [ref=e390]:
+        - generic [ref=e391]:
+          - heading "Mas eu já vejo conteúdo fitness de graça..." [level=3] [ref=e392]
+          - paragraph [ref=e393]: "Conteúdo gratuito te dá ideias. O Expert Club organiza sua execução. Aqui você não fica só vendo dicas: você escolhe um treino, segue uma dieta, registra check-ins, acompanha evolução e participa de um ciclo mensal."
+        - generic [ref=e394]:
+          - heading "E se eu não souber por onde começar?" [level=3] [ref=e395]
+          - paragraph [ref=e396]: Você começa pelo onboarding. O app te ajuda a escolher um caminho inicial conforme seu objetivo, seu nível e o que você consegue executar agora.
+        - generic [ref=e397]:
+          - heading "Isso é igual consultoria?" [level=3] [ref=e398]
+          - paragraph [ref=e399]: Não. Consultoria é individual. O Expert Club é uma assinatura com planos, ferramentas e comunidade. É mais acessível e serve para quem quer mais direção sem entrar ainda em um acompanhamento individual.
+    - generic [ref=e401]:
+      - generic [ref=e402]:
+        - generic [ref=e403]: Prova honesta
+        - heading "O que já está dentro do Expert Club" [level=2] [ref=e404]
+        - paragraph [ref=e405]: A primeira turma entra para usar o app, validar os ciclos mensais e ajudar a construir a comunidade desde o começo.
+      - generic [ref=e406]:
+        - generic [ref=e407]:
+          - img [ref=e409]
+          - paragraph [ref=e412]: Dashboard Hoje
+        - generic [ref=e413]:
+          - img [ref=e415]
+          - paragraph [ref=e418]: Dietas
+        - generic [ref=e419]:
+          - img [ref=e421]
+          - paragraph [ref=e424]: Treinos
+        - generic [ref=e425]:
+          - img [ref=e427]
+          - paragraph [ref=e430]: Execução de treino
+        - generic [ref=e431]:
+          - img [ref=e433]
+          - paragraph [ref=e436]: Check-ins
+        - generic [ref=e437]:
+          - img [ref=e439]
+          - paragraph [ref=e442]: Hidratação
+        - generic [ref=e443]:
+          - img [ref=e445]
+          - paragraph [ref=e448]: Evolução
+        - generic [ref=e449]:
+          - img [ref=e451]
+          - paragraph [ref=e454]: Desafios
+        - generic [ref=e455]:
+          - img [ref=e457]
+          - paragraph [ref=e460]: Comunidade
+        - generic [ref=e461]:
+          - img [ref=e463]
+          - paragraph [ref=e466]: Billing seguro
+    - generic [ref=e468]:
+      - generic [ref=e469]:
+        - generic [ref=e470]: Dúvidas
+        - heading "Perguntas de quem está pensando em entrar" [level=2] [ref=e471]
+      - generic [ref=e472]:
+        - generic [ref=e473]:
+          - button "Isso é uma consultoria individual?" [expanded] [ref=e474] [cursor=pointer]:
+            - generic [ref=e475]: Isso é uma consultoria individual?
+            - img [ref=e476]
+          - generic [ref=e478]: Não. O Expert Club é uma assinatura com app, planos, check-ins, conteúdos e comunidade. Para acompanhamento 100% individual, existe a consultoria.
+        - button "A dieta é feita só para mim?" [ref=e480] [cursor=pointer]:
+          - generic [ref=e481]: A dieta é feita só para mim?
+          - img [ref=e482]
+        - button "O treino é personalizado?" [ref=e485] [cursor=pointer]:
+          - generic [ref=e486]: O treino é personalizado?
+          - img [ref=e487]
+        - button "Eu posso cancelar?" [ref=e490] [cursor=pointer]:
+          - generic [ref=e491]: Eu posso cancelar?
+          - img [ref=e492]
+        - button "Tem grupo no WhatsApp?" [ref=e495] [cursor=pointer]:
+          - generic [ref=e496]: Tem grupo no WhatsApp?
+          - img [ref=e497]
+        - button "Serve para quem está começando?" [ref=e500] [cursor=pointer]:
+          - generic [ref=e501]: Serve para quem está começando?
+          - img [ref=e502]
+        - button "Serve para emagrecer e ganhar massa?" [ref=e505] [cursor=pointer]:
+          - generic [ref=e506]: Serve para emagrecer e ganhar massa?
+          - img [ref=e507]
+        - button "Como recebo acesso?" [ref=e510] [cursor=pointer]:
+          - generic [ref=e511]: Como recebo acesso?
+          - img [ref=e512]
+        - button "Vai ter live?" [ref=e515] [cursor=pointer]:
+          - generic [ref=e516]: Vai ter live?
+          - img [ref=e517]
+        - button "E se eu entrar pelo link de uma influenciadora?" [ref=e520] [cursor=pointer]:
+          - generic [ref=e521]: E se eu entrar pelo link de uma influenciadora?
+          - img [ref=e522]
+    - generic [ref=e525]:
+      - img [ref=e527]
+      - heading "Você não precisa começar perfeito. Precisa começar com um caminho." [level=2] [ref=e531]
+      - paragraph [ref=e532]: Entre no Expert Club, siga um treino, escolha uma dieta, registre sua rotina e pare de fazer tudo no improviso.
+      - link "Entrar no plano fundador" [ref=e534] [cursor=pointer]:
+        - /url: /app/billing/plans?ref=MARI384&utm_campaign=stories
+        - text: Entrar no plano fundador
+        - img [ref=e535]
+      - generic [ref=e537]:
+        - generic [ref=e538]:
+          - img [ref=e539]
+          - text: Treino
+        - generic [ref=e542]:
+          - img [ref=e543]
+          - text: Evolução
+        - generic [ref=e547]:
+          - img [ref=e548]
+          - text: Comunidade
+  - contentinfo [ref=e550]:
+    - generic [ref=e551]:
+      - paragraph [ref=e552]: Expert Club
+      - paragraph [ref=e553]: Treino, dieta, check-ins e comunidade para você saber o que fazer hoje.

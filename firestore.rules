@@ -1,0 +1,361 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function userPath(uid) {
+      return /databases/$(database)/documents/users/$(uid);
+    }
+
+    function subscriptionPath(uid) {
+      return /databases/$(database)/documents/subscriptions/$(uid);
+    }
+
+    function isOwner(uid) {
+      return isAuthenticated() && request.auth.uid == uid;
+    }
+
+    function hasRole(role) {
+      return isAuthenticated()
+        && exists(userPath(request.auth.uid))
+        && get(userPath(request.auth.uid)).data.role == role;
+    }
+
+    function isAdmin() {
+      return hasRole('admin');
+    }
+
+    function isAffiliate() {
+      return hasRole('affiliate');
+    }
+
+    function isMember() {
+      return hasRole('member');
+    }
+
+    function hasActiveSubscription() {
+      return isAuthenticated()
+        && exists(subscriptionPath(request.auth.uid))
+        && (
+          get(subscriptionPath(request.auth.uid)).data.status == 'active'
+          || get(subscriptionPath(request.auth.uid)).data.status == 'trialing'
+        );
+    }
+
+    function canUseStudentApp() {
+      return (isMember() || isAffiliate()) && hasActiveSubscription();
+    }
+
+    function ownsWrittenDoc(uid) {
+      return request.resource.data.uid == uid;
+    }
+
+    function isSafeUserSelfUpdate(uid) {
+      return isOwner(uid)
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.email == resource.data.email
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+          'role',
+          'uid',
+          'email',
+          'subscription',
+          'subscription.status',
+          'subscriptionStatus',
+          'subscriptionPlan',
+          'referralCode',
+          'affiliateId',
+          'admin',
+          'isAdmin',
+          'adminFlags',
+          'permissions',
+          'customClaims'
+        ]);
+    }
+
+    match /users/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow create: if isAdmin()
+        || (
+          isOwner(uid)
+          && request.resource.data.uid == uid
+          && request.resource.data.email == request.auth.token.email
+          && (
+            request.resource.data.role == 'member'
+            || (request.resource.data.role == 'admin' && request.auth.token.email.matches('.*@expertclub\\.com\\.br$'))
+          )
+          && !request.resource.data.keys().hasAny([
+            'subscription',
+            'subscriptionStatus',
+            'subscriptionPlan',
+            'referralCode',
+            'affiliateId',
+            'admin',
+            'isAdmin',
+            'adminFlags',
+            'permissions',
+            'customClaims'
+          ])
+        );
+      allow update: if isAdmin() || isSafeUserSelfUpdate(uid);
+      allow delete: if isAdmin();
+    }
+
+    match /profiles/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow write: if isOwner(uid) || isAdmin();
+    }
+
+    match /subscriptions/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow create: if isOwner(uid)
+        && request.resource.data.uid == uid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.provider == 'manual'
+        && request.resource.data.planId == 'founder'
+        && request.resource.data.price == 49
+        && request.resource.data.currency == 'BRL'
+        && request.resource.data.interval == 'monthly'
+        && request.resource.data.keys().hasOnly([
+          'uid',
+          'planId',
+          'planName',
+          'status',
+          'provider',
+          'price',
+          'currency',
+          'interval',
+          'startedAt',
+          'currentPeriodStart',
+          'currentPeriodEnd',
+          'createdAt',
+          'updatedAt'
+        ]);
+      allow update, delete: if isAdmin();
+    }
+
+    match /plans/{planId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    match /checkoutSessions/{sessionId} {
+      allow read: if isAdmin() || (isAuthenticated() && resource.data.uid == request.auth.uid);
+      allow write: if isAdmin();
+    }
+
+    match /billingEvents/{eventId} {
+      allow read: if isAdmin();
+      allow write: if isAdmin();
+    }
+
+    match /auditLogs/{logId} {
+      allow read: if isAdmin();
+      allow create: if isAdmin()
+        && request.resource.data.actorUid == request.auth.uid
+        && request.resource.data.createdAt == request.time;
+      allow update, delete: if false;
+    }
+
+    match /affiliateAccounts/{affiliateId} {
+      allow get: if isAdmin() || (isAffiliate() && resource.data.uid == request.auth.uid);
+      allow list: if isAdmin();
+      allow write: if isAdmin();
+    }
+
+    match /referralCodes/{code} {
+      allow get: if true;
+      allow list: if isAdmin();
+      allow write: if isAdmin();
+    }
+
+    match /referralAttributions/{attributionId} {
+      allow read: if isAdmin();
+      allow write: if isAdmin();
+    }
+
+    match /commissionLedger/{entryId} {
+      allow read: if isAdmin();
+      allow write: if isAdmin();
+    }
+
+    match /affiliatePayouts/{payoutId} {
+      allow read: if isAdmin();
+      allow write: if isAdmin();
+    }
+
+    match /affiliateDashboards/{affiliateId} {
+      allow get: if isAdmin() || (
+        isAffiliate()
+        && exists(/databases/$(database)/documents/affiliateAccounts/$(affiliateId))
+        && get(/databases/$(database)/documents/affiliateAccounts/$(affiliateId)).data.uid == request.auth.uid
+        && get(/databases/$(database)/documents/affiliateAccounts/$(affiliateId)).data.status == 'active'
+      );
+      allow list, write: if isAdmin();
+    }
+
+    match /foods/{foodId} {
+      allow read: if isAdmin() || (canUseStudentApp() && resource.data.status == 'active');
+      allow write: if isAdmin();
+    }
+
+    match /diets/{dietId} {
+      allow read: if isAdmin() || (canUseStudentApp() && resource.data.status == 'published');
+      allow write: if isAdmin();
+
+      match /versions/{versionId} {
+        allow read, write: if isAdmin();
+      }
+    }
+
+    match /workouts/{workoutId} {
+      allow read: if isAdmin() || (canUseStudentApp() && resource.data.status == 'published');
+      allow write: if isAdmin();
+
+      match /versions/{versionId} {
+        allow read, write: if isAdmin();
+      }
+    }
+
+    match /exercises/{exerciseId} {
+      allow read: if isAdmin() || (canUseStudentApp() && resource.data.status == 'active');
+      allow write: if isAdmin();
+    }
+
+    match /users/{uid}/hydrationDays/{date} {
+      allow read: if (isOwner(uid) && canUseStudentApp()) || isAdmin();
+      allow create, update: if ((isOwner(uid) && canUseStudentApp() && ownsWrittenDoc(uid)) || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    match /users/{uid}/workoutSessions/{sessionId} {
+      allow read: if (isOwner(uid) && canUseStudentApp()) || isAdmin();
+      allow create, update: if ((isOwner(uid) && canUseStudentApp() && ownsWrittenDoc(uid)) || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    match /users/{uid}/dietDays/{dateKey} {
+      allow read: if (isOwner(uid) && canUseStudentApp()) || isAdmin();
+      allow create, update: if ((isOwner(uid) && canUseStudentApp() && ownsWrittenDoc(uid)) || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    match /users/{uid}/bodyCheckins/{checkinId} {
+      allow read: if (isOwner(uid) && canUseStudentApp()) || isAdmin();
+      allow create, update: if ((isOwner(uid) && canUseStudentApp() && ownsWrittenDoc(uid)) || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    match /users/{uid}/dailyCheckins/{date} {
+      allow read: if (isOwner(uid) && canUseStudentApp()) || isAdmin();
+      allow create, update: if ((isOwner(uid) && canUseStudentApp() && ownsWrittenDoc(uid)) || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    match /users/{uid}/weeklyCheckins/{week} {
+      allow read: if (isOwner(uid) && canUseStudentApp()) || isAdmin();
+      allow create, update: if ((isOwner(uid) && canUseStudentApp() && ownsWrittenDoc(uid)) || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    match /challenges/{challengeId} {
+      allow read: if isAdmin() || canUseStudentApp();
+      allow write: if isAdmin();
+
+      match /participants/{uid} {
+        allow read: if isAdmin() || canUseStudentApp();
+        allow write: if (isOwner(uid) && canUseStudentApp()) || isAdmin();
+      }
+    }
+
+    match /content/{id} {
+      allow read: if isAdmin() || canUseStudentApp();
+      allow write: if isAdmin();
+    }
+
+    match /announcements/{id} {
+      allow read: if isAdmin() || canUseStudentApp();
+      allow write: if isAdmin();
+    }
+
+    match /settings/{id} {
+      allow read: if isAdmin() || canUseStudentApp();
+      allow write: if isAdmin();
+    }
+
+    match /badges/{id} {
+      allow read: if isAdmin() || canUseStudentApp();
+      allow write: if isAdmin();
+    }
+
+    match /users/{uid}/contentProgress/{contentId} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow write: if isOwner(uid) || isAdmin();
+    }
+
+    match /users/{uid}/earnedBadges/{badgeId} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow write: if isAdmin(); // Only Admin (or scoring service) can award badges
+    }
+
+    // ═══════════════════════════════════════════════
+    // COMMUNITY FEED
+    // ═══════════════════════════════════════════════
+    match /community_posts/{postId} {
+      // Anyone authenticated can read published posts
+      allow read: if isAdmin() || (canUseStudentApp() && resource.data.status == 'published');
+
+      // Students can create their own posts but CANNOT set isPinned/isOfficial or manipulate counts
+      allow create: if canUseStudentApp()
+        && request.resource.data.authorId == request.auth.uid
+        && request.resource.data.isPinned == false
+        && request.resource.data.isOfficial == false
+        && request.resource.data.likesCount == 0
+        && request.resource.data.commentsCount == 0
+        && request.resource.data.status == 'published'
+        && request.resource.data.content.size() <= 1000
+        && request.resource.data.content.size() > 0;
+
+      // Students can only toggle likes on posts (update likedBy array and likesCount)
+      // Admin can do anything
+      allow update: if isAdmin()
+        || (canUseStudentApp()
+          && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+            'authorId', 'authorName', 'authorPhoto', 'content', 'type',
+            'createdAt', 'isPinned', 'isOfficial', 'status', 'imageUrl', 'commentsCount'
+          ])
+        );
+
+      allow delete: if isAdmin();
+
+      // Comments sub-collection
+      match /comments/{commentId} {
+        allow read: if isAdmin() || canUseStudentApp();
+        allow create: if canUseStudentApp()
+          && request.resource.data.authorId == request.auth.uid
+          && request.resource.data.content.size() <= 500
+          && request.resource.data.content.size() > 0;
+        allow delete: if isAdmin()
+          || (canUseStudentApp() && resource.data.authorId == request.auth.uid);
+        allow update: if isAdmin();
+      }
+    }
+
+    // ═══════════════════════════════════════════════
+    // NOTIFICATIONS (per-user)
+    // ═══════════════════════════════════════════════
+    match /users/{uid}/notifications/{notifId} {
+      // Users can only read their own notifications
+      allow read: if isOwner(uid) || isAdmin();
+      // Users can only mark their own notifications as read (update isRead field only)
+      allow update: if isOwner(uid)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead'])
+        && request.resource.data.isRead == true;
+      // Only admin/system can create notifications
+      allow create: if isAdmin();
+      allow delete: if isAdmin();
+    }
+  }
+}

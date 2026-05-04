@@ -1,0 +1,729 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================
+   Expert Club — Design System v3.0
+   Brandbook: Violeta Elétrico • Premium Dark
+   ============================================ */
+
+:root {
+  /* === Backgrounds — Official Palette === */
+  --bg-primary: #050A12;
+  --bg-secondary: #090F1A;
+  --bg-dark: #03070D;
+  --surface-1: #0E1219;
+  --surface-2: #141822;
+  --surface-3: #1A1F2C;
+
+  /* === Brand Primary — Violeta Elétrico === */
+  --ec-violet: #5B4BFF;
+  --ec-violet-2: #684CFF;
+  --ec-violet-dim: rgba(91, 75, 255, 0.12);
+  --ec-violet-border: rgba(91, 75, 255, 0.22);
+  --ec-violet-glow: rgba(91, 75, 255, 0.35);
+  --on-violet: #FFFFFF;
+
+  /* === Accent — Lime (gamificação, conquistas, conclusão) === */
+  --accent-lime: #B7FF3C;
+  --accent-lime-dim: rgba(183, 255, 60, 0.12);
+  --accent-lime-border: rgba(183, 255, 60, 0.22);
+  --accent-lime-glow: rgba(183, 255, 60, 0.08);
+  --on-lime: #050A12;
+
+  /* === Accent — Sky (dados, hidratação, informações) === */
+  --accent-sky: #5DDCFF;
+  --accent-sky-dim: rgba(93, 220, 255, 0.10);
+  --accent-sky-border: rgba(93, 220, 255, 0.20);
+  --accent-sky-glow: rgba(93, 220, 255, 0.06);
+
+  /* === Accent — Purple (XP, nível, legacy compat) === */
+  --accent-purple: #8B5CF6;
+  --accent-purple-dim: rgba(139, 92, 246, 0.10);
+  --accent-purple-border: rgba(139, 92, 246, 0.20);
+  --accent-purple-glow: rgba(139, 92, 246, 0.06);
+  --accent-purple-light: #C4B5FD;
+
+  /* === Semantic === */
+  --accent-green: #22C55E;
+  --accent-red: #FF3B3B;
+  --accent-yellow: #FACC15;
+  --accent-orange: #F97316;
+
+  /* === Text — Official Brandbook === */
+  --text-primary: #FFFFFF;
+  --text-secondary: #9CA3AF;
+  --text-muted: #5F6573;
+  --text-disabled: #3D4455;
+
+  /* === Snow / Light Surfaces === */
+  --ec-snow: #F7F8FA;
+  --ec-gray-100: #EEF0F4;
+
+  /* === Borders === */
+  --border-subtle: rgba(255, 255, 255, 0.07);
+  --border-medium: rgba(255, 255, 255, 0.12);
+  --border-strong: rgba(255, 255, 255, 0.20);
+
+  /* === Expert Club Glass V3 — Violet Edition === */
+  --ec-glass-light: rgba(14, 18, 25, 0.58);
+  --ec-glass: rgba(14, 18, 25, 0.72);
+  --ec-glass-strong: rgba(10, 13, 20, 0.86);
+  --ec-glass-edge: rgba(255, 255, 255, 0.14);
+  --ec-glass-edge-soft: rgba(255, 255, 255, 0.08);
+  --ec-glass-inner: rgba(255, 255, 255, 0.10);
+
+  --ec-shadow-card: 0 18px 70px rgba(0, 0, 0, 0.38);
+  --ec-shadow-float: 0 26px 90px rgba(0, 0, 0, 0.46);
+  --ec-shadow-violet: 0 16px 46px rgba(91, 75, 255, 0.18);
+  --ec-shadow-lime: 0 16px 46px rgba(183, 255, 60, 0.14);
+  --ec-shadow-soft: 0 20px 60px rgba(5, 10, 18, 0.12);
+  --ec-shadow-glow: 0 0 60px rgba(91, 75, 255, 0.25);
+
+  --ec-highlight-violet: rgba(91, 75, 255, 0.22);
+  --ec-highlight-lime: rgba(183, 255, 60, 0.18);
+  --ec-highlight-sky: rgba(93, 220, 255, 0.16);
+  --ec-highlight-purple: rgba(139, 92, 246, 0.16);
+
+  --ec-ease-premium: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* === Gradients — Official === */
+  --ec-gradient-primary: linear-gradient(135deg, #5B4BFF 0%, #684CFF 100%);
+  --ec-gradient-dark: linear-gradient(180deg, #03070D 0%, #090F1A 100%);
+  --ec-glow-bg: radial-gradient(circle, rgba(91, 75, 255, 0.25) 0%, rgba(5, 10, 18, 0) 60%);
+
+  /* === Spacing (8pt grid) === */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* === Radius — Brandbook Official === */
+  --radius-xs: 6px;
+  --radius-sm: 12px;
+  --radius-md: 20px;
+  --radius-lg: 28px;
+  --radius-xl: 36px;
+  --radius-card: 20px;
+  --radius-shell: 28px;
+  --radius-full: 9999px;
+}
+
+/* ============================================
+   Base Styles
+   ============================================ */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  background:
+    radial-gradient(1200px 700px at 50% -10%, rgba(91, 75, 255, 0.09), transparent 58%),
+    radial-gradient(900px 600px at 90% 5%, rgba(91, 75, 255, 0.05), transparent 60%),
+    linear-gradient(180deg, #050A12 0%, #050A12 48%, #03070D 100%);
+  color: var(--text-primary);
+  font-family: 'Inter', sans-serif;
+  min-height: 100dvh;
+  overflow-x: hidden;
+}
+
+#root {
+  min-height: 100dvh;
+  isolation: isolate;
+}
+
+button,
+a,
+input,
+textarea,
+select {
+  touch-action: manipulation;
+}
+
+.tracking-tight,
+.tracking-tighter {
+  letter-spacing: 0 !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ============================================
+   Expert Club Glass V3 — Violet Edition
+   ============================================ */
+
+.ec-app-bg {
+  position: relative;
+  min-height: 100dvh;
+  overflow-x: clip;
+}
+
+.ec-app-bg::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background:
+    linear-gradient(115deg, rgba(91, 75, 255, 0.06), transparent 30%),
+    radial-gradient(1000px 520px at 80% 0%, rgba(91, 75, 255, 0.05), transparent 56%),
+    radial-gradient(900px 640px at 15% 88%, rgba(91, 75, 255, 0.03), transparent 62%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 24%);
+}
+
+.ec-app-bg::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.08;
+  mix-blend-mode: soft-light;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: linear-gradient(to bottom, black, transparent 78%);
+}
+
+.ec-glass,
+.ec-glass-strong,
+.ec-panel,
+.ec-card,
+.ec-hero-shell,
+.ec-floating-pill {
+  position: relative;
+  border: 1px solid transparent;
+  background-clip: padding-box, border-box;
+  transition:
+    transform 220ms var(--ec-ease-premium),
+    border-color 220ms var(--ec-ease-premium),
+    background 220ms var(--ec-ease-premium),
+    box-shadow 220ms var(--ec-ease-premium);
+}
+
+.ec-glass::before,
+.ec-glass-strong::before,
+.ec-panel::before,
+.ec-card::before,
+.ec-hero-shell::before,
+.ec-floating-pill::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  box-shadow:
+    inset 0 1px 0 var(--ec-glass-inner),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.ec-glass > *,
+.ec-glass-strong > *,
+.ec-panel > *,
+.ec-card > *,
+.ec-hero-shell > *,
+.ec-floating-pill > * {
+  position: relative;
+  z-index: 1;
+}
+
+.ec-glass {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.012)) padding-box,
+    linear-gradient(135deg, var(--ec-glass-edge), rgba(255, 255, 255, 0.03), rgba(91, 75, 255, 0.12)) border-box;
+  background-color: var(--ec-glass);
+  backdrop-filter: blur(18px) saturate(140%);
+  box-shadow: var(--ec-shadow-card);
+}
+
+.ec-glass-strong,
+.ec-panel {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.065), rgba(255, 255, 255, 0.015)) padding-box,
+    linear-gradient(135deg, rgba(255,255,255,0.16), rgba(255,255,255,0.03), rgba(91, 75, 255, 0.12)) border-box;
+  background-color: var(--ec-glass-strong);
+  backdrop-filter: blur(24px) saturate(150%);
+  box-shadow: var(--ec-shadow-float);
+}
+
+.ec-card {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.01)) padding-box,
+    linear-gradient(145deg, rgba(255,255,255,0.10), rgba(255,255,255,0.025)) border-box;
+  background-color: rgba(14, 18, 25, 0.86);
+  box-shadow: 0 12px 42px rgba(0, 0, 0, 0.30);
+}
+
+.ec-card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 20px 58px rgba(0, 0, 0, 0.38),
+    0 0 0 1px rgba(91, 75, 255, 0.12);
+}
+
+.ec-card-hover:active {
+  transform: scale(0.99);
+}
+
+.ec-hero-shell {
+  overflow: hidden;
+  background:
+    radial-gradient(780px 360px at 92% 0%, rgba(91, 75, 255, 0.18), transparent 62%) padding-box,
+    linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02)) padding-box,
+    linear-gradient(135deg, rgba(255,255,255,0.18), rgba(91, 75, 255, 0.16), rgba(104, 76, 255, 0.08)) border-box;
+  background-color: rgba(10, 14, 22, 0.84);
+  backdrop-filter: blur(26px) saturate(150%);
+  box-shadow:
+    0 28px 96px rgba(0,0,0,0.45),
+    0 0 0 1px rgba(91, 75, 255, 0.04);
+}
+
+.ec-hero-shell::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 34%;
+  pointer-events: none;
+  background: linear-gradient(180deg, transparent, rgba(91, 75, 255, 0.03));
+}
+
+.ec-floating-pill {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.025)) padding-box,
+    linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0.04), rgba(91, 75, 255, 0.16)) border-box;
+  background-color: rgba(10, 12, 17, 0.82);
+  backdrop-filter: blur(24px) saturate(150%);
+  box-shadow: 0 20px 58px rgba(0,0,0,0.45);
+}
+
+/* === Primary CTA — Violet Gradient === */
+.ec-premium-cta {
+  background: var(--ec-gradient-primary);
+  color: var(--on-violet);
+  box-shadow: var(--ec-shadow-violet), inset 0 1px 0 rgba(255,255,255,0.18);
+}
+
+.ec-premium-cta:hover {
+  box-shadow: var(--ec-shadow-violet), 0 0 40px rgba(91, 75, 255, 0.25), inset 0 1px 0 rgba(255,255,255,0.22);
+}
+
+/* === Secondary CTA — Lime (for gamification) === */
+.ec-cta-lime {
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.72), transparent 34%) padding-box,
+    linear-gradient(135deg, rgba(183,255,60,0.95), rgba(93,220,255,0.34)) border-box;
+  background-color: var(--accent-lime);
+  color: var(--on-lime);
+  box-shadow: var(--ec-shadow-lime), inset 0 1px 0 rgba(255,255,255,0.62);
+}
+
+.ec-highlight-ring {
+  box-shadow:
+    0 0 0 1px rgba(91, 75, 255, 0.22),
+    0 18px 60px rgba(91, 75, 255, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.10);
+}
+
+.ec-page-shell {
+  width: 100%;
+  max-width: 1200px;
+  margin-inline: auto;
+  padding: clamp(20px, 3vw, 36px) clamp(16px, 2.4vw, 28px) 112px;
+}
+
+.ec-page-wide {
+  max-width: 1360px;
+}
+
+.ec-section-header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.ec-input {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01)) padding-box,
+    linear-gradient(135deg, rgba(255,255,255,0.10), rgba(255,255,255,0.02)) border-box;
+  background-color: rgba(5, 10, 18, 0.78);
+  border: 1px solid transparent;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+}
+
+.ec-input:focus {
+  border-color: transparent;
+  box-shadow:
+    0 0 0 1px rgba(91, 75, 255, 0.42),
+    0 0 0 5px rgba(91, 75, 255, 0.10),
+    inset 0 1px 0 rgba(255,255,255,0.07);
+}
+
+.ec-subtle-grid {
+  background-image:
+    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 34px 34px;
+}
+
+.ec-page-reveal {
+  animation: ec-page-reveal 420ms var(--ec-ease-premium) both;
+}
+
+@keyframes ec-page-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================
+   Scrollbar styling (subtle dark)
+   ============================================ */
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* ============================================
+   Utility Classes
+   ============================================ */
+
+@layer components {
+  /* Bloom-inspired liquid glass for Expert Club landing */
+  .liquid-glass,
+  .liquid-glass-strong {
+    position: relative;
+    overflow: hidden;
+    border: none;
+    isolation: isolate;
+    background-blend-mode: luminosity;
+  }
+
+  .liquid-glass > *,
+  .liquid-glass-strong > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .liquid-glass::before,
+  .liquid-glass-strong::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    padding: 1.4px;
+    background:
+      linear-gradient(
+        180deg,
+        rgba(255,255,255,0.40) 0%,
+        rgba(255,255,255,0.12) 20%,
+        transparent 40%,
+        transparent 60%,
+        rgba(255,255,255,0.12) 80%,
+        rgba(255,255,255,0.40) 100%
+      ),
+      linear-gradient(135deg, rgba(91, 75, 255, 0.22), transparent 34%, rgba(104, 76, 255, 0.16));
+    -webkit-mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+  }
+
+  .liquid-glass {
+    background: rgba(255, 255, 255, 0.01);
+    backdrop-filter: blur(4px) saturate(135%);
+    -webkit-backdrop-filter: blur(4px) saturate(135%);
+    box-shadow:
+      inset 0 1px 1px rgba(255,255,255,0.08),
+      0 18px 58px rgba(0,0,0,0.28);
+  }
+
+  .liquid-glass-strong {
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.065), rgba(255,255,255,0.012)),
+      rgba(255,255,255,0.015);
+    backdrop-filter: blur(50px) saturate(155%);
+    -webkit-backdrop-filter: blur(50px) saturate(155%);
+    box-shadow:
+      4px 4px 4px rgba(0,0,0,0.05),
+      0 28px 110px rgba(0,0,0,0.48),
+      inset 0 1px 1px rgba(255,255,255,0.12);
+  }
+
+  .liquid-glass-strong::before {
+    background:
+      linear-gradient(
+        180deg,
+        rgba(255,255,255,0.45) 0%,
+        rgba(255,255,255,0.16) 20%,
+        transparent 40%,
+        transparent 60%,
+        rgba(255,255,255,0.16) 80%,
+        rgba(255,255,255,0.45) 100%
+      ),
+      linear-gradient(135deg, rgba(91, 75, 255, 0.24), transparent 32%, rgba(104, 76, 255, 0.16));
+  }
+
+  .ec-landing-cta-primary {
+    background: var(--ec-gradient-primary);
+    box-shadow:
+      0 20px 60px rgba(91, 75, 255, 0.28),
+      inset 0 1px 1px rgba(255,255,255,0.22);
+    color: #FFFFFF;
+  }
+
+  /* Glass panel */
+  .glass-panel {
+    background: rgba(14, 18, 25, 0.80);
+    backdrop-filter: blur(24px);
+    border: 1px solid var(--border-subtle);
+  }
+
+  /* Card standard */
+  .card-base {
+    background: var(--surface-1);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-card);
+    padding: var(--space-5);
+  }
+
+  /* Card glass */
+  .card-glass {
+    background: rgba(14, 18, 25, 0.80);
+    backdrop-filter: blur(24px);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-card);
+  }
+
+  /* Card dashed CTA */
+  .card-dashed {
+    border: 2px dashed rgba(91, 75, 255, 0.22);
+    background: rgba(91, 75, 255, 0.04);
+    border-radius: var(--radius-card);
+  }
+
+  /* Glow utilities */
+  .glow-violet {
+    box-shadow: 0 0 40px rgba(91, 75, 255, 0.10);
+  }
+
+  .glow-lime {
+    box-shadow: 0 0 40px rgba(183, 255, 60, 0.06);
+  }
+
+  .glow-sky {
+    box-shadow: 0 0 40px rgba(93, 220, 255, 0.06);
+  }
+
+  .glow-purple {
+    box-shadow: 0 0 40px rgba(139, 92, 246, 0.06);
+  }
+
+  /* Input dark */
+  .input-dark {
+    background: var(--bg-primary);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    padding: 13px 16px;
+    font-size: 15px;
+    font-family: 'Inter', sans-serif;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    width: 100%;
+  }
+
+  .input-dark:focus {
+    border-color: var(--ec-violet);
+    box-shadow: 0 0 0 3px rgba(91, 75, 255, 0.12);
+  }
+
+  .input-dark::placeholder {
+    color: var(--text-muted);
+  }
+
+  /* Skeleton shimmer */
+  .skeleton {
+    background: linear-gradient(90deg, #0E1219 25%, #141822 50%, #0E1219 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s linear infinite;
+  }
+
+  .ec-btn-neon-trace {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .ec-btn-neon-trace::after {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    background: conic-gradient(
+      from 0deg,
+      transparent 0deg,
+      transparent 180deg,
+      var(--ec-violet) 270deg,
+      var(--accent-sky) 360deg
+    );
+    animation: rotate-neon 3s linear infinite;
+    z-index: -1;
+    border-radius: inherit;
+  }
+
+  @keyframes rotate-neon {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+}
+
+@keyframes shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+
+/* ============================================
+   Expert Club Landing — cinematic liquid glass
+   ============================================ */
+
+.ec-landing {
+  position: relative;
+  font-family: 'Poppins', sans-serif;
+  --landing-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.ec-landing em {
+  font-family: 'Source Serif 4', Georgia, serif;
+  font-style: italic;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.ec-landing-video {
+  transform: scale(1.02);
+  filter: saturate(1.14) contrast(1.08) brightness(0.74);
+}
+
+.ec-landing-scrim {
+  pointer-events: none;
+  background:
+    radial-gradient(760px 520px at 34% 20%, rgba(91, 75, 255, 0.18), transparent 64%),
+    radial-gradient(720px 500px at 78% 16%, rgba(104, 76, 255, 0.10), transparent 58%),
+    radial-gradient(720px 520px at 78% 72%, rgba(91, 75, 255, 0.08), transparent 64%),
+    linear-gradient(90deg, rgba(3,5,7,0.78) 0%, rgba(3,5,7,0.38) 46%, rgba(3,5,7,0.64) 100%),
+    linear-gradient(180deg, rgba(3,5,7,0.26), rgba(3,5,7,0.92));
+}
+
+.ec-landing-grain {
+  pointer-events: none;
+  opacity: 0.12;
+  mix-blend-mode: soft-light;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: linear-gradient(to bottom, black, transparent 88%);
+}
+
+.ec-landing .liquid-glass,
+.ec-landing .liquid-glass-strong,
+.ec-landing a,
+.ec-landing button {
+  transition:
+    transform 260ms var(--landing-ease),
+    color 220ms ease,
+    background 260ms var(--landing-ease),
+    box-shadow 260ms var(--landing-ease),
+    opacity 220ms ease;
+}
+
+.ec-landing .ec-landing-float {
+  box-shadow:
+    0 32px 120px rgba(0,0,0,0.52),
+    0 0 80px rgba(91, 75, 255, 0.06),
+    inset 0 1px 1px rgba(255,255,255,0.14);
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .liquid-glass,
+  .liquid-glass-strong {
+    background: rgba(5, 10, 18, 0.90);
+  }
+}
+
+@media (max-width: 767px) {
+  .ec-landing-scrim {
+    background:
+      radial-gradient(520px 420px at 50% 8%, rgba(91, 75, 255, 0.14), transparent 68%),
+      linear-gradient(180deg, rgba(3,5,7,0.46), rgba(3,5,7,0.92) 42%, rgba(3,5,7,0.98));
+  }
+
+  .liquid-glass-strong {
+    backdrop-filter: blur(28px) saturate(145%);
+    -webkit-backdrop-filter: blur(28px) saturate(145%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ec-landing .liquid-glass,
+  .ec-landing .liquid-glass-strong,
+  .ec-landing a,
+  .ec-landing button {
+    transition-duration: 0.01ms;
+  }
+}
+
+/* ============================================
+   Safe area padding for mobile nav
+   ============================================ */
+
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .pb-safe {
+    padding-bottom: calc(12px + env(safe-area-inset-bottom));
+  }
+}

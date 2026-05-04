@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Expert Club | Profile Onboarding</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;900&amp;family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-container": "#8B5CF6",
+                        "on-secondary-container": "#bfb2da",
+                        "surface-container": "#211f24",
+                        "on-error-container": "#ffdad6",
+                        "surface-tint": "#C4B5FD",
+                        "on-secondary-fixed-variant": "#4b4263",
+                        "surface-dim": "#141218",
+                        "surface-container-high": "#2b292f",
+                        "background": "#07080A",
+                        "inverse-on-surface": "#322f35",
+                        "secondary": "#cdc0e9",
+                        "surface": "#0D0F14",
+                        "on-primary-fixed-variant": "#4f378a",
+                        "tertiary": "#e7c365",
+                        "on-tertiary-fixed": "#241a00",
+                        "outline-variant": "#494551",
+                        "on-primary-container": "#e0d2ff",
+                        "surface-bright": "#3b383e",
+                        "outline": "#948e9c",
+                        "surface-container-lowest": "#0f0d13",
+                        "on-primary": "#381e72",
+                        "tertiary-container": "#c9a74d",
+                        "on-tertiary": "#3e2e00",
+                        "inverse-primary": "#8B5CF6",
+                        "inverse-surface": "#e6e0e9",
+                        "tertiary-fixed-dim": "#e7c365",
+                        "on-tertiary-fixed-variant": "#594400",
+                        "primary-fixed": "#e9ddff",
+                        "on-secondary-fixed": "#1f1635",
+                        "surface-variant": "#36343a",
+                        "tertiary-fixed": "#ffdf93",
+                        "error": "#ffb4ab",
+                        "on-secondary": "#342b4b",
+                        "surface-container-highest": "#36343a",
+                        "primary-fixed-dim": "#C4B5FD",
+                        "on-primary-fixed": "#22005d",
+                        "secondary-fixed": "#e9ddff",
+                        "on-surface-variant": "#cbc4d2",
+                        "on-tertiary-container": "#503d00",
+                        "secondary-container": "#4d4465",
+                        "on-error": "#690005",
+                        "error-container": "#93000a",
+                        "on-surface": "#e6e0e9",
+                        "surface-container-low": "#1d1b20",
+                        "secondary-fixed-dim": "#cdc0e9",
+                        "on-background": "#e6e0e9",
+                        "primary": "#B7FF3C"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Inter"],
+                        "h2": ["Space Grotesk"],
+                        "h3": ["Space Grotesk"],
+                        "ui-label": ["Inter"],
+                        "code-data": ["Inter"],
+                        "body-md": ["Inter"],
+                        "h1": ["Space Grotesk"],
+                        "display-xl": ["Space Grotesk"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "h2": ["32px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                        "h3": ["24px", {"lineHeight": "1.4", "fontWeight": "600"}],
+                        "ui-label": ["14px", {"lineHeight": "1", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                        "code-data": ["12px", {"lineHeight": "1", "fontWeight": "600"}],
+                        "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "h1": ["40px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "display-xl": ["64px", {"lineHeight": "1.1", "letterSpacing": "-0.04em", "fontWeight": "700"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        input:focus { outline: none; box-shadow: none; border-color: #5DDCFF; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .glass-card {
+            background: rgba(18, 21, 28, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-[#07080A] text-on-background font-body-md selection:bg-primary selection:text-background min-h-screen pb-xxl">
+<!-- TopAppBar Shell (Onboarding Variant) -->
+<header class="bg-[#07080A]/80 backdrop-blur-xl border-b border-white/10 sticky top-0 z-50 flex justify-between items-center w-full px-6 py-4">
+<div class="flex items-center gap-4">
+<span class="text-xl font-black italic text-[#B7FF3C] tracking-widest font-['Space_Grotesk']">EXPERT CLUB</span>
+</div>
+<div class="flex items-center gap-3">
+<div class="h-8 w-8 rounded-full overflow-hidden border border-white/20 bg-surface-container">
+<img class="h-full w-full object-cover" data-alt="Close-up portrait of a determined fitness athlete in a dark gym setting with dramatic lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD0DZi-HotYxKPd3apWY54baKtMS5HRbHvgr5AnRrNhbhIMYf2cEJht7WLAcK-dk9Ecg4Vb_jmrmiaWDE4eHs1APCv-6st20qbcWZ97Whc_IyheDlt_-mgOLuZZvMw7rn8LNOpgVgj0OxuxsMYPgB6oDCdDKXWi4SWxdlkiLUUg6jPALRqxLDqtkJ_GtYTvam8FVe53rtuPGo9e0wk5v2-BQqABCeGhoanYYYwwgZhVH4dV2qRlpgAtV1EX8SpUWGg25OIoYx8UrUs"/>
+</div>
+</div>
+</header>
+<main class="max-w-4xl mx-auto px-6 py-12">
+<!-- Title Section -->
+<section class="mb-xl text-center md:text-left">
+<h1 class="font-h1 text-h1 text-[#B7FF3C] mb-xs">Personalize sua Jornada</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">Defina seus parâmetros para que nossa inteligência crie o protocolo de performance ideal para o seu perfil.</p>
+</section>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-lg">
+<!-- Basic Stats Card -->
+<div class="md:col-span-7 glass-card rounded-xl p-lg space-y-lg">
+<div class="flex items-center gap-2 mb-md">
+<span class="material-symbols-outlined text-primary">person</span>
+<h3 class="font-h3 text-h3">Biofísico</h3>
+</div>
+<div class="grid grid-cols-2 gap-lg">
+<div class="space-y-sm">
+<label class="font-ui-label text-ui-label text-white/60 block">Sexo</label>
+<select class="w-full bg-[#07080A] border border-white/10 rounded-lg py-3 px-4 text-white font-body-md appearance-none focus:border-primary transition-colors">
+<option value="masculino">Masculino</option>
+<option value="feminino">Feminino</option>
+<option value="outro">Outro</option>
+</select>
+</div>
+<div class="space-y-sm">
+<label class="font-ui-label text-ui-label text-white/60 block">Idade</label>
+<input class="w-full bg-[#07080A] border border-white/10 rounded-lg py-3 px-4 text-white font-body-md focus:border-primary transition-colors" placeholder="25" type="number"/>
+</div>
+<div class="space-y-sm">
+<label class="font-ui-label text-ui-label text-white/60 block">Altura (cm)</label>
+<input class="w-full bg-[#07080A] border border-white/10 rounded-lg py-3 px-4 text-white font-body-md focus:border-primary transition-colors" placeholder="180" type="number"/>
+</div>
+<div class="space-y-sm">
+<label class="font-ui-label text-ui-label text-white/60 block">Peso atual (kg)</label>
+<input class="w-full bg-[#07080A] border border-white/10 rounded-lg py-3 px-4 text-white font-body-md focus:border-primary transition-colors" placeholder="85.0" step="0.1" type="number"/>
+</div>
+</div>
+</div>
+<!-- Training Level Card -->
+<div class="md:col-span-5 glass-card rounded-xl p-lg">
+<div class="flex items-center gap-2 mb-lg">
+<span class="material-symbols-outlined text-primary">fitness_center</span>
+<h3 class="font-h3 text-h3">Experiência</h3>
+</div>
+<div class="flex flex-col gap-3">
+<button class="w-full text-left p-4 rounded-lg bg-[#07080A] border border-white/10 hover:border-primary transition-all group active:scale-95">
+<p class="font-ui-label text-white group-hover:text-primary transition-colors">Iniciante</p>
+<p class="text-[12px] text-white/40">Menos de 6 meses de treino</p>
+</button>
+<button class="w-full text-left p-4 rounded-lg bg-primary/10 border border-primary transition-all group active:scale-95">
+<div class="flex justify-between items-center">
+<p class="font-ui-label text-primary">Intermediário</p>
+<span class="material-symbols-outlined text-primary text-sm" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<p class="text-[12px] text-primary/60">Entre 6 meses e 2 anos</p>
+</button>
+<button class="w-full text-left p-4 rounded-lg bg-[#07080A] border border-white/10 hover:border-primary transition-all group active:scale-95">
+<p class="font-ui-label text-white group-hover:text-primary transition-colors">Avançado</p>
+<p class="text-[12px] text-white/40">Mais de 2 anos consistente</p>
+</button>
+</div>
+</div>
+<!-- Frequency Card -->
+<div class="md:col-span-6 glass-card rounded-xl p-lg">
+<div class="flex items-center gap-2 mb-lg">
+<span class="material-symbols-outlined text-primary">calendar_month</span>
+<h3 class="font-h3 text-h3">Frequência</h3>
+</div>
+<div class="flex items-end justify-between mb-4">
+<p class="font-ui-label text-white/60">Vezes por semana</p>
+<span class="text-h2 font-h2 text-primary leading-none">4x</span>
+</div>
+<div class="relative w-full h-2 bg-[#07080A] rounded-full overflow-hidden">
+<div class="absolute left-0 top-0 h-full bg-primary w-[60%]"></div>
+</div>
+<div class="flex justify-between mt-3 text-[10px] text-white/40 uppercase tracking-widest font-medium">
+<span>2x</span>
+<span>3x</span>
+<span>4x</span>
+<span>5x</span>
+<span>6x</span>
+</div>
+</div>
+<!-- Location Selection Card -->
+<div class="md:col-span-6 glass-card rounded-xl p-lg">
+<div class="flex items-center gap-2 mb-lg">
+<span class="material-symbols-outlined text-primary">location_on</span>
+<h3 class="font-h3 text-h3">Local de Treino</h3>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="relative group cursor-pointer">
+<input checked="" class="peer hidden" id="academia" name="local" type="radio"/>
+<label class="flex flex-col items-center justify-center p-6 rounded-xl bg-[#07080A] border border-white/10 peer-checked:border-primary peer-checked:bg-primary/5 transition-all" for="academia">
+<span class="material-symbols-outlined text-3xl mb-2 text-white/40 peer-checked:text-primary">stadium</span>
+<span class="font-ui-label text-white/60 peer-checked:text-white">Academia</span>
+</label>
+</div>
+<div class="relative group cursor-pointer">
+<input class="peer hidden" id="casa" name="local" type="radio"/>
+<label class="flex flex-col items-center justify-center p-6 rounded-xl bg-[#07080A] border border-white/10 peer-checked:border-primary peer-checked:bg-primary/5 transition-all" for="casa">
+<span class="material-symbols-outlined text-3xl mb-2 text-white/40 peer-checked:text-primary">home</span>
+<span class="font-ui-label text-white/60 peer-checked:text-white">Casa</span>
+</label>
+</div>
+</div>
+</div>
+<!-- Decorative Visual Prompt Component -->
+<div class="md:col-span-12 glass-card rounded-xl overflow-hidden h-40 relative group">
+<img class="w-full h-full object-cover opacity-30 group-hover:scale-105 transition-transform duration-700" data-alt="High-contrast black and white photography of heavy chrome dumbbells in a dark, moody luxury gym environment" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB2lBoIDTTM82Ih4kZBq2OE9uLXrbN7XNYZfxd9bQ3YD0E9wHAsn4xoNvM7KlIz7E9D7KtpwjR8-25kleC0IPs9ZrC9AjHwlIzcW7As_NyvbDbiWtzKxatGkRrZNqMooRPBxrTtp__P37DHS-n4-y5l_kErpqp0YGEy1KVYFTli4YHnxcRA0nLLP5YyyAWLf6QG_oag5fQc7XAJQChZmyzPH9sPTcwLMlnV8p3uHtiYl3G2RmBVWJyD2rLsSioD1NpDu8aKkpRcZCk"/>
+<div class="absolute inset-0 bg-gradient-to-t from-[#0D0F14] to-transparent"></div>
+<div class="absolute bottom-6 left-8 flex items-center gap-4">
+<div class="h-12 w-12 rounded-full bg-primary/20 border border-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">bolt</span>
+</div>
+<div>
+<p class="font-h3 text-h3 text-white">Quase lá.</p>
+<p class="text-white/60 text-body-md">Seus dados estão sendo processados pelo nosso algoritmo.</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Action Section -->
+<footer class="mt-xxl flex flex-col items-center">
+<button class="w-full md:w-auto px-12 py-5 bg-primary text-background font-h3 rounded-xl hover:opacity-90 active:scale-95 transition-all shadow-[0_0_40px_rgba(183,255,60,0.2)]">
+                Finalizar e Ver meu Plano
+            </button>
+<p class="mt-lg text-white/40 text-[12px] uppercase tracking-widest font-medium">Ao clicar, você aceita nossos termos de privacidade e serviço.</p>
+</footer>
+</main>
+<!-- BottomNavBar Suppressed for Onboarding as per Design Rules -->
+</body></html>

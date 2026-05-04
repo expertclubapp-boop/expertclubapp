@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html class="dark" lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Expert Club — Hidratação</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<style>
+  body { background:#07080A; color:#F5F7FA; font-family:'Inter',sans-serif; min-height:max(884px,100dvh); padding-bottom:90px; }
+  .material-symbols-outlined { font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24; }
+  .filled { font-variation-settings:'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24; }
+  .card { background:#12151C; border:1px solid rgba(255,255,255,0.08); border-radius:20px; padding:20px; }
+
+  /* Progress ring */
+  .ring-wrap { position:relative; width:200px; height:200px; }
+  .ring-svg { transform:rotate(-90deg); }
+  .ring-bg { fill:none; stroke:rgba(255,255,255,0.06); stroke-width:14; }
+  .ring-fill { fill:none; stroke-width:14; stroke-linecap:round; transition:stroke-dashoffset 0.8s cubic-bezier(0.4,0,0.2,1); }
+  .ring-center { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+
+  /* Add buttons */
+  .add-btn { background:#12151C; border:1px solid rgba(93,220,255,0.20); border-radius:14px; padding:16px 10px; display:flex; flex-direction:column; align-items:center; gap:6px; cursor:pointer; transition:all 0.15s; flex:1; }
+  .add-btn:hover { background:#181C24; border-color:rgba(93,220,255,0.40); }
+  .add-btn:active { transform:scale(0.96); background:rgba(93,220,255,0.08); }
+  .add-btn .vol { font-family:'Space Grotesk',sans-serif; font-size:17px; font-weight:700; color:#5DDCFF; }
+  .add-btn .lbl { font-size:10px; color:#707987; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; }
+
+  /* History bars */
+  .day-bar-wrap { display:flex; flex-direction:column; align-items:center; gap:6px; flex:1; }
+  .day-bar-track { width:28px; height:80px; background:rgba(255,255,255,0.05); border-radius:6px; overflow:hidden; display:flex; flex-direction:column; justify-content:flex-end; }
+  .day-bar-fill { width:100%; border-radius:6px; transition:height 0.5s ease; }
+  .day-label { font-size:10px; color:#707987; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; }
+  .day-value { font-size:10px; color:#A8B0BD; font-weight:600; font-family:'Space Grotesk',sans-serif; }
+
+  /* Entry log */
+  .log-entry { display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.05); }
+  .log-entry:last-child { border-bottom:none; }
+  .log-icon { width:34px; height:34px; background:rgba(93,220,255,0.10); border-radius:9px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+
+  /* Streak badge */
+  .streak-badge { background:linear-gradient(135deg,rgba(183,255,60,0.12),rgba(183,255,60,0.05)); border:1px solid rgba(183,255,60,0.20); border-radius:14px; padding:12px 16px; display:flex; align-items:center; gap:12px; }
+
+  /* Goal achieved state */
+  .goal-achieved { background:linear-gradient(135deg,rgba(93,220,255,0.10),rgba(93,220,255,0.03)); border:1px solid rgba(93,220,255,0.20); border-radius:16px; padding:16px; text-align:center; }
+
+  /* Bottom Nav */
+  .bottom-nav { background:rgba(13,15,20,0.95); backdrop-filter:blur(16px); border-top:1px solid rgba(255,255,255,0.08); position:fixed; bottom:0; left:0; width:100%; display:flex; justify-content:space-around; align-items:center; padding:10px 8px 12px; z-index:50; }
+  .nav-item { display:flex; flex-direction:column; align-items:center; gap:3px; padding:6px 12px; border-radius:12px; font-size:10px; font-family:'Space Grotesk',sans-serif; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; transition:all 0.2s; color:rgba(255,255,255,0.30); cursor:pointer; }
+  .nav-item.active { color:#B7FF3C; background:rgba(183,255,60,0.07); }
+</style>
+</head>
+<body>
+
+<!-- BG Glow -->
+<div style="position:fixed;top:-5%;right:-10%;width:400px;height:400px;background:rgba(93,220,255,0.04);filter:blur(100px);border-radius:50%;pointer-events:none;z-index:0;"></div>
+
+<!-- Header -->
+<header style="background:rgba(7,8,10,0.90);backdrop-filter:blur(16px);border-bottom:1px solid rgba(255,255,255,0.07);padding:14px 20px;position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;">
+  <div>
+    <div style="font-size:11px;color:#707987;letter-spacing:0.1em;text-transform:uppercase;">Hoje · 29 abr</div>
+    <div style="font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;color:#F5F7FA;">Hidratação</div>
+  </div>
+  <button style="background:rgba(93,220,255,0.08);border:1px solid rgba(93,220,255,0.18);border-radius:10px;padding:8px 14px;color:#5DDCFF;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;">
+    <span class="material-symbols-outlined" style="font-size:16px;">settings</span>
+    Meta
+  </button>
+</header>
+
+<main style="max-width:480px;margin:0 auto;padding:20px 16px;position:relative;z-index:1;">
+
+  <!-- Main Ring + Current Status -->
+  <div class="card" style="display:flex;flex-direction:column;align-items:center;padding:28px 20px;margin-bottom:12px;">
+    <div class="ring-wrap" id="ring-wrap">
+      <svg class="ring-svg" width="200" height="200" viewBox="0 0 200 200">
+        <circle class="ring-bg" cx="100" cy="100" r="86"/>
+        <circle class="ring-fill" id="ring-main" cx="100" cy="100" r="86" stroke="#5DDCFF"
+          stroke-dasharray="540.35"
+          stroke-dashoffset="194.5"/>
+      </svg>
+      <div class="ring-center">
+        <span class="material-symbols-outlined filled" style="font-size:20px;color:#5DDCFF;margin-bottom:4px;">water_drop</span>
+        <span id="current-ml" style="font-family:'Space Grotesk',sans-serif;font-size:38px;font-weight:700;color:#F5F7FA;line-height:1;">2.1L</span>
+        <span style="font-size:12px;color:#707987;margin-top:2px;">de <strong style="color:#A8B0BD;">3.0L</strong> meta</span>
+        <span id="pct-label" style="font-size:11px;color:#5DDCFF;font-weight:700;margin-top:6px;letter-spacing:0.08em;">70% — quase lá!</span>
+      </div>
+    </div>
+
+    <!-- Motivational copy -->
+    <div id="motivation-copy" style="margin-top:16px;text-align:center;padding:10px 16px;background:rgba(93,220,255,0.06);border:1px solid rgba(93,220,255,0.12);border-radius:10px;max-width:280px;">
+      <p style="font-size:13px;color:#A8B0BD;line-height:1.5;">Faltam <strong style="color:#5DDCFF;">900ml</strong> para bater a meta de hoje. Você está no ritmo certo.</p>
+    </div>
+  </div>
+
+  <!-- Add buttons -->
+  <div class="card" style="margin-bottom:12px;">
+    <div style="font-size:11px;font-weight:700;color:#707987;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px;">Adicionar</div>
+    <div style="display:flex;gap:8px;">
+      <div class="add-btn" onclick="addWater(250)">
+        <span class="material-symbols-outlined filled" style="font-size:22px;color:#5DDCFF;">water_drop</span>
+        <span class="vol">+250ml</span>
+        <span class="lbl">Copo</span>
+      </div>
+      <div class="add-btn" onclick="addWater(500)">
+        <span class="material-symbols-outlined filled" style="font-size:26px;color:#5DDCFF;">water_drop</span>
+        <span class="vol">+500ml</span>
+        <span class="lbl">Garrafa P</span>
+      </div>
+      <div class="add-btn" onclick="addWater(1000)">
+        <span class="material-symbols-outlined filled" style="font-size:30px;color:#5DDCFF;">water_drop</span>
+        <span class="vol">+1L</span>
+        <span class="lbl">Garrafa G</span>
+      </div>
+      <div class="add-btn" onclick="addCustom()">
+        <span class="material-symbols-outlined" style="font-size:22px;color:#A8B0BD;">edit</span>
+        <span class="vol" style="color:#A8B0BD;">Outro</span>
+        <span class="lbl">Qtd livre</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Streak -->
+  <div class="streak-badge" style="margin-bottom:12px;">
+    <span class="material-symbols-outlined filled" style="font-size:28px;color:#B7FF3C;">local_fire_department</span>
+    <div>
+      <div style="font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;color:#B7FF3C;">5 dias de streak</div>
+      <div style="font-size:12px;color:#A8B0BD;">Você bateu a meta de água 5 dias seguidos.</div>
+    </div>
+    <div style="margin-left:auto;text-align:right;">
+      <div style="font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:#B7FF3C;">+5 XP</div>
+      <div style="font-size:10px;color:#707987;">por dia</div>
+    </div>
+  </div>
+
+  <!-- Weekly history -->
+  <div class="card" style="margin-bottom:12px;">
+    <div style="font-size:11px;font-weight:700;color:#707987;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;">
+      <span>Histórico semanal</span>
+      <span style="color:#B7FF3C;">5/7 metas</span>
+    </div>
+    <div style="display:flex;gap:6px;justify-content:space-between;">
+      <!-- Each day bar -->
+      <div class="day-bar-wrap">
+        <div class="day-value">3.1</div>
+        <div class="day-bar-track"><div class="day-bar-fill" style="height:100%;background:#B7FF3C;"></div></div>
+        <div class="day-label">Seg</div>
+      </div>
+      <div class="day-bar-wrap">
+        <div class="day-value">2.8</div>
+        <div class="day-bar-track"><div class="day-bar-fill" style="height:93%;background:#B7FF3C;"></div></div>
+        <div class="day-label">Ter</div>
+      </div>
+      <div class="day-bar-wrap">
+        <div class="day-value">3.0</div>
+        <div class="day-bar-track"><div class="day-bar-fill" style="height:100%;background:#B7FF3C;"></div></div>
+        <div class="day-label">Qua</div>
+      </div>
+      <div class="day-bar-wrap">
+        <div class="day-value">1.8</div>
+        <div class="day-bar-track"><div class="day-bar-fill" style="height:60%;background:rgba(255,59,59,0.70);"></div></div>
+        <div class="day-label">Qui</div>
+      </div>
+      <div class="day-bar-wrap">
+        <div class="day-value">2.4</div>
+        <div class="day-bar-track"><div class="day-bar-fill" style="height:80%;background:#B7FF3C;"></div></div>
+        <div class="day-label">Sex</div>
+      </div>
+      <div class="day-bar-wrap">
+        <div class="day-value">1.5</div>
+        <div class="day-bar-track"><div class="day-bar-fill" style="height:50%;background:rgba(255,59,59,0.70);"></div></div>
+        <div class="day-label">Sáb</div>
+      </div>
+      <div class="day-bar-wrap">
+        <div class="day-value">2.1</div>
+        <div class="day-bar-track" style="border:1px solid rgba(93,220,255,0.25);">
+          <div class="day-bar-fill" style="height:70%;background:#5DDCFF;"></div>
+        </div>
+        <div class="day-label" style="color:#5DDCFF;">Hoje</div>
+      </div>
+    </div>
+    <!-- Goal line indicator -->
+    <div style="display:flex;align-items:center;gap:6px;margin-top:12px;">
+      <div style="height:1px;flex:1;background:rgba(183,255,60,0.20);"></div>
+      <span style="font-size:10px;color:#B7FF3C;font-weight:700;">META: 3.0L</span>
+      <div style="height:1px;flex:1;background:rgba(183,255,60,0.20);"></div>
+    </div>
+  </div>
+
+  <!-- Today's log -->
+  <div class="card">
+    <div style="font-size:11px;font-weight:700;color:#707987;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:14px;">Registro de hoje</div>
+    <div>
+      <div class="log-entry">
+        <div class="log-icon"><span class="material-symbols-outlined filled" style="font-size:18px;color:#5DDCFF;">water_drop</span></div>
+        <div style="flex:1;"><div style="font-size:14px;font-weight:600;color:#F5F7FA;">500ml</div><div style="font-size:11px;color:#707987;">08:32 — Garrafa</div></div>
+        <button style="background:none;border:none;color:rgba(255,255,255,0.20);cursor:pointer;padding:4px;"><span class="material-symbols-outlined" style="font-size:18px;">delete</span></button>
+      </div>
+      <div class="log-entry">
+        <div class="log-icon"><span class="material-symbols-outlined filled" style="font-size:18px;color:#5DDCFF;">water_drop</span></div>
+        <div style="flex:1;"><div style="font-size:14px;font-weight:600;color:#F5F7FA;">250ml</div><div style="font-size:11px;color:#707987;">10:15 — Copo</div></div>
+        <button style="background:none;border:none;color:rgba(255,255,255,0.20);cursor:pointer;padding:4px;"><span class="material-symbols-outlined" style="font-size:18px;">delete</span></button>
+      </div>
+      <div class="log-entry">
+        <div class="log-icon"><span class="material-symbols-outlined filled" style="font-size:18px;color:#5DDCFF;">water_drop</span></div>
+        <div style="flex:1;"><div style="font-size:14px;font-weight:600;color:#F5F7FA;">1.0L</div><div style="font-size:11px;color:#707987;">13:00 — Almoço</div></div>
+        <button style="background:none;border:none;color:rgba(255,255,255,0.20);cursor:pointer;padding:4px;"><span class="material-symbols-outlined" style="font-size:18px;">delete</span></button>
+      </div>
+      <div class="log-entry">
+        <div class="log-icon"><span class="material-symbols-outlined filled" style="font-size:18px;color:#5DDCFF;">water_drop</span></div>
+        <div style="flex:1;"><div style="font-size:14px;font-weight:600;color:#F5F7FA;">350ml</div><div style="font-size:11px;color:#707987;">15:44 — Pré-treino</div></div>
+        <button style="background:none;border:none;color:rgba(255,255,255,0.20);cursor:pointer;padding:4px;"><span class="material-symbols-outlined" style="font-size:18px;">delete</span></button>
+      </div>
+    </div>
+    <div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.05);display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-size:13px;color:#707987;">Total registrado</span>
+      <span style="font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;color:#5DDCFF;">2.100ml</span>
+    </div>
+  </div>
+
+  <!-- Goal achieved state (hidden by default, shown when 100%) -->
+  <div id="goal-achieved" class="goal-achieved" style="display:none;margin-top:12px;">
+    <span class="material-symbols-outlined filled" style="font-size:36px;color:#5DDCFF;display:block;margin-bottom:8px;">celebration</span>
+    <div style="font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;color:#F5F7FA;margin-bottom:6px;">Meta batida! 🎉</div>
+    <p style="font-size:13px;color:#A8B0BD;line-height:1.5;">Você chegou em 3.0L hoje. Hidratação é disciplina silenciosa — parabéns.</p>
+    <div style="margin-top:12px;font-size:12px;color:#5DDCFF;font-weight:700;">+5 XP conquistados</div>
+  </div>
+
+</main>
+
+<!-- Bottom Nav -->
+<nav class="bottom-nav">
+  <a class="nav-item" href="#"><span class="material-symbols-outlined">calendar_today</span>Hoje</a>
+  <a class="nav-item" href="#"><span class="material-symbols-outlined">fitness_center</span>Treinos</a>
+  <a class="nav-item" href="#"><span class="material-symbols-outlined">restaurant</span>Dietas</a>
+  <a class="nav-item" href="#"><span class="material-symbols-outlined">monitoring</span>Evolução</a>
+  <a class="nav-item" href="#"><span class="material-symbols-outlined">play_circle</span>Conteúdo</a>
+</nav>
+
+<script>
+let currentMl = 2100;
+const goalMl = 3000;
+const circumference = 2 * Math.PI * 86;
+
+function updateRing(ml) {
+  const pct = Math.min(ml / goalMl, 1);
+  const offset = circumference * (1 - pct);
+  document.getElementById('ring-main').style.strokeDashoffset = offset;
+  const liters = (ml / 1000).toFixed(1);
+  document.getElementById('current-ml').textContent = liters + 'L';
+  const pctInt = Math.round(pct * 100);
+
+  let copy = '';
+  let pctColor = '#5DDCFF';
+  if (pctInt < 30) { copy = 'Comece logo — hidratação é prioridade.'; }
+  else if (pctInt < 60) { copy = `Faltam <strong style="color:#5DDCFF;">${((goalMl-ml)/1000).toFixed(1)}L</strong> para bater a meta. Continua!`; }
+  else if (pctInt < 100) { copy = `Faltam <strong style="color:#5DDCFF;">${((goalMl-ml)/1000).toFixed(1)}L</strong> para bater a meta de hoje. Você está no ritmo certo.`; pctColor = '#5DDCFF'; }
+  else { copy = 'Meta batida! Hidratação perfeita hoje.'; pctColor = '#B7FF3C'; document.getElementById('goal-achieved').style.display='block'; document.getElementById('ring-main').style.stroke='#B7FF3C'; }
+
+  document.getElementById('pct-label').style.color = pctColor;
+  document.getElementById('pct-label').textContent = pctInt + (pctInt >= 100 ? '% — meta batida! 🎉' : pctInt >= 70 ? '% — quase lá!' : pctInt >= 40 ? '% — bom ritmo' : '% — vamos lá');
+  document.getElementById('motivation-copy').querySelector('p').innerHTML = copy;
+}
+
+function addWater(ml) {
+  currentMl = Math.min(currentMl + ml, goalMl + 500);
+  updateRing(currentMl);
+  // Add log entry
+  const log = document.querySelector('.card:last-of-type > div:first-of-type');
+  const now = new Date();
+  const timeStr = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+  const entry = document.createElement('div');
+  entry.className = 'log-entry';
+  const label = ml >= 1000 ? (ml/1000).toFixed(1)+'L' : ml+'ml';
+  entry.innerHTML = `<div class="log-icon"><span class="material-symbols-outlined filled" style="font-size:18px;color:#5DDCFF;">water_drop</span></div><div style="flex:1;"><div style="font-size:14px;font-weight:600;color:#F5F7FA;">${label}</div><div style="font-size:11px;color:#707987;">${timeStr} — Adicionado</div></div><button style="background:none;border:none;color:rgba(255,255,255,0.20);cursor:pointer;padding:4px;"><span class="material-symbols-outlined" style="font-size:18px;">delete</span></button>`;
+  const totalRow = document.querySelector('#current-ml').closest('main').querySelector('.card:last-of-type .card:last-of-type') || document.querySelector('[style*="border-top:1px solid rgba"]');
+  log.insertBefore(entry, log.lastElementChild);
+}
+
+function addCustom() {
+  const ml = parseInt(prompt('Quanto em ml?'));
+  if (ml && ml > 0) addWater(ml);
+}
+
+updateRing(currentMl);
+</script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+node_modules
+dist
+build
+.env
+.env.local
+.env.production
+.env.development
+.firebase
+.runtimeconfig.json
+serviceAccountKey.json
+*.log
+.DS_Store
+functions/node_modules
+functions/lib

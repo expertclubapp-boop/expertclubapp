@@ -1,0 +1,17 @@
+- main [ref=e4]:
+  - generic [ref=e5]:
+    - generic [ref=e6]: EXPERT CLUB
+    - heading "Bem-vindo ao Elite" [level=1] [ref=e7]
+    - paragraph [ref=e8]: Sua jornada expert começa aqui. Login rápido e seguro.
+  - generic [ref=e9]:
+    - generic [ref=e10]: Treinos Reais
+    - generic [ref=e11]: Macros Reais
+    - generic [ref=e12]: Resultados Expert
+  - generic [ref=e13]:
+    - paragraph [ref=e14]: Acesse sua conta
+    - button [disabled] [ref=e15]
+    - generic [ref=e17]:
+      - paragraph [ref=e18]: Ao entrar você aceita nossos Termos e Privacidade.
+      - link "Criar conta com E-mail →" [ref=e19] [cursor=pointer]:
+        - /url: /signup
+  - paragraph [ref=e21]: Precision · Performance · Evolution

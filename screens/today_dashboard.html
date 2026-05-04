@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Today Dashboard - Expert Club</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800;900&amp;family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-container": "#8B5CF6",
+                        "on-secondary-container": "#bfb2da",
+                        "surface-container": "#211f24",
+                        "on-error-container": "#ffdad6",
+                        "surface-tint": "#C4B5FD",
+                        "on-secondary-fixed-variant": "#4b4263",
+                        "surface-dim": "#141218",
+                        "surface-container-high": "#2b292f",
+                        "background": "#07080A",
+                        "inverse-on-surface": "#322f35",
+                        "secondary": "#cdc0e9",
+                        "surface": "#0D0F14",
+                        "on-primary-fixed-variant": "#4f378a",
+                        "tertiary": "#e7c365",
+                        "on-tertiary-fixed": "#241a00",
+                        "outline-variant": "#494551",
+                        "on-primary-container": "#e0d2ff",
+                        "surface-bright": "#3b383e",
+                        "outline": "rgba(255,255,255,0.08)",
+                        "surface-container-lowest": "#0f0d13",
+                        "on-primary": "#381e72",
+                        "tertiary-container": "#c9a74d",
+                        "on-tertiary": "#3e2e00",
+                        "inverse-primary": "#8B5CF6",
+                        "inverse-surface": "#e6e0e9",
+                        "tertiary-fixed-dim": "#e7c365",
+                        "on-tertiary-fixed-variant": "#594400",
+                        "primary-fixed": "#e9ddff",
+                        "on-secondary-fixed": "#1f1635",
+                        "surface-variant": "#36343a",
+                        "tertiary-fixed": "#ffdf93",
+                        "error": "#ffb4ab",
+                        "on-secondary": "#342b4b",
+                        "surface-container-highest": "#36343a",
+                        "primary-fixed-dim": "#C4B5FD",
+                        "on-primary-fixed": "#22005d",
+                        "secondary-fixed": "#e9ddff",
+                        "on-surface-variant": "#cbc4d2",
+                        "on-tertiary-container": "#503d00",
+                        "secondary-container": "#4d4465",
+                        "on-error": "#690005",
+                        "error-container": "#93000a",
+                        "on-surface": "#e6e0e9",
+                        "surface-container-low": "#1d1b20",
+                        "secondary-fixed-dim": "#cdc0e9",
+                        "on-background": "#e6e0e9",
+                        "primary": "#B7FF3C"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "md": "16px",
+                        "margin": "32px",
+                        "xl": "32px",
+                        "sm": "8px",
+                        "lg": "24px",
+                        "xs": "4px",
+                        "xxl": "48px",
+                        "gutter": "20px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Inter"],
+                        "h2": ["Space Grotesk"],
+                        "h3": ["Space Grotesk"],
+                        "ui-label": ["Inter"],
+                        "code-data": ["Inter"],
+                        "body-md": ["Inter"],
+                        "h1": ["Space Grotesk"],
+                        "display-xl": ["Space Grotesk"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "h2": ["32px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                        "h3": ["24px", {"lineHeight": "1.4", "fontWeight": "600"}],
+                        "ui-label": ["14px", {"lineHeight": "1", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                        "code-data": ["12px", {"lineHeight": "1", "fontWeight": "600"}],
+                        "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "h1": ["40px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "display-xl": ["64px", {"lineHeight": "1.1", "letterSpacing": "-0.04em", "fontWeight": "700"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #07080A;
+            color: #e6e0e9;
+        }
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+        }
+        @media (max-width: 768px) {
+            .bento-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .glass-card {
+            background: rgba(18, 21, 28, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-body-md text-on-background min-h-screen pb-32">
+<!-- TopAppBar -->
+<header class="bg-[#07080A]/80 backdrop-blur-xl border-b border-white/10 docked full-width top-0 sticky z-50 flex justify-between items-center w-full px-6 py-4">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full border border-[#B7FF3C]/30 overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="professional athlete profile portrait with focused expression and dark background with dramatic rim lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB1DpWWIHJWUVM6Df2SCH1jBf8B3776VZzqvdrAzUOmzayiyMQlsMf88IUEAtS9MVZFVxMex8WiD7IPJJAcLk960DnwlDMQj1CpaDTQcVWUT-cNZawKoyMXD3HMpsnTsZrWNFJJQOeJv0n_lagRATQUFvkXYhjRzZul8vBAQHPr9BbeJ8rOoXvc0u1HjRGRE6asxCZC6VzFnsdsfeqJud4bXZDibC8MXzwCdEs1P0qn9t4z0c1vHcHGpN6VV4zTcByxpSIv2m5miBA"/>
+</div>
+<div>
+<p class="font-ui-label text-white/60 text-xs uppercase tracking-widest">Bom dia, Rubens · Seg, 29 abr</p>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[#B7FF3C] text-sm" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
+<span class="font-['Space_Grotesk'] font-bold text-white">8 dias de streak</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<span class="font-['Space_Grotesk'] font-black italic text-[#B7FF3C] tracking-widest text-xl">EXPERT CLUB</span>
+<button class="text-[#B7FF3C] active:opacity-80 active:scale-95 transition-all">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+</div>
+</header>
+<main class="max-w-7xl mx-auto px-6 py-8">
+<!-- Dashboard Content -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+<!-- Treino do Dia (Major Focus) -->
+<div class="md:col-span-8 group relative overflow-hidden rounded-xl border border-white/10 bg-[#12151C] p-6 hover:border-[#B7FF3C]/40 transition-all">
+<div class="absolute top-0 right-0 w-64 h-64 bg-[#B7FF3C]/5 blur-[80px] -mr-32 -mt-32"></div>
+<div class="relative z-10 flex flex-col h-full justify-between">
+<div>
+<div class="flex items-center gap-2 mb-4">
+<span class="px-3 py-1 bg-[#B7FF3C]/10 text-[#B7FF3C] text-[10px] font-bold uppercase tracking-widest rounded-full border border-[#B7FF3C]/20">Treino do Dia</span>
+<span class="text-white/40 text-[10px] uppercase tracking-widest font-medium">Intermediário • 55 min</span>
+</div>
+<h2 class="font-h1 text-white mb-2">Lower Body Power &amp; Hypertrophy</h2>
+<p class="font-body-md text-white/60 max-w-md">Foco em explosão nos primeiros blocos e volume técnico na cadeia posterior para finalização.</p>
+</div>
+<div class="mt-8 flex items-end justify-between">
+<div class="flex gap-4">
+<div class="flex flex-col">
+<span class="text-[#B7FF3C] font-h3">6</span>
+<span class="text-white/40 text-[10px] uppercase tracking-widest">Exercícios</span>
+</div>
+<div class="w-[1px] h-10 bg-white/10"></div>
+<div class="flex flex-col">
+<span class="text-[#B7FF3C] font-h3">2.4k</span>
+<span class="text-white/40 text-[10px] uppercase tracking-widest">Kcal Est.</span>
+</div>
+</div>
+<button class="bg-[#B7FF3C] text-[#07080A] font-ui-label px-6 py-3 rounded-lg font-bold flex items-center gap-2 hover:scale-105 transition-transform active:scale-95">
+                            INICIAR TREINO
+                            <span class="material-symbols-outlined">play_arrow</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Dieta Recomendada -->
+<div class="md:col-span-4 rounded-xl border border-white/10 bg-[#12151C] p-6 flex flex-col justify-between">
+<div>
+<h3 class="font-h3 text-white mb-4">Dieta Recomendada</h3>
+<div class="space-y-4">
+<div class="flex items-center justify-between">
+<span class="text-white/60 text-sm">Carboidratos</span>
+<span class="text-white font-code-data">240g / 300g</span>
+</div>
+<div class="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
+<div class="h-full bg-primary rounded-full" style="width: 80%"></div>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-white/60 text-sm">Proteínas</span>
+<span class="text-white font-code-data">165g / 180g</span>
+</div>
+<div class="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
+<div class="h-full bg-[#5DDCFF] rounded-full" style="width: 92%"></div>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-white/60 text-sm">Gorduras</span>
+<span class="text-white font-code-data">58g / 75g</span>
+</div>
+<div class="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
+<div class="h-full bg-[#E7C365] rounded-full" style="width: 77%"></div>
+</div>
+</div>
+</div>
+<div class="mt-6 pt-6 border-t border-white/5">
+<button class="w-full border border-white/10 text-white font-ui-label py-2.5 rounded-lg flex items-center justify-center gap-2 hover:bg-white/5 transition-colors">
+                        VER CARDÁPIO COMPLETO
+                    </button>
+</div>
+</div>
+<!-- Hidratação Tracker -->
+<div class="md:col-span-3 rounded-xl border border-white/10 bg-[#12151C] p-6">
+<div class="flex items-center justify-between mb-4">
+<h3 class="font-ui-label text-white/80 uppercase tracking-widest text-xs">Hidratação</h3>
+<span class="material-symbols-outlined text-[#5DDCFF]">water_drop</span>
+</div>
+<div class="flex flex-col items-center mb-6">
+<span class="font-h2 text-white">2.4L</span>
+<span class="text-white/40 text-[10px] uppercase tracking-widest">Meta: 3.5L</span>
+</div>
+<div class="w-full h-2 bg-white/5 rounded-full mb-6 overflow-hidden">
+<div class="h-full bg-[#5DDCFF] rounded-full" style="width: 68%"></div>
+</div>
+<div class="grid grid-cols-2 gap-2">
+<button class="bg-white/5 hover:bg-white/10 text-white text-xs py-2 rounded-lg flex items-center justify-center gap-1 transition-all">
+<span class="material-symbols-outlined text-sm">add</span> 250ml
+                    </button>
+<button class="bg-white/5 hover:bg-white/10 text-white text-xs py-2 rounded-lg flex items-center justify-center gap-1 transition-all">
+<span class="material-symbols-outlined text-sm">add</span> 500ml
+                    </button>
+</div>
+</div>
+<!-- Daily Check-in CTA -->
+<div class="md:col-span-5 rounded-xl border-2 border-dashed border-[#B7FF3C]/20 bg-[#B7FF3C]/5 p-6 flex items-center gap-6">
+<div class="w-16 h-16 rounded-full bg-[#B7FF3C] flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-[#07080A] text-3xl">fact_check</span>
+</div>
+<div>
+<h3 class="font-h3 text-[#B7FF3C] mb-1">Check-in Diário</h3>
+<p class="text-sm text-white/60 mb-3">Hoje o foco não é perfeição. É execução. Registre como foi seu dia.</p>
+<button class="text-white font-ui-label text-sm font-bold flex items-center gap-2 hover:translate-x-1 transition-transform">
+                        FAZER AGORA <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Missão da Semana -->
+<div class="md:col-span-4 rounded-xl border border-white/10 bg-gradient-to-br from-[#12151C] to-[#07080A] p-6 relative overflow-hidden">
+<div class="relative z-10">
+<div class="flex items-center gap-2 mb-4">
+<span class="material-symbols-outlined text-tertiary">military_tech</span>
+<h3 class="font-ui-label text-white/80 uppercase tracking-widest text-xs">Missão da Semana</h3>
+</div>
+<p class="text-white font-body-md font-bold mb-4 italic">"Completar 4 treinos de alta intensidade e 30km de cardio total."</p>
+<div class="flex items-center gap-4">
+<div class="flex -space-x-2">
+<div class="w-8 h-8 rounded-full border-2 border-[#12151C] bg-zinc-800"></div>
+<div class="w-8 h-8 rounded-full border-2 border-[#12151C] bg-zinc-700"></div>
+<div class="w-8 h-8 rounded-full border-2 border-[#12151C] bg-[#B7FF3C] flex items-center justify-center text-[10px] text-[#07080A] font-bold">+12</div>
+</div>
+<span class="text-xs text-white/40">Outros membros na missão</span>
+</div>
+</div>
+<div class="absolute bottom-[-20%] right-[-10%] opacity-10">
+<span class="material-symbols-outlined text-[120px]">workspace_premium</span>
+</div>
+</div>
+<!-- Próxima Live -->
+<div class="md:col-span-12 rounded-xl border border-white/10 bg-[#12151C] p-1 flex flex-col md:flex-row overflow-hidden">
+<div class="md:w-1/3 h-48 md:h-auto relative">
+<img class="w-full h-full object-cover grayscale opacity-60" data-alt="high energy fitness workshop with professional trainers in a modern industrial gym studio setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCo3EKTZf6hFa4qm5SPtQaYZXzj0yJTBKFEG7F8rxZfjmt5P2E5S7tg6mXMqtLPY4NJGS2NGFqj87CbteDS09dccHStgdrZkja-YbUCUDTSfNyWM0eo7e3uOn3YqtqJkGhhHldxKSzt6zCv3KQ5ufw6s1GJfpRPlpMHQ1NnmpJBnew8Ih9DiLlLzsFKdcKjsXzGaKmeYqI-6tltmDMZfKRjuecnqFZzS48zK1ue4QnxPU7kiINae2a0qtTT8yPgn4weT3gSPm89hcg"/>
+<div class="absolute inset-0 bg-gradient-to-r from-[#12151C] via-transparent to-transparent"></div>
+<div class="absolute top-4 left-4">
+<span class="px-2 py-1 bg-red-600 text-white text-[10px] font-bold rounded flex items-center gap-1">
+<span class="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span> AO VIVO AMANHÃ
+                        </span>
+</div>
+</div>
+<div class="md:w-2/3 p-6 flex flex-col justify-center">
+<div class="flex items-center gap-4 mb-2">
+<span class="text-[#B7FF3C] font-code-data uppercase">19:00 BRT</span>
+<span class="text-white/40 font-code-data">•</span>
+<span class="text-white/60 text-sm">Biohacking &amp; Performance</span>
+</div>
+<h2 class="font-h2 text-white mb-4">Estratégias de Recuperação Avançada</h2>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-zinc-800"></div>
+<div>
+<p class="text-sm font-bold text-white">Dr. Ricardo Silva</p>
+<p class="text-xs text-white/40">Fisiologista do Exercício</p>
+</div>
+</div>
+<button class="border border-white/20 text-white px-6 py-2 rounded-lg font-ui-label hover:border-[#B7FF3C] hover:text-[#B7FF3C] transition-colors">LEMBRETE</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+
+<!-- WhatsApp Community CTA -->
+<div class="md:col-span-12 rounded-xl border border-white/10 p-6 flex items-center gap-5" style="background:linear-gradient(135deg,#0D1A0A,#07080A);border-color:rgba(183,255,60,0.12);">
+  <div style="width:52px;height:52px;background:rgba(37,211,102,0.15);border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+  </div>
+  <div style="flex:1;">
+    <div style="font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;color:#F5F7FA;margin-bottom:4px;">Comunidade Expert Club</div>
+    <p style="font-size:13px;color:#A8B0BD;line-height:1.4;">Relatos, fotos, motivação e suporte. 847 membros ativos esta semana.</p>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:8px;flex-shrink:0;">
+    <button style="background:#25D366;color:#07080A;font-weight:700;font-size:12px;border-radius:8px;padding:9px 16px;border:none;cursor:pointer;white-space:nowrap;font-family:Inter,sans-serif;">Entrar no grupo</button>
+    <button style="background:transparent;border:1px solid rgba(255,255,255,0.10);color:#A8B0BD;font-size:12px;border-radius:8px;padding:8px 16px;cursor:pointer;white-space:nowrap;font-family:Inter,sans-serif;">Compartilhar progresso</button>
+  </div>
+</div>
+
+</div>
+</main>
+<!-- BottomNavBar removed placeholder -->
+<nav class="bg-[#0D0F14]/95 backdrop-blur-md fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-3 pb-safe border-t border-white/10 shadow-2xl">
+<!-- Today (Active) -->
+<a class="flex flex-col items-center justify-center text-[#B7FF3C] bg-[#B7FF3C]/5 rounded-xl py-1 px-3 active:scale-110 duration-300 ease-out" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">calendar_today</span>
+<span class="font-['Space_Grotesk'] text-[10px] uppercase tracking-widest font-medium mt-1">Today</span>
+</a>
+<!-- Workouts -->
+<a class="flex flex-col items-center justify-center text-white/40 hover:text-white transition-all active:scale-110 duration-300 ease-out" href="#">
+<span class="material-symbols-outlined">fitness_center</span>
+<span class="font-['Space_Grotesk'] text-[10px] uppercase tracking-widest font-medium mt-1">Workouts</span>
+</a>
+<!-- Diets -->
+<a class="flex flex-col items-center justify-center text-white/40 hover:text-white transition-all active:scale-110 duration-300 ease-out" href="#">
+<span class="material-symbols-outlined">restaurant</span>
+<span class="font-['Space_Grotesk'] text-[10px] uppercase tracking-widest font-medium mt-1">Diets</span>
+</a>
+<!-- Evolution -->
+<a class="flex flex-col items-center justify-center text-white/40 hover:text-white transition-all active:scale-110 duration-300 ease-out" href="#">
+<span class="material-symbols-outlined">monitoring</span>
+<span class="font-['Space_Grotesk'] text-[10px] uppercase tracking-widest font-medium mt-1">Evolution</span>
+</a>
+<!-- Content -->
+<a class="flex flex-col items-center justify-center text-white/40 hover:text-white transition-all active:scale-110 duration-300 ease-out" href="#">
+<span class="material-symbols-outlined">play_circle</span>
+<span class="font-['Space_Grotesk'] text-[10px] uppercase tracking-widest font-medium mt-1">Content</span>
+</a>
+</nav>
+</body></html>

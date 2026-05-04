@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800;900&amp;family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-container": "#8B5CF6",
+                        "on-secondary-container": "#bfb2da",
+                        "surface-container": "#211f24",
+                        "on-error-container": "#ffdad6",
+                        "surface-tint": "#C4B5FD",
+                        "on-secondary-fixed-variant": "#4b4263",
+                        "surface-dim": "#141218",
+                        "surface-container-high": "#2b292f",
+                        "background": "#07080A",
+                        "inverse-on-surface": "#322f35",
+                        "secondary": "#cdc0e9",
+                        "surface": "#141218",
+                        "on-primary-fixed-variant": "#4f378a",
+                        "tertiary": "#e7c365",
+                        "on-tertiary-fixed": "#241a00",
+                        "outline-variant": "#494551",
+                        "on-primary-container": "#e0d2ff",
+                        "surface-bright": "#3b383e",
+                        "outline": "#948e9c",
+                        "surface-container-lowest": "#0f0d13",
+                        "on-primary": "#381e72",
+                        "tertiary-container": "#c9a74d",
+                        "on-tertiary": "#3e2e00",
+                        "inverse-primary": "#8B5CF6",
+                        "inverse-surface": "#e6e0e9",
+                        "tertiary-fixed-dim": "#e7c365",
+                        "on-tertiary-fixed-variant": "#594400",
+                        "primary-fixed": "#e9ddff",
+                        "on-secondary-fixed": "#1f1635",
+                        "surface-variant": "#36343a",
+                        "tertiary-fixed": "#ffdf93",
+                        "error": "#ffb4ab",
+                        "on-secondary": "#342b4b",
+                        "surface-container-highest": "#36343a",
+                        "primary-fixed-dim": "#C4B5FD",
+                        "on-primary-fixed": "#22005d",
+                        "secondary-fixed": "#e9ddff",
+                        "on-surface-variant": "#cbc4d2",
+                        "on-tertiary-container": "#503d00",
+                        "secondary-container": "#4d4465",
+                        "on-error": "#690005",
+                        "error-container": "#93000a",
+                        "on-surface": "#e6e0e9",
+                        "surface-container-low": "#1d1b20",
+                        "secondary-fixed-dim": "#cdc0e9",
+                        "on-background": "#e6e0e9",
+                        "primary": "#C4B5FD"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "md": "16px",
+                        "margin": "32px",
+                        "xl": "32px",
+                        "sm": "8px",
+                        "lg": "24px",
+                        "xs": "4px",
+                        "xxl": "48px",
+                        "gutter": "20px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Inter"],
+                        "h2": ["Space Grotesk"],
+                        "h3": ["Space Grotesk"],
+                        "ui-label": ["Inter"],
+                        "code-data": ["Inter"],
+                        "body-md": ["Inter"],
+                        "h1": ["Space Grotesk"],
+                        "display-xl": ["Space Grotesk"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "h2": ["32px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                        "h3": ["24px", {"lineHeight": "1.4", "fontWeight": "600"}],
+                        "ui-label": ["14px", {"lineHeight": "1", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                        "code-data": ["12px", {"lineHeight": "1", "fontWeight": "600"}],
+                        "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "h1": ["40px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "display-xl": ["64px", {"lineHeight": "1.1", "letterSpacing": "-0.04em", "fontWeight": "700"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .filled-icon {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #07080A;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-body-md text-on-background min-h-screen pb-32">
+<!-- TopAppBar -->
+<header class="bg-[#07080A]/80 backdrop-blur-xl border-b border-white/10 docked full-width top-0 sticky z-50 flex justify-between items-center w-full px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full border border-[#B7FF3C]/30 p-0.5 overflow-hidden">
+<img alt="User" class="w-full h-full object-cover rounded-full" data-alt="close-up portrait of a determined athletic man with short hair in soft studio lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC66hHcHKZfM-vDrsZP-10tR6GY1Z1mCotpMe3liQE1vo_yZP51YLOpC7KwNPlayIIfDLbTkz9V-r0tKRVVmSSYSKmdItymrvgq4r1b26xZkDMO-uHaHEbNTTv5_EXJM7h6FosoLAuDzc1kNX1r8ue5G9qkxl6Wi8gfonxsWoIl5cxaRjYikJJ-Lfy4cet_b9W55KNHXGupN8edsLMVA1M7oPzeppBcQylMr2Dimhazjrs8fyaQUJFFR5LJPseyHPAFMEcDJJ6qNIs"/>
+</div>
+<span class="text-xl font-black italic text-[#B7FF3C] tracking-widest font-['Space_Grotesk']">EXPERT CLUB</span>
+</div>
+<button class="text-white/60 hover:text-[#B7FF3C] transition-colors">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+</header>
+<main class="max-w-2xl mx-auto px-6 py-8">
+<!-- Motivational Micro-copy -->
+<section class="mb-10">
+<h1 class="font-h1 text-h1 mb-2">Check-in Diário</h1>
+<p class="text-white/60 font-body-md">A disciplina é o que separa o amador do <span class="text-[#B7FF3C] font-bold">expert</span>. Como foi o seu dia?</p>
+</section>
+<!-- Form Canvas -->
+<div class="space-y-6">
+<!-- Binary Toggles -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+<div class="bg-[#12151C] border border-white/10 p-5 rounded-xl group hover:border-[#B7FF3C]/30 transition-all duration-300">
+<div class="flex justify-between items-center mb-4">
+<span class="material-symbols-outlined text-[#B7FF3C]" data-icon="fitness_center">fitness_center</span>
+<input class="w-10 h-5 bg-[#07080A] rounded-full border-white/10 text-[#B7FF3C] focus:ring-0 appearance-none checked:bg-[#B7FF3C] relative cursor-pointer before:content-[''] before:absolute before:w-4 before:h-4 before:bg-white before:rounded-full before:top-0.5 before:left-0.5 checked:before:translate-x-5 before:transition-transform" type="checkbox"/>
+</div>
+<p class="font-ui-label text-ui-label text-white/90">Treinou hoje?</p>
+</div>
+<div class="bg-[#12151C] border border-white/10 p-5 rounded-xl group hover:border-[#B7FF3C]/30 transition-all duration-300">
+<div class="flex justify-between items-center mb-4">
+<span class="material-symbols-outlined text-[#B7FF3C]" data-icon="restaurant">restaurant</span>
+<input class="w-10 h-5 bg-[#07080A] rounded-full border-white/10 text-[#B7FF3C] focus:ring-0 appearance-none checked:bg-[#B7FF3C] relative cursor-pointer before:content-[''] before:absolute before:w-4 before:h-4 before:bg-white before:rounded-full before:top-0.5 before:left-0.5 checked:before:translate-x-5 before:transition-transform" type="checkbox"/>
+</div>
+<p class="font-ui-label text-ui-label text-white/90">Seguiu a dieta?</p>
+</div>
+<div class="bg-[#12151C] border border-white/10 p-5 rounded-xl group hover:border-[#B7FF3C]/30 transition-all duration-300">
+<div class="flex justify-between items-center mb-4">
+<span class="material-symbols-outlined text-[#B7FF3C]" data-icon="water_drop">water_drop</span>
+<input class="w-10 h-5 bg-[#07080A] rounded-full border-white/10 text-[#B7FF3C] focus:ring-0 appearance-none checked:bg-[#B7FF3C] relative cursor-pointer before:content-[''] before:absolute before:w-4 before:h-4 before:bg-white before:rounded-full before:top-0.5 before:left-0.5 checked:before:translate-x-5 before:transition-transform" type="checkbox"/>
+</div>
+<p class="font-ui-label text-ui-label text-white/90">Bateu água?</p>
+</div>
+</div>
+<!-- Quantitative Ratings -->
+<div class="bg-[#12151C] border border-white/10 rounded-xl overflow-hidden">
+<div class="p-6 border-b border-white/5">
+<div class="flex items-center gap-2 mb-4">
+<span class="material-symbols-outlined text-[#B7FF3C] text-sm" data-icon="bedtime">bedtime</span>
+<h3 class="font-h3 text-h3">Qualidade do Sono</h3>
+</div>
+<div class="flex justify-between gap-1">
+<!-- Rating buttons -->
+<button class="flex-1 py-3 text-sm font-bold bg-[#07080A] border border-white/5 rounded hover:border-[#B7FF3C] hover:text-[#B7FF3C] transition-all">1</button>
+<button class="flex-1 py-3 text-sm font-bold bg-[#07080A] border border-white/5 rounded hover:border-[#B7FF3C] hover:text-[#B7FF3C] transition-all">2</button>
+<button class="flex-1 py-3 text-sm font-bold bg-[#07080A] border border-white/5 rounded hover:border-[#B7FF3C] hover:text-[#B7FF3C] transition-all">3</button>
+<button class="flex-1 py-3 text-sm font-bold bg-[#07080A] border border-white/5 rounded hover:border-[#B7FF3C] hover:text-[#B7FF3C] transition-all">4</button>
+<button class="flex-1 py-3 text-sm font-bold bg-[#07080A] border border-white/5 rounded hover:border-[#B7FF3C] hover:text-[#B7FF3C] transition-all">5</button>
+<button class="flex-1 py-3 text-sm font-bold bg-[#07080A] border border-[#B7FF3C] text-[#B7FF3C] bg-[#B7FF3C]/5 rounded">6</button>
+<button class="flex-1 py-3 text-sm font-bold bg-[#07080A] border border-white/5 rounded hover:border-[#B7FF3C] hover:text-[#B7FF3C] transition-all">7</button>
+<button class="flex-1 py-3 text-sm font-bold bg-[#07080A] border border-white/5 rounded hover:border-[#B7FF3C] hover:text-[#B7FF3C] transition-all">8</button>
+<button class="flex-1 py-3 text-sm font-bold bg-[#07080A] border border-white/5 rounded hover:border-[#B7FF3C] hover:text-[#B7FF3C] transition-all">9</button>
+<button class="flex-1 py-3 text-sm font-bold bg-[#07080A] border border-white/5 rounded hover:border-[#B7FF3C] hover:text-[#B7FF3C] transition-all">10</button>
+</div>
+</div>
+<div class="p-6 border-b border-white/5">
+<div class="flex items-center gap-2 mb-4">
+<span class="material-symbols-outlined text-[#B7FF3C] text-sm" data-icon="mood">mood</span>
+<h3 class="font-h3 text-h3">Humor</h3>
+</div>
+<input class="w-full h-1 bg-[#07080A] appearance-none cursor-pointer rounded-lg accent-[#B7FF3C]" max="10" min="0" type="range" value="8"/>
+<div class="flex justify-between mt-2 text-[10px] text-white/40 uppercase tracking-widest font-bold">
+<span>Péssimo</span>
+<span>Neutro</span>
+<span>Incrível</span>
+</div>
+</div>
+<div class="p-6">
+<div class="flex items-center gap-2 mb-4">
+<span class="material-symbols-outlined text-[#B7FF3C] text-sm" data-icon="bolt">bolt</span>
+<h3 class="font-h3 text-h3">Nível de Energia</h3>
+</div>
+<div class="flex gap-2">
+<button class="px-4 py-2 rounded-full border border-white/10 text-white/60 hover:border-[#B7FF3C] hover:text-white transition-all text-xs font-bold uppercase tracking-wider">Baixa</button>
+<button class="px-4 py-2 rounded-full border border-[#B7FF3C] text-[#B7FF3C] bg-[#B7FF3C]/10 text-xs font-bold uppercase tracking-wider">Moderada</button>
+<button class="px-4 py-2 rounded-full border border-white/10 text-white/60 hover:border-[#B7FF3C] hover:text-white transition-all text-xs font-bold uppercase tracking-wider">Alta</button>
+<button class="px-4 py-2 rounded-full border border-white/10 text-white/60 hover:border-[#B7FF3C] hover:text-white transition-all text-xs font-bold uppercase tracking-wider">Elite</button>
+</div>
+</div>
+</div>
+<!-- Notes Section -->
+<div class="space-y-3">
+<label class="block font-ui-label text-ui-label text-white/60">Notas e Observações</label>
+<textarea class="w-full bg-[#07080A] border border-white/10 rounded-xl focus:border-[#5DDCFF] focus:ring-0 text-white p-4 placeholder:text-white/20 transition-all" placeholder="Como você se sentiu hoje? Alguma dor ou conquista especial?" rows="4"></textarea>
+</div>
+<!-- Action Button -->
+<button class="w-full bg-[#B7FF3C] text-[#07080A] py-5 rounded-xl font-bold text-lg hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-2">
+                Salvar Check-in
+                <span class="material-symbols-outlined" data-icon="check_circle">check_circle</span>
+</button>
+</div>
+<!-- Weekly Summary Teaser (Bento-style) -->
+<div class="mt-12 grid grid-cols-2 gap-4">
+<div class="col-span-2 bg-gradient-to-br from-[#12151C] to-[#07080A] border border-white/10 p-6 rounded-2xl relative overflow-hidden group">
+<div class="relative z-10">
+<h4 class="font-h3 text-h3 mb-1">Sequência Atual</h4>
+<div class="flex items-end gap-2">
+<span class="text-4xl font-black text-[#B7FF3C] italic">12</span>
+<span class="text-white/40 font-bold uppercase text-[10px] pb-1 tracking-widest">Dias Imparáveis</span>
+</div>
+</div>
+<div class="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity">
+<span class="material-symbols-outlined text-9xl text-white" data-icon="local_fire_department">local_fire_department</span>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-3 pb-safe bg-[#0D0F14]/95 backdrop-blur-md border-t border-white/10 shadow-2xl">
+<a class="flex flex-col items-center justify-center text-[#B7FF3C] bg-[#B7FF3C]/5 rounded-xl py-1 px-3" href="#">
+<span class="material-symbols-outlined filled-icon" data-icon="calendar_today">calendar_today</span>
+<span class="font-['Space_Grotesk'] text-[10px] uppercase tracking-widest font-medium mt-1">Today</span>
+</a>
+<a class="flex flex-col items-center justify-center text-white/40 hover:text-white transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="fitness_center">fitness_center</span>
+<span class="font-['Space_Grotesk'] text-[10px] uppercase tracking-widest font-medium mt-1">Workouts</span>
+</a>
+<a class="flex flex-col items-center justify-center text-white/40 hover:text-white transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="restaurant">restaurant</span>
+<span class="font-['Space_Grotesk'] text-[10px] uppercase tracking-widest font-medium mt-1">Diets</span>
+</a>
+<a class="flex flex-col items-center justify-center text-white/40 hover:text-white transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="monitoring">monitoring</span>
+<span class="font-['Space_Grotesk'] text-[10px] uppercase tracking-widest font-medium mt-1">Evolution</span>
+</a>
+<a class="flex flex-col items-center justify-center text-white/40 hover:text-white transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="play_circle">play_circle</span>
+<span class="font-['Space_Grotesk'] text-[10px] uppercase tracking-widest font-medium mt-1">Content</span>
+</a>
+</nav>
+</body></html>

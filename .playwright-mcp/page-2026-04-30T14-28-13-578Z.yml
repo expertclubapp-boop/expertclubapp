@@ -1,0 +1,310 @@
+- generic [ref=e3]:
+  - main [ref=e5]:
+    - generic [ref=e7]:
+      - generic [ref=e10]:
+        - navigation "Navegação principal" [ref=e11]:
+          - link "Expert Club" [ref=e12] [cursor=pointer]:
+            - /url: "#topo"
+            - generic [ref=e18]: Expert Club
+          - generic [ref=e19]:
+            - link "Método" [ref=e20] [cursor=pointer]:
+              - /url: "#metodo"
+            - link "Dentro do app" [ref=e21] [cursor=pointer]:
+              - /url: "#recebe"
+            - link "Plano" [ref=e22] [cursor=pointer]:
+              - /url: "#preco"
+            - link "Dúvidas" [ref=e23] [cursor=pointer]:
+              - /url: "#duvidas"
+          - link "Menu" [ref=e24] [cursor=pointer]:
+            - /url: "#recebe"
+            - img [ref=e25]
+            - text: Menu
+        - generic [ref=e26]:
+          - heading "Treino, dieta e constância com cara de produto premium." [level=1] [ref=e32]:
+            - text: Treino, dieta e constância com cara de
+            - emphasis [ref=e33]: produto premium
+            - text: .
+          - paragraph [ref=e34]: "O Expert Club transforma sua rotina em um cockpit fitness: você abre o app, vê o que precisa fazer hoje e registra sua evolução sem depender de improviso."
+          - generic [ref=e35]:
+            - link "Explorar agora" [ref=e36] [cursor=pointer]:
+              - /url: /app/billing/plans
+              - text: Explorar agora
+              - img [ref=e38]
+            - link "Ver dentro do app" [ref=e41] [cursor=pointer]:
+              - /url: "#recebe"
+              - text: Ver dentro do app
+              - img [ref=e42]
+          - generic [ref=e44]:
+            - generic [ref=e45]: Treino do dia
+            - generic [ref=e46]: Dieta ativa
+            - generic [ref=e47]: Check-ins
+        - generic [ref=e48]:
+          - paragraph [ref=e49]: Direção diária
+          - paragraph [ref=e50]: "\"Você não precisa decidir tudo de novo. Precisa executar o plano certo de hoje.\""
+          - generic [ref=e51]: Expert Club
+      - complementary [ref=e54]:
+        - generic [ref=e55]:
+          - generic [ref=e56]:
+            - link "Twitter Expert Club" [ref=e57] [cursor=pointer]:
+              - /url: "#topo"
+              - img [ref=e58]
+            - link "LinkedIn Expert Club" [ref=e60] [cursor=pointer]:
+              - /url: "#topo"
+              - img [ref=e61]
+            - link "Instagram Expert Club" [ref=e65] [cursor=pointer]:
+              - /url: "#topo"
+              - img [ref=e66]
+            - link "Ir para plano" [ref=e69] [cursor=pointer]:
+              - /url: "#preco"
+              - img [ref=e70]
+          - generic [ref=e72]:
+            - link "Destaques Expert Club" [ref=e73] [cursor=pointer]:
+              - /url: "#recebe"
+              - img [ref=e74]
+            - link "Account A" [ref=e76] [cursor=pointer]:
+              - /url: /login
+              - text: Account
+              - generic [ref=e77]: A
+        - generic [ref=e79]:
+          - paragraph [ref=e80]: Entre no método
+          - paragraph [ref=e81]: Treino, dieta, check-ins e comunidade conectados em uma rotina de execução.
+        - generic [ref=e83]:
+          - generic [ref=e84]:
+            - generic [ref=e85]:
+              - img [ref=e87]
+              - paragraph [ref=e90]: Planejamento
+              - paragraph [ref=e91]: O app organiza o que fazer hoje sem transformar sua rotina em planilha.
+            - generic [ref=e92]:
+              - img [ref=e94]
+              - paragraph [ref=e96]: Histórico de evolução
+              - paragraph [ref=e97]: Check-ins, medidas e fotos dão contexto para manter constância.
+          - generic [ref=e98]:
+            - img "Pessoa treinando em academia premium" [ref=e99]
+            - generic [ref=e100]:
+              - paragraph [ref=e101]: Execução guiada
+              - paragraph [ref=e102]: Séries, carga, descanso e foco para sair do treino solto.
+            - link "Ver execução guiada" [ref=e103] [cursor=pointer]:
+              - /url: "#recebe"
+              - text: +
+    - generic [ref=e105]:
+      - generic [ref=e106]:
+        - generic [ref=e107]: Método Expert
+        - heading "Menos tela genérica. Mais direção de execução." [level=2] [ref=e108]:
+          - text: Menos tela genérica. Mais
+          - emphasis [ref=e109]: direção de execução
+          - text: .
+        - paragraph [ref=e110]: "A referência visual vira produto quando cada superfície responde a uma pergunta simples: o que o aluno precisa fazer agora?"
+      - generic [ref=e111]:
+        - generic [ref=e112]:
+          - generic [ref=e113]:
+            - img [ref=e115]
+            - generic [ref=e119]: "01"
+          - heading "Direção" [level=3] [ref=e120]
+          - paragraph [ref=e121]: "Você abre o app e enxerga o que importa hoje: treino, dieta, água e check-in."
+        - generic [ref=e122]:
+          - generic [ref=e123]:
+            - img [ref=e125]
+            - generic [ref=e128]: "02"
+          - heading "Execução" [level=3] [ref=e129]
+          - paragraph [ref=e130]: A tela de treino vira um modo foco, com séries, carga, descanso e progresso no mesmo fluxo.
+        - generic [ref=e131]:
+          - generic [ref=e132]:
+            - img [ref=e134]
+            - generic [ref=e138]: "03"
+          - heading "Ajuste" [level=3] [ref=e139]
+          - paragraph [ref=e140]: Check-ins e histórico mostram se você está avançando, travando ou precisando ajustar a rotina.
+    - generic [ref=e142]:
+      - generic [ref=e143]:
+        - generic [ref=e144]: Dentro do app
+        - heading "Um cockpit fitness para o dia inteiro." [level=2] [ref=e145]
+        - paragraph [ref=e146]: Treino, dieta, água, check-in e comunidade aparecem como camadas de uma mesma experiência, com hierarquia e foco.
+      - generic [ref=e147]:
+        - generic [ref=e149]:
+          - generic [ref=e150]:
+            - generic [ref=e151]:
+              - paragraph [ref=e152]: Dashboard
+              - heading "Hoje" [level=3] [ref=e153]
+            - generic [ref=e154]: 4 tarefas
+          - generic [ref=e155]:
+            - generic [ref=e156]:
+              - generic [ref=e157]:
+                - img [ref=e159]
+                - generic [ref=e165]:
+                  - paragraph [ref=e166]: Treino de hoje
+                  - paragraph [ref=e167]: Inferiores + cardio
+              - generic [ref=e168]:
+                - generic [ref=e169]: 5 exercícios
+                - generic [ref=e170]: 42 min
+                - generic [ref=e171]: Carga
+            - generic [ref=e172]:
+              - generic [ref=e173]:
+                - img [ref=e174]
+                - paragraph [ref=e177]: Água
+                - paragraph [ref=e178]: 1,5L
+              - generic [ref=e181]:
+                - img [ref=e182]
+                - paragraph [ref=e186]: Check-in
+                - paragraph [ref=e187]: Hoje
+                - paragraph [ref=e188]: Sono, fome e adesão
+            - generic [ref=e189]:
+              - generic [ref=e190]:
+                - generic [ref=e191]:
+                  - paragraph [ref=e192]: Dieta ativa
+                  - paragraph [ref=e193]: Recomposição
+                - img [ref=e194]
+              - generic [ref=e197]:
+                - paragraph [ref=e200]: Proteína
+                - paragraph [ref=e203]: Carbo
+                - paragraph [ref=e206]: Gordura
+        - generic [ref=e207]:
+          - generic [ref=e208]:
+            - generic [ref=e209]:
+              - img [ref=e211]
+              - generic [ref=e217]: 5 exercícios hoje
+            - heading "Treinos por objetivo" [level=3] [ref=e218]
+            - paragraph [ref=e219]: Escolha o treino certo para hipertrofia, emagrecimento ou recomposição e registre execução sem improviso.
+          - generic [ref=e220]:
+            - generic [ref=e221]:
+              - img [ref=e223]
+              - generic [ref=e226]: 5 refeições
+            - heading "Dietas e macros" [level=3] [ref=e227]
+            - paragraph [ref=e228]: Modelos por objetivo com refeições, quantidades, macros e substituições para manter clareza durante a semana.
+          - generic [ref=e229]:
+            - generic [ref=e230]:
+              - img [ref=e232]
+              - generic [ref=e236]: Diário + semanal
+            - heading "Check-ins e evolução" [level=3] [ref=e237]
+            - paragraph [ref=e238]: Peso, medidas, fotos, sono, fome e adesão em uma rotina simples de acompanhamento.
+          - generic [ref=e239]:
+            - generic [ref=e240]:
+              - img [ref=e242]
+              - generic [ref=e248]: Ciclo mensal
+            - heading "Comunidade e desafios" [level=3] [ref=e249]
+            - paragraph [ref=e250]: Ciclos mensais, grupo e missões para transformar execução em ritmo, não em motivação solta.
+    - generic [ref=e253]:
+      - generic [ref=e254]:
+        - generic [ref=e255]:
+          - generic [ref=e256]: Antes e depois
+          - heading "O app deixa de parecer lista e passa a parecer experiência guiada." [level=2] [ref=e257]:
+            - text: O app deixa de parecer lista e passa a parecer
+            - emphasis [ref=e258]: experiência guiada
+            - text: .
+          - paragraph [ref=e259]: "A estética liquid-glass foi traduzida para superfícies úteis: status, ação, progresso e decisão. Bonito, mas principalmente claro."
+        - generic [ref=e260]:
+          - generic [ref=e261]:
+            - img [ref=e262]
+            - paragraph [ref=e265]: Antes
+            - paragraph [ref=e266]: Treino perdido, dieta solta e evolução na memória.
+          - generic [ref=e267]:
+            - img [ref=e268]
+            - paragraph [ref=e270]: Depois
+            - paragraph [ref=e271]: Hoje claro, registros fáceis e progresso visível.
+      - generic [ref=e272]:
+        - generic [ref=e274]:
+          - generic [ref=e275]:
+            - img [ref=e276]
+            - text: Hoje
+          - generic [ref=e279]: 4 tarefas
+        - generic [ref=e281]:
+          - generic [ref=e282]:
+            - img [ref=e283]
+            - text: Água
+          - generic [ref=e286]: 1,5L/3L
+        - generic [ref=e288]:
+          - generic [ref=e289]:
+            - img [ref=e290]
+            - text: Streak
+          - generic [ref=e292]: 12 dias
+    - generic [ref=e294]:
+      - generic [ref=e295]:
+        - generic [ref=e296]: Plano fundador
+        - heading "Entre no ciclo inicial por R$ 49/mês." [level=2] [ref=e297]
+        - paragraph [ref=e298]: Um plano acessível para organizar execução, acompanhar evolução e participar da comunidade sem contratar uma consultoria individual.
+      - generic [ref=e300]:
+        - generic [ref=e302]: Fundador
+        - generic [ref=e303]:
+          - paragraph [ref=e304]: Assinatura mensal
+          - generic [ref=e305]:
+            - generic [ref=e306]: R$ 49
+            - generic [ref=e307]: /mês
+        - generic [ref=e308]:
+          - generic [ref=e309]:
+            - img [ref=e310]
+            - generic [ref=e312]: Dashboard Hoje
+          - generic [ref=e313]:
+            - img [ref=e314]
+            - generic [ref=e316]: Treinos por objetivo
+          - generic [ref=e317]:
+            - img [ref=e318]
+            - generic [ref=e320]: Dietas por objetivo
+          - generic [ref=e321]:
+            - img [ref=e322]
+            - generic [ref=e324]: Execução de treino
+          - generic [ref=e325]:
+            - img [ref=e326]
+            - generic [ref=e328]: Check-ins
+          - generic [ref=e329]:
+            - img [ref=e330]
+            - generic [ref=e332]: Hidratação
+          - generic [ref=e333]:
+            - img [ref=e334]
+            - generic [ref=e336]: Evolução
+          - generic [ref=e337]:
+            - img [ref=e338]
+            - generic [ref=e340]: Desafios
+          - generic [ref=e341]:
+            - img [ref=e342]
+            - generic [ref=e344]: Conteúdos
+          - generic [ref=e345]:
+            - img [ref=e346]
+            - generic [ref=e348]: Comunidade WhatsApp
+        - generic [ref=e349]:
+          - link "Quero meu acesso fundador" [ref=e350] [cursor=pointer]:
+            - /url: /app/billing/plans
+            - text: Quero meu acesso fundador
+            - img [ref=e351]
+          - paragraph [ref=e353]: Cancele quando quiser. Checkout via Mercado Pago.
+    - generic [ref=e355]:
+      - generic [ref=e356]:
+        - generic [ref=e357]: Dúvidas
+        - heading "Perguntas antes de entrar" [level=2] [ref=e358]
+      - generic [ref=e359]:
+        - generic [ref=e360]:
+          - button "Isso é uma consultoria individual?" [expanded] [ref=e361] [cursor=pointer]:
+            - generic [ref=e362]: Isso é uma consultoria individual?
+            - img [ref=e363]
+          - generic [ref=e365]: Não. O Expert Club é uma assinatura com app, planos, check-ins, conteúdos e comunidade. Para acompanhamento 100% individual, existe a consultoria.
+        - button "A dieta é feita só para mim?" [ref=e367] [cursor=pointer]:
+          - generic [ref=e368]: A dieta é feita só para mim?
+          - img [ref=e369]
+        - button "O treino é personalizado?" [ref=e372] [cursor=pointer]:
+          - generic [ref=e373]: O treino é personalizado?
+          - img [ref=e374]
+        - button "Eu posso cancelar?" [ref=e377] [cursor=pointer]:
+          - generic [ref=e378]: Eu posso cancelar?
+          - img [ref=e379]
+        - button "Como recebo acesso?" [ref=e382] [cursor=pointer]:
+          - generic [ref=e383]: Como recebo acesso?
+          - img [ref=e384]
+    - generic [ref=e388]:
+      - img [ref=e390]
+      - heading "Um produto fitness premium para quem quer parar de improvisar." [level=2] [ref=e393]
+      - paragraph [ref=e394]: Entre, siga o plano de hoje, registre sua execução e mantenha a evolução visível.
+      - link "Entrar no Expert Club" [ref=e396] [cursor=pointer]:
+        - /url: /app/billing/plans
+        - text: Entrar no Expert Club
+        - img [ref=e397]
+      - generic [ref=e399]:
+        - generic [ref=e400]:
+          - img [ref=e401]
+          - text: Conteúdos
+        - generic [ref=e404]:
+          - img [ref=e405]
+          - text: Comunidade
+        - generic [ref=e410]:
+          - img [ref=e411]
+          - text: WhatsApp
+  - contentinfo [ref=e413]:
+    - generic [ref=e414]:
+      - paragraph [ref=e415]: Expert Club
+      - paragraph [ref=e416]: Treino, dieta, check-ins e comunidade para você saber o que fazer hoje.

@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>EXPERT CLUB - Content &amp; Live Classes</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;900&amp;family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "primary-container": "#8B5CF6",
+                    "on-secondary-container": "#bfb2da",
+                    "surface-container": "#211f24",
+                    "on-error-container": "#ffdad6",
+                    "surface-tint": "#C4B5FD",
+                    "on-secondary-fixed-variant": "#4b4263",
+                    "surface-dim": "#141218",
+                    "surface-container-high": "#2b292f",
+                    "background": "#07080A",
+                    "inverse-on-surface": "#322f35",
+                    "secondary": "#cdc0e9",
+                    "surface": "#141218",
+                    "on-primary-fixed-variant": "#4f378a",
+                    "tertiary": "#e7c365",
+                    "on-tertiary-fixed": "#241a00",
+                    "outline-variant": "#494551",
+                    "on-primary-container": "#e0d2ff",
+                    "surface-bright": "#3b383e",
+                    "outline": "#948e9c",
+                    "surface-container-lowest": "#0f0d13",
+                    "on-primary": "#381e72",
+                    "tertiary-container": "#c9a74d",
+                    "on-tertiary": "#3e2e00",
+                    "inverse-primary": "#8B5CF6",
+                    "inverse-surface": "#e6e0e9",
+                    "tertiary-fixed-dim": "#e7c365",
+                    "on-tertiary-fixed-variant": "#594400",
+                    "primary-fixed": "#e9ddff",
+                    "on-secondary-fixed": "#1f1635",
+                    "surface-variant": "#36343a",
+                    "tertiary-fixed": "#ffdf93",
+                    "error": "#ffb4ab",
+                    "on-secondary": "#342b4b",
+                    "surface-container-highest": "#36343a",
+                    "primary-fixed-dim": "#C4B5FD",
+                    "on-primary-fixed": "#22005d",
+                    "secondary-fixed": "#e9ddff",
+                    "on-surface-variant": "#cbc4d2",
+                    "on-tertiary-container": "#503d00",
+                    "secondary-container": "#4d4465",
+                    "on-error": "#690005",
+                    "error-container": "#93000a",
+                    "on-surface": "#e6e0e9",
+                    "surface-container-low": "#1d1b20",
+                    "secondary-fixed-dim": "#cdc0e9",
+                    "on-background": "#e6e0e9",
+                    "primary": "#B7FF3C"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "md": "16px",
+                    "margin": "32px",
+                    "xl": "32px",
+                    "sm": "8px",
+                    "lg": "24px",
+                    "xs": "4px",
+                    "xxl": "48px",
+                    "gutter": "20px"
+            },
+            "fontFamily": {
+                    "body-lg": ["Inter"],
+                    "h2": ["Space Grotesk"],
+                    "h3": ["Space Grotesk"],
+                    "ui-label": ["Inter"],
+                    "code-data": ["Inter"],
+                    "body-md": ["Inter"],
+                    "h1": ["Space Grotesk"],
+                    "display-xl": ["Space Grotesk"]
+            },
+            "fontSize": {
+                    "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "h2": ["32px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                    "h3": ["24px", {"lineHeight": "1.4", "fontWeight": "600"}],
+                    "ui-label": ["14px", {"lineHeight": "1", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                    "code-data": ["12px", {"lineHeight": "1", "fontWeight": "600"}],
+                    "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "h1": ["40px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "display-xl": ["64px", {"lineHeight": "1.1", "letterSpacing": "-0.04em", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .glass-card {
+            background: rgba(18, 21, 28, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .text-glow-lime {
+            text-shadow: 0 0 15px rgba(183, 255, 60, 0.4);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-[#07080A] text-on-background font-body-md min-h-screen pb-32">
+<!-- TopAppBar -->
+<header class="bg-[#07080A]/80 backdrop-blur-xl border-b border-white/10 docked full-width top-0 sticky z-50 flex justify-between items-center w-full px-6 py-4">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full border border-[#B7FF3C]/30 overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="professional athlete profile headshot with dramatic lighting and dark background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCvDgfa2HSZsCYgPE1x_FUo2twOrIWHts6NEf163gr1KVWvIHImANqOIQr11aK8WB105uCvssem7WIJdPWjzXMDM7IV5OCwC8yWOoX9ZrPs54kZb62RgTcY6WoyOxImBB_3g5238FtVDBSaBWpdd2oWN0QF6yFDeSwHFMp6Ipvrpw9fyBufGB7DlJ4GRoFTN48L1CMV1s0b2TQpc1cfFCicKLKGj0K2EvCIMJFtu2rJ7FSQhrzxJ0Y9FhaWZcz0j3TuiRWOUuImNHs"/>
+</div>
+<h1 class="font-['Space_Grotesk'] font-bold tracking-tighter text-xl italic text-[#B7FF3C] tracking-widest">EXPERT CLUB</h1>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-white/60 hover:text-[#B7FF3C] transition-colors">
+<span class="material-symbols-outlined">search</span>
+</button>
+<button class="text-white/60 hover:text-[#B7FF3C] transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+</div>
+</header>
+<main class="max-w-7xl mx-auto px-6 py-8">
+<!-- Hero: Próximas Lives (Bento Style) -->
+<section class="mb-12">
+<div class="flex items-center justify-between mb-6">
+<h2 class="font-h2 text-h2 text-white">Próximas Lives</h2>
+<span class="text-xs font-code-data text-[#B7FF3C] bg-[#B7FF3C]/10 px-3 py-1 rounded-full border border-[#B7FF3C]/20 uppercase tracking-widest">Ao Vivo em Breve</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-12 gap-6 h-auto md:h-[420px]">
+<!-- Main Featured Live -->
+<div class="md:col-span-8 relative group overflow-hidden rounded-xl border border-white/10">
+<img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="ultra-modern gym interior with neon lime lighting and high-end fitness equipment, cinematic atmosphere" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB0K48bVubF4PV24u2os9y1-dWHka7H7gZBh7FEvRVgxBFW9lzMqm1hKhwqHPWWE9HwXAB6SsUrxPLoaciKKUyHm3rACry36CSbdohdkgXykO1sDQHWmwuMvV0kARLnoFnR1-Ta3Q9SVTJvKFX1U36Bs9SBbUlPumHyVJwrDi2HhEiLHyv5dgXn7eqQ6_glUgNGJOrLaZ09CQM2aIPKIDLjwh0KEnLyDC-AV_IgiuwoW4dPJ8jOfxOHZIiJu_BKF4mAzCri-GyyGEk"/>
+<div class="absolute inset-0 bg-gradient-to-t from-[#07080A] via-transparent to-transparent opacity-90"></div>
+<div class="absolute bottom-0 left-0 p-8 w-full">
+<div class="flex items-center gap-3 mb-4">
+<span class="bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1">
+<span class="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span> AO VIVO
+                            </span>
+<span class="text-white/70 text-sm font-ui-label">Hoje, 20:00 • Nutrição Avançada</span>
+</div>
+<h3 class="font-h1 text-h1 text-white mb-4 leading-tight">Protocolo de Periodização Nutricional para Hipertrofia</h3>
+<div class="flex flex-wrap items-center gap-4">
+<button class="bg-[#B7FF3C] text-[#07080A] font-bold px-8 py-3 rounded-lg flex items-center gap-2 hover:scale-105 transition-all active:scale-95">
+<span class="material-symbols-outlined">notifications_active</span> Lembrar-me
+                            </button>
+<div class="flex -space-x-3">
+<img class="w-10 h-10 rounded-full border-2 border-[#07080A] object-cover" data-alt="male portrait small" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBAsyUy2Dy7OLcOY8ddvaZuYqitSFq-b11xOcvVJiGbHT_63zPDhBn9VgtEVe7rZEDN9D-Broi9oD9RpyELbrMJxV1QcQyH7nOXJHf4I-8CNP-UdYvE5R7cGHRaIhfgH32p59Kth3XPipVWdrLvG6g3fs5H_VV3yBOMQqqVnDk2bsLif8WtshTZKipMMjmsy7GttRY7e1IQRKZYu_CDLKi4ZQhdBbmmEwmXx2jDf9CDJHVLoXRhVcQKznwf4QKDCw8dBJbIZfsgIOw"/>
+<img class="w-10 h-10 rounded-full border-2 border-[#07080A] object-cover" data-alt="female portrait small" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAAR_4V_kCfLttD7dJKaacIBSWgTuKUsrujMBNfKTtlrPwSnkCm2beTLmBEqtuGBCG_ZyyHQmSe2c0NfpBQOckl8UusF62BOy0POrYt3R9p3uLaPGBmaVd0zgZmnJ4SJgPtoJNWMurccmhA7Dbjb_aOw60Ac0LlbHOhWjF8gXtCsEAHjrTY-DwlKJVcVds8DeZ_JtsejQWSAiWBU0W_J5ioNSNLsoPCLV6QGyhRosrp0-CYIKoYiKS8kNW8x_jcTHdvlWcFHWkywQ4"/>
+<div class="w-10 h-10 rounded-full bg-[#12151C] border-2 border-[#07080A] flex items-center justify-center text-[10px] text-white/60">+420</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Secondary Live/Resource -->
+<div class="md:col-span-4 flex flex-col gap-6">
+<div class="flex-1 glass-card p-6 rounded-xl relative overflow-hidden group">
+<div class="absolute top-0 right-0 p-4">
+<span class="material-symbols-outlined text-[#B7FF3C] text-4xl opacity-20 group-hover:opacity-50 transition-opacity">calendar_month</span>
+</div>
+<p class="text-[#B7FF3C] text-xs font-code-data uppercase mb-2">Amanhã • 08:30</p>
+<h4 class="font-h3 text-lg text-white mb-4">Biofeedback: Otimizando o Treino de Força</h4>
+<button class="text-white/60 text-sm font-ui-label border border-white/10 px-4 py-2 rounded-lg hover:bg-white/5 transition-colors">Agendar</button>
+</div>
+<div class="flex-1 bg-[#B7FF3C]/10 border border-[#B7FF3C]/20 p-6 rounded-xl relative overflow-hidden group">
+<div class="absolute top-0 right-0 p-4">
+<span class="material-symbols-outlined text-[#B7FF3C] text-4xl opacity-30">terminal</span>
+</div>
+<p class="text-[#B7FF3C] text-xs font-code-data uppercase mb-2">Novo Recurso</p>
+<h4 class="font-h3 text-lg text-white mb-2">Protocolos de Pós-Treino v2.4</h4>
+<p class="text-white/50 text-xs mb-4">Download PDF disponível agora.</p>
+<button class="bg-[#B7FF3C] text-[#07080A] p-2 rounded-lg inline-flex">
+<span class="material-symbols-outlined" data-weight="fill">download</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Video Library Filters -->
+<section class="mb-12">
+<div class="flex flex-wrap items-center gap-4 mb-8">
+<button class="bg-[#B7FF3C] text-[#07080A] px-6 py-2 rounded-full font-bold text-sm">Todos</button>
+<button class="bg-[#12151C] text-white border border-white/10 px-6 py-2 rounded-full font-medium text-sm hover:border-[#B7FF3C]/50 transition-colors">Nutrição</button>
+<button class="bg-[#12151C] text-white border border-white/10 px-6 py-2 rounded-full font-medium text-sm hover:border-[#B7FF3C]/50 transition-colors">Treino</button>
+<button class="bg-[#12151C] text-white border border-white/10 px-6 py-2 rounded-full font-medium text-sm hover:border-[#B7FF3C]/50 transition-colors">Mentalidade</button>
+<button class="bg-[#12151C] text-white border border-white/10 px-6 py-2 rounded-full font-medium text-sm hover:border-[#B7FF3C]/50 transition-colors">Suplementação</button>
+</div>
+<!-- Categories Horizontal Rows -->
+<div class="space-y-12">
+<!-- Treino Category -->
+<div>
+<div class="flex items-center justify-between mb-4">
+<h3 class="font-h3 text-h3 text-white flex items-center gap-2">
+<span class="material-symbols-outlined text-[#B7FF3C]">fitness_center</span> Treino
+                        </h3>
+<a class="text-white/40 text-xs font-code-data uppercase hover:text-[#B7FF3C] transition-colors" href="#">Ver Tudo</a>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+<!-- Video Card -->
+<div class="group cursor-pointer">
+<div class="relative aspect-video rounded-lg overflow-hidden mb-3 border border-white/5">
+<img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" data-alt="professional bodybuilder training in a moody dark gym with sharp highlights" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDSxODeoVUadtHNvW3FB3RAgPqBiwIMQwTKszLhnYCFHhjhnEC0EtKgFfl6b7pcmOt6PueYb0nkEAY3prcMmTnci6wU29Qe-yZJrdy0cBwekR_fUnQmzIs_kDi7iJVjFHkNbg84IFbC7RrPJgeVxiGDkpzOgWSQlpMoyoO0476lcqka0eZ_vYKsJ3X1QVS1lCUSSOOhEbWuYPjZDFwKw-qgNJkvswb49HBHOVREh8QJyu1SwUk6iGkXkn9rYT2JRCpCkrqUfTIuNzs"/>
+<div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-[#B7FF3C] text-5xl">play_circle</span>
+</div>
+<span class="absolute bottom-2 right-2 bg-black/80 text-white text-[10px] px-1.5 py-0.5 rounded font-code-data">24:15</span>
+</div>
+<h5 class="text-white font-medium text-sm line-clamp-2 group-hover:text-[#B7FF3C] transition-colors">Mecânica do Agachamento: Erros Comuns e Correções</h5>
+<p class="text-white/40 text-xs mt-1">Série Expert Pro • há 2 dias</p>
+</div>
+<!-- Video Card 2 -->
+<div class="group cursor-pointer">
+<div class="relative aspect-video rounded-lg overflow-hidden mb-3 border border-white/5">
+<img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" data-alt="detailed view of heavy iron weights in a professional training facility" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC2IvvWedcq1C2C3BVpPiXTfaHQDZjSSfSnxarZZHX-usz96K2Fk3UgBD3pjR-fLy5bRCm8-0iI973t00fEo6dwsUVImfvhuDnhVsJbYUW0cOJWyVCdusxafGEixMEWPTIlJKEmVkVXf84DbdCRMdFZFn5HdO8KrLLJ5OyTUVGxg7MjXtT9rJIgjOZly4yZTfT21OGb274TQZ0c2tlG0a45hUZZnHBzQHSTYOcXK7tKNEWwGAU9TDglFZr0d7u3z499CqnScEj-zJU"/>
+<div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-[#B7FF3C] text-5xl">play_circle</span>
+</div>
+<span class="absolute bottom-2 right-2 bg-black/80 text-white text-[10px] px-1.5 py-0.5 rounded font-code-data">18:40</span>
+</div>
+<h5 class="text-white font-medium text-sm line-clamp-2 group-hover:text-[#B7FF3C] transition-colors">Densidade de Treino: Quando Menos é Mais</h5>
+<p class="text-white/40 text-xs mt-1">Série Expert Pro • há 5 dias</p>
+</div>
+<!-- Video Card 3 -->
+<div class="group cursor-pointer">
+<div class="relative aspect-video rounded-lg overflow-hidden mb-3 border border-white/5">
+<img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" data-alt="gym rings hanging from a high ceiling in a clean modern crossfit box" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC_dVUaoZNTqvWTv2V3PLvRH51jkvqysjztysZYyyv66Neu1aGsOoj1rWrz5kUGB66XEeEKCcZD8ic81IG5kpE18dthOy0tPspT404Mznv4jFCjxIo6jSA1wRHpShVi2em-DECF9DC_Dpq0lrk033U7cbvjlQ48fphgwwl_alC8fvBLw81cV-B5Zvvs4MfjnJt397f6IG36ebT_ZEMvWbKQZypLpv1VK8IsD1XH7CNSDyOjAZQKclpxWFoXS0TlOvpcgdG5kscsdIo"/>
+<div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-[#B7FF3C] text-5xl">play_circle</span>
+</div>
+<span class="absolute bottom-2 right-2 bg-black/80 text-white text-[10px] px-1.5 py-0.5 rounded font-code-data">12:05</span>
+</div>
+<h5 class="text-white font-medium text-sm line-clamp-2 group-hover:text-[#B7FF3C] transition-colors">Isoladores vs Compostos: A Verdade Científica</h5>
+<p class="text-white/40 text-xs mt-1">Workshop • há 1 semana</p>
+</div>
+<!-- Video Card 4 -->
+<div class="group cursor-pointer">
+<div class="relative aspect-video rounded-lg overflow-hidden mb-3 border border-white/5">
+<img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" data-alt="person doing stretching exercises in a high-tech gym with focused lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCUvt51i0InaytqTfyUTQ70d_tqqdVyyRlwBOO69tNm6WJ3231ZniaiOb_lnXb66G91y3r0pFJE21_g5kY0-YJOwcFk82q3cEDxoadl1j6lN-PhQMMAlwAkgEBWfdAhbeg0R9UO16Ucnsr3FaeM4hWEF1mv25MMkw9VbOqZpjDT6wJfqXPAjp8h5eVsWoIiMFI6zACuVq58sRhWPFMefuyUlR0NMoH_BUvMTKlMe_3H1BTvQ8-HV3LDCsxR2wEtdTYRUGFNqyuQxz0"/>
+<div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-[#B7FF3C] text-5xl">play_circle</span>
+</div>
+<span class="absolute bottom-2 right-2 bg-black/80 text-white text-[10px] px-1.5 py-0.5 rounded font-code-data">35:50</span>
+</div>
+<h5 class="text-white font-medium text-sm line-clamp-2 group-hover:text-[#B7FF3C] transition-colors">Recuperação Ativa: Protocolos de Mobilidade</h5>
+<p class="text-white/40 text-xs mt-1">Masterclass • há 2 semanas</p>
+</div>
+</div>
+</div>
+<!-- Nutrição Category -->
+<div>
+<div class="flex items-center justify-between mb-4">
+<h3 class="font-h3 text-h3 text-white flex items-center gap-2">
+<span class="material-symbols-outlined text-[#B7FF3C]">restaurant</span> Nutrição
+                        </h3>
+<a class="text-white/40 text-xs font-code-data uppercase hover:text-[#B7FF3C] transition-colors" href="#">Ver Tudo</a>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+<!-- Video Card -->
+<div class="group cursor-pointer">
+<div class="relative aspect-video rounded-lg overflow-hidden mb-3 border border-white/5">
+<img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" data-alt="healthy gourmet meal prep with dark background and vibrant vegetables" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDaft4xJxHfXgPnZSl0Yl7m2o82RiIKo9bXaoM4OuLfMTC6q1e8dGmYDuCjQUJ4gackdv7Jc-2NDn2sOxUHdqlr0Ka-TTHj6nZ4S7dKFhzDNa8b6OtX2pcxPfaL5af_KX1LdH7R9Rzloz2Xm3ADurRIr-V4JZezeI5ZolnCD29Q41r1znuUQMGX_-vY-3kJYwNlzVrCjOTYb6gG9a6q8MELfyRHtY_8c_CnpeF9nM5zQbADSybO_HP8CEG9VaVeEwBFA0YAP024uF4"/>
+<div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-[#B7FF3C] text-5xl">play_circle</span>
+</div>
+<span class="absolute bottom-2 right-2 bg-black/80 text-white text-[10px] px-1.5 py-0.5 rounded font-code-data">42:15</span>
+</div>
+<h5 class="text-white font-medium text-sm line-clamp-2 group-hover:text-[#B7FF3C] transition-colors">Microbiota e Performance: O Eixo Intestino-Músculo</h5>
+<p class="text-white/40 text-xs mt-1">Seminário Científico • há 3 dias</p>
+</div>
+<!-- Video Card 2 -->
+<div class="group cursor-pointer">
+<div class="relative aspect-video rounded-lg overflow-hidden mb-3 border border-white/5">
+<img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" data-alt="vibrant energy bowl with fruits and nuts on dark stone surface" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD2jFhatambjgwfMwSNflBoO0mQFlUflNqYDF0JpTIDzL37v8PgIU3mD4qK7AzpME4l7urHHxSb8DxSAm5x5rbHoDdpbXChHp-zlI7fnr25Y3bbDyfQSpAhV3tkIOi3TfqYIbb3ua0d-8oJGmBZXXbPxTMNm0CyCtcvjSVXeePaC1nkaaeRRpYJA2PbPCU6RKmrWJA-EPbM579qYntuKBVNGzIXhnrA6qI1tiIbVEXesvKAWV7mWMuDnMlccXm-GMYdC-t5AQQR550"/>
+<div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-[#B7FF3C] text-5xl">play_circle</span>
+</div>
+<span class="absolute bottom-2 right-2 bg-black/80 text-white text-[10px] px-1.5 py-0.5 rounded font-code-data">22:10</span>
+</div>
+<h5 class="text-white font-medium text-sm line-clamp-2 group-hover:text-[#B7FF3C] transition-colors">Ciclagem de Carboidratos: Estratégias Práticas</h5>
+<p class="text-white/40 text-xs mt-1">Dicas Expert • há 1 semana</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Protocols & Resources -->
+<section class="mb-12">
+<h2 class="font-h2 text-h2 text-white mb-6">Protocolos &amp; Materiais</h2>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="glass-card p-6 rounded-xl flex items-start gap-4 hover:border-[#B7FF3C]/30 transition-all group">
+<div class="bg-[#B7FF3C]/10 p-3 rounded-lg text-[#B7FF3C]">
+<span class="material-symbols-outlined" data-weight="fill">description</span>
+</div>
+<div>
+<h4 class="text-white font-bold mb-1">Manual de Suplementação 2024</h4>
+<p class="text-white/50 text-xs mb-3">Guia completo de evidências e dosagens.</p>
+<div class="flex items-center gap-4">
+<span class="text-[10px] font-code-data text-white/30 uppercase">PDF • 12MB</span>
+<button class="text-[#B7FF3C] text-xs font-bold hover:underline">Download</button>
+</div>
+</div>
+</div>
+<div class="glass-card p-6 rounded-xl flex items-start gap-4 hover:border-[#B7FF3C]/30 transition-all group">
+<div class="bg-[#B7FF3C]/10 p-3 rounded-lg text-[#B7FF3C]">
+<span class="material-symbols-outlined" data-weight="fill">analytics</span>
+</div>
+<div>
+<h4 class="text-white font-bold mb-1">Planilha de Volume Semanal</h4>
+<p class="text-white/50 text-xs mb-3">Controle sua progressão de carga avançada.</p>
+<div class="flex items-center gap-4">
+<span class="text-[10px] font-code-data text-white/30 uppercase">XLSX • 2MB</span>
+<button class="text-[#B7FF3C] text-xs font-bold hover:underline">Download</button>
+</div>
+</div>
+</div>
+<div class="glass-card p-6 rounded-xl flex items-start gap-4 hover:border-[#B7FF3C]/30 transition-all group">
+<div class="bg-[#B7FF3C]/10 p-3 rounded-lg text-[#B7FF3C]">
+<span class="material-symbols-outlined" data-weight="fill">menu_book</span>
+</div>
+<div>
+<h4 class="text-white font-bold mb-1">Protocolo Jejum Metabólico</h4>
+<p class="text-white/50 text-xs mb-3">Guia teórico e prático para definição.</p>
+<div class="flex items-center gap-4">
+<span class="text-[10px] font-code-data text-white/30 uppercase">PDF • 8MB</span>
+<button class="text-[#B7FF3C] text-xs font-bold hover:underline">Download</button>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="bg-[#0D0F14]/95 backdrop-blur-md fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-3 pb-safe border-t border-white/10 shadow-2xl">
+<a class="flex flex-col items-center justify-center text-white/40 hover:text-white transition-all" href="#">
+<span class="material-symbols-outlined mb-1">calendar_today</span>
+<span class="font-['Space_Grotesk'] text-[10px] uppercase tracking-widest font-medium">Today</span>
+</a>
+<a class="flex flex-col items-center justify-center text-white/40 hover:text-white transition-all" href="#">
+<span class="material-symbols-outlined mb-1">fitness_center</span>
+<span class="font-['Space_Grotesk'] text-[10px] uppercase tracking-widest font-medium">Workouts</span>
+</a>
+<a class="flex flex-col items-center justify-center text-white/40 hover:text-white transition-all" href="#">
+<span class="material-symbols-outlined mb-1">restaurant</span>
+<span class="font-['Space_Grotesk'] text-[10px] uppercase tracking-widest font-medium">Diets</span>
+</a>
+<a class="flex flex-col items-center justify-center text-white/40 hover:text-white transition-all" href="#">
+<span class="material-symbols-outlined mb-1">monitoring</span>
+<span class="font-['Space_Grotesk'] text-[10px] uppercase tracking-widest font-medium">Evolution</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#B7FF3C] bg-[#B7FF3C]/5 rounded-xl py-1 px-3 active:scale-110 duration-300 ease-out" href="#">
+<span class="material-symbols-outlined mb-1">play_circle</span>
+<span class="font-['Space_Grotesk'] text-[10px] uppercase tracking-widest font-medium">Content</span>
+</a>
+</nav>
+</body></html>

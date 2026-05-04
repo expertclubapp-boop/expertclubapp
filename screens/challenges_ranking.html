@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Expert Club | Monthly Challenge</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;900&amp;family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-container": "#8B5CF6",
+                        "on-secondary-container": "#bfb2da",
+                        "surface-container": "#211f24",
+                        "on-error-container": "#ffdad6",
+                        "surface-tint": "#C4B5FD",
+                        "on-secondary-fixed-variant": "#4b4263",
+                        "surface-dim": "#141218",
+                        "surface-container-high": "#2b292f",
+                        "background": "#07080A",
+                        "inverse-on-surface": "#322f35",
+                        "secondary": "#cdc0e9",
+                        "surface": "#0D0F14",
+                        "on-primary-fixed-variant": "#4f378a",
+                        "tertiary": "#e7c365",
+                        "on-tertiary-fixed": "#241a00",
+                        "outline-variant": "#494551",
+                        "on-primary-container": "#e0d2ff",
+                        "surface-bright": "#3b383e",
+                        "outline": "#948e9c",
+                        "surface-container-lowest": "#0f0d13",
+                        "on-primary": "#381e72",
+                        "tertiary-container": "#c9a74d",
+                        "on-tertiary": "#3e2e00",
+                        "inverse-primary": "#8B5CF6",
+                        "inverse-surface": "#e6e0e9",
+                        "tertiary-fixed-dim": "#e7c365",
+                        "on-tertiary-fixed-variant": "#594400",
+                        "primary-fixed": "#e9ddff",
+                        "on-secondary-fixed": "#1f1635",
+                        "surface-variant": "#36343a",
+                        "tertiary-fixed": "#ffdf93",
+                        "error": "#ffb4ab",
+                        "on-secondary": "#342b4b",
+                        "surface-container-highest": "#36343a",
+                        "primary-fixed-dim": "#C4B5FD",
+                        "on-primary-fixed": "#22005d",
+                        "secondary-fixed": "#e9ddff",
+                        "on-surface-variant": "#cbc4d2",
+                        "on-tertiary-container": "#503d00",
+                        "secondary-container": "#4d4465",
+                        "on-error": "#690005",
+                        "error-container": "#93000a",
+                        "on-surface": "#e6e0e9",
+                        "surface-container-low": "#1d1b20",
+                        "secondary-fixed-dim": "#cdc0e9",
+                        "on-background": "#e6e0e9",
+                        "primary": "#C4B5FD"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "md": "16px",
+                        "margin": "32px",
+                        "xl": "32px",
+                        "sm": "8px",
+                        "lg": "24px",
+                        "xs": "4px",
+                        "xxl": "48px",
+                        "gutter": "20px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Inter"],
+                        "h2": ["Space Grotesk"],
+                        "h3": ["Space Grotesk"],
+                        "ui-label": ["Inter"],
+                        "code-data": ["Inter"],
+                        "body-md": ["Inter"],
+                        "h1": ["Space Grotesk"],
+                        "display-xl": ["Space Grotesk"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "h2": ["32px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                        "h3": ["24px", {"lineHeight": "1.4", "fontWeight": "600"}],
+                        "ui-label": ["14px", {"lineHeight": "1", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                        "code-data": ["12px", {"lineHeight": "1", "fontWeight": "600"}],
+                        "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "h1": ["40px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "display-xl": ["64px", {"lineHeight": "1.1", "letterSpacing": "-0.04em", "fontWeight": "700"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #07080A;
+            color: #e6e0e9;
+            font-family: 'Inter', sans-serif;
+        }
+        .bento-card {
+            background-color: #0D0F14;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: border-color 0.3s ease;
+        }
+        .bento-card:hover {
+            border-color: rgba(183, 255, 60, 0.2);
+        }
+        .glass-panel {
+            background: rgba(18, 21, 28, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #07080A;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #B7FF3C;
+            border-radius: 10px;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen pb-24">
+<!-- TopAppBar -->
+<header class="bg-[#07080A]/80 backdrop-blur-xl docked full-width top-0 sticky z-50 border-b border-white/10 flex justify-between items-center w-full px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full overflow-hidden border border-[#B7FF3C]/30">
+<img alt="User Profile" data-alt="close-up portrait of a determined athlete with subtle perspiration, dramatic high-contrast lighting on dark background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD9WAtyMGqXnqsIFIuJmWL3i9B31pnujLoXe3TPbM-U5cnKwmSvMbqiywjqyHcW4h8mvqb_PgAAL1jhOrjjF2exhWMPyqFxNgmevUcu_IyUluZ1WW6eF2Rk7XOmmg9us-b2lt5Co6lv_wHyOHuvhsRYhqVpw1F02zsDcVqDR3KDgwiDf3ZekezMsEL4j15ADpH5B9gnucC2u4NVEE9RVyhESUZeEZdJTNUD2dGfgj6OelGkJebDt1lFwHxe2ZWDH1kEUdqUp5YVC_Y"/>
+</div>
+<h1 class="text-xl font-black italic text-[#B7FF3C] tracking-widest font-['Space_Grotesk'] uppercase">EXPERT CLUB</h1>
+</div>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-white/60 hover:text-[#B7FF3C] transition-colors cursor-pointer">notifications</span>
+</div>
+</header>
+<main class="max-w-7xl mx-auto px-6 py-8">
+<!-- Challenge Hero Banner -->
+<section class="relative w-full rounded-2xl overflow-hidden mb-12 group">
+<div class="absolute inset-0 bg-gradient-to-r from-[#07080A] via-[#07080A]/60 to-transparent z-10"></div>
+<img alt="Challenge Banner" class="w-full h-80 object-cover grayscale opacity-60 group-hover:grayscale-0 transition-all duration-700" data-alt="cinematic shot of intense athletic training in a modern industrial gym with atmospheric lighting and subtle lens flares" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCY-zwVits6tuAkk7jaN03Y_f1GRhIaYTrygL3X7EKHIDobxFdNuTCpH8fkW8basIJkCapBMq0Y3d2DTFmjLuqQCI5GU2hxuW2V24WpG8g3erS7vPoBa9c6JSrqoV_utfvdKlAXxN3nWtcteo4MCCAAefQ54TaUEUnZ6ZT2xMH_rKYbJa2rkXhDccPk0y8MhGTfsK33hg3rP5ea_zk1eSCMVbqCumBkjDcy-n5gAHb7Eb8lYlVow6ZNGGWKD_JbhYp595OvR6STsV8"/>
+<div class="absolute inset-0 z-20 flex flex-col justify-center p-10">
+<div class="flex items-center gap-2 text-[#B7FF3C] mb-4">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">stars</span>
+<span class="font-h3 text-ui-label uppercase tracking-widest">Featured Challenge</span>
+</div>
+<h2 class="font-h1 text-display-xl text-white mb-2 leading-none">21 DIAS DE<br/><span class="text-[#B7FF3C]">CONSTÂNCIA</span></h2>
+<div class="flex flex-wrap gap-8 mt-8">
+<div>
+<p class="text-white/40 font-ui-label uppercase tracking-widest text-xs mb-1">Ends In</p>
+<div class="flex gap-2">
+<div class="flex flex-col items-center">
+<span class="font-h2 text-h2 text-white tabular-nums">12</span>
+<span class="text-[10px] text-white/40 uppercase">Days</span>
+</div>
+<span class="font-h2 text-h2 text-[#B7FF3C]/50">:</span>
+<div class="flex flex-col items-center">
+<span class="font-h2 text-h2 text-white tabular-nums">08</span>
+<span class="text-[10px] text-white/40 uppercase">Hrs</span>
+</div>
+<span class="font-h2 text-h2 text-[#B7FF3C]/50">:</span>
+<div class="flex flex-col items-center">
+<span class="font-h2 text-h2 text-white tabular-nums">42</span>
+<span class="text-[10px] text-white/40 uppercase">Min</span>
+</div>
+</div>
+</div>
+<div class="border-l border-white/10 pl-8">
+<p class="text-white/40 font-ui-label uppercase tracking-widest text-xs mb-1">Rewards</p>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[#5DDCFF]">workspace_premium</span>
+<span class="font-h3 text-h3 text-white">Legendary Badge</span>
+</div>
+<p class="text-[#B7FF3C] text-sm font-medium mt-1">+2,500 XP Points</p>
+</div>
+</div>
+</div>
+</section>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+<!-- Left Column: My Stats & Ranking -->
+<div class="lg:col-span-4 flex flex-col gap-8">
+<!-- Personal Progress Card -->
+<div class="bento-card rounded-2xl p-6 relative overflow-hidden">
+<div class="absolute top-0 right-0 p-4 opacity-10">
+<span class="material-symbols-outlined text-8xl">bolt</span>
+</div>
+<h3 class="font-h3 text-h3 text-white mb-6">Your Performance</h3>
+<div class="flex items-end justify-between mb-2">
+<div>
+<p class="text-white/40 text-xs uppercase tracking-widest">Total Points</p>
+<span class="font-h2 text-h2 text-[#B7FF3C]">1,840</span>
+</div>
+<div class="text-right">
+<p class="text-white/40 text-xs uppercase tracking-widest">Daily Streak</p>
+<div class="flex items-center gap-1 text-[#5DDCFF]">
+<span class="material-symbols-outlined text-sm">local_fire_department</span>
+<span class="font-code-data text-h3">14</span>
+</div>
+</div>
+</div>
+<div class="space-y-4">
+<div class="w-full bg-white/5 h-3 rounded-full overflow-hidden">
+<div class="bg-[#B7FF3C] h-full rounded-full" style="width: 72%"></div>
+</div>
+<div class="flex justify-between text-[11px] font-ui-label uppercase text-white/40">
+<span>Level 14</span>
+<span>Level 15 (2,000 XP)</span>
+</div>
+</div>
+<button class="w-full mt-8 bg-[#B7FF3C] text-[#07080A] py-3 rounded-lg font-ui-label font-bold uppercase tracking-widest hover:opacity-90 transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-lg">share</span>
+                        Share Achievement
+                    </button>
+</div>
+<!-- Community Ranking -->
+<div class="bento-card rounded-2xl p-6 flex-1 flex flex-col">
+<div class="flex justify-between items-center mb-6">
+<h3 class="font-h3 text-h3 text-white">Global Ranking</h3>
+<span class="text-[#5DDCFF] text-xs font-ui-label uppercase cursor-pointer hover:underline">See All</span>
+</div>
+<div class="space-y-4 custom-scrollbar overflow-y-auto max-h-[400px] pr-2">
+<!-- Top 1 -->
+<div class="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-[#B7FF3C]/20">
+<div class="flex items-center gap-3">
+<span class="text-[#B7FF3C] font-black text-lg w-4">1</span>
+<img alt="User 1" class="w-10 h-10 rounded-full border border-white/10" data-alt="headshot of a female athlete with intense focus, minimalist dark studio setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBJvi5-TvR6cxKXIyL5Alcfu3ersrmrJ9Y9sLbq1GnN1NO6Sx-uaPcSA3epqKHjhspHsh47GwZSMalb7GEMhJs0lHfrtRBaafcKzVBzBKKpADuzClQSsfn65rN18nTjVblo5Cxxz0tpK1xbwYs5LMkiq4OWl5oUs28hqYI404YbFtnxvoIwF5HmWXFcbl4vbK9UhW-0S9IMmRMImvxG86nZptkscUo5Z9ChP3C2AnpvuSPiqwFH2kml8JWOSDi4Z05GvKfM8joFLF4"/>
+<div>
+<p class="text-white text-sm font-bold">Beatriz Silva</p>
+<p class="text-white/40 text-[10px] uppercase">Elite Member</p>
+</div>
+</div>
+<div class="text-right">
+<p class="text-[#B7FF3C] font-code-data text-sm">4,820</p>
+<p class="text-white/40 text-[9px] uppercase">PTS</p>
+</div>
+</div>
+<!-- Top 2 -->
+<div class="flex items-center justify-between p-3 rounded-xl hover:bg-white/5 transition-colors">
+<div class="flex items-center gap-3">
+<span class="text-white/40 font-black text-lg w-4">2</span>
+<img alt="User 2" class="w-10 h-10 rounded-full border border-white/10" data-alt="professional portrait of a fit man in sports gear, cool blue lighting, dark background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuArWhEpk7O_V2xiKlqd5eFsdJ6Sj9V2tIVzt5UAUEQmRkcBsRW12KNVqVLy6xV8GJqJ2rt3Xq3Yx8bLhpArOut6mJZjDSvcfmUNcw0z-ohiXo1vDzIquLqfIJVEQnzjH2Ru7HN-NsSgGQFF9FWMn-lDxQk8aUVARef830f1D7LirxGgFHyfNFAgYNTIXUAzY02jsilVY-wx4fEr_plxc5sRdl-UYNXSjsXqlsinnnJCcvekKZVCGlct3TvIgcYmA6XTDYIBlr9bwYc"/>
+<div>
+<p class="text-white text-sm font-bold">Lucas Mendes</p>
+<p class="text-white/40 text-[10px] uppercase">Pro Member</p>
+</div>
+</div>
+<div class="text-right">
+<p class="text-white font-code-data text-sm">4,150</p>
+<p class="text-white/40 text-[9px] uppercase">PTS</p>
+</div>
+</div>
+<!-- Top 3 -->
+<div class="flex items-center justify-between p-3 rounded-xl hover:bg-white/5 transition-colors">
+<div class="flex items-center gap-3">
+<span class="text-white/40 font-black text-lg w-4">3</span>
+<img alt="User 3" class="w-10 h-10 rounded-full border border-white/10" data-alt="portrait of an athletic man, low key lighting, strong shadows, focused expression" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDNShIz4Fc5XEBCbvaZYTw8Nxqy-NhzCdssvvQTEvmX5kXG5m4IZ9Skb2tiNvCwSIt1b2kUe37E7_AHNYH1WjhlBJ_HvdHV_1fd6qccWiL42kcXQ5AU_i1McBXmE5epkE0u13nj2hLtywTlqIv1nV1nV0S-a98NYvM_DXFUkCAPodMndiWDqSGX-ZGpOELsMG7qTPoXHA4dB3wr-dJT9c51r0ocsht-MmTyodglRQ-quWNpbU0muzNsQr8SkVNN9xmuF_4JkIy-G2Y"/>
+<div>
+<p class="text-white text-sm font-bold">Tiago Rocha</p>
+<p class="text-white/40 text-[10px] uppercase">Pro Member</p>
+</div>
+</div>
+<div class="text-right">
+<p class="text-white font-code-data text-sm">3,980</p>
+<p class="text-white/40 text-[9px] uppercase">PTS</p>
+</div>
+</div>
+<!-- You -->
+<div class="mt-4 pt-4 border-t border-white/5">
+<div class="flex items-center justify-between p-3 rounded-xl bg-[#5DDCFF]/10 border border-[#5DDCFF]/30">
+<div class="flex items-center gap-3">
+<span class="text-[#5DDCFF] font-black text-lg w-4">12</span>
+<img alt="Me" class="w-10 h-10 rounded-full border border-[#5DDCFF]/30" data-alt="close-up portrait of a determined athlete with subtle perspiration, dramatic high-contrast lighting on dark background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAERSAbg9Wmy6cmra5kT2-IjkqLBhpiUJy2d69G4NGaK-HH9n0L0SlzW-8vwcUTq77eT9kDVOqRdB46Slw0ThZ3TxuT7qq0SGS6e5YoMMaMrt8q0hjCwXk2bGZFHyOIYqOFCOI2fnBu7A3oTvoSBGVW30KVoSjJd79Vy-U1WkDEAXwQQx_3j6JwQ9yVxauYE9CcGoTPZPAeuvmh5sVuX51uccYq5QV_t-DYyQB14Dd05UfhtHhi4LuNeweqMR0shIrhRpjizOIcoNA"/>
+<div>
+<p class="text-white text-sm font-bold">You (Marcos)</p>
+<p class="text-[#5DDCFF] text-[10px] uppercase">Rising Star</p>
+</div>
+</div>
+<div class="text-right">
+<p class="text-[#5DDCFF] font-code-data text-sm">1,840</p>
+<p class="text-white/40 text-[9px] uppercase">PTS</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Active Missions -->
+<div class="lg:col-span-8">
+<div class="bento-card rounded-2xl p-8">
+<div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+<div>
+<h3 class="font-h2 text-h2 text-white mb-1">Active Missions</h3>
+<p class="text-white/40 text-body-md">Complete tasks to boost your score and climb the leaderboard.</p>
+</div>
+<div class="flex gap-2">
+<span class="px-4 py-1 rounded-full bg-[#B7FF3C]/10 text-[#B7FF3C] text-[10px] uppercase tracking-widest font-bold border border-[#B7FF3C]/20">All</span>
+<span class="px-4 py-1 rounded-full bg-white/5 text-white/40 text-[10px] uppercase tracking-widest font-bold border border-white/5 hover:border-white/20 cursor-pointer transition-all">Workouts</span>
+<span class="px-4 py-1 rounded-full bg-white/5 text-white/40 text-[10px] uppercase tracking-widest font-bold border border-white/5 hover:border-white/20 cursor-pointer transition-all">Diet</span>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<!-- Mission 1 -->
+<div class="bg-[#12151C] border border-white/5 p-6 rounded-xl hover:bg-white/[0.03] transition-all relative group">
+<div class="flex items-start justify-between mb-4">
+<div class="w-12 h-12 rounded-lg bg-[#B7FF3C]/10 flex items-center justify-center text-[#B7FF3C]">
+<span class="material-symbols-outlined text-2xl">fitness_center</span>
+</div>
+<div class="bg-white/5 px-2 py-1 rounded text-[10px] font-code-data text-[#5DDCFF]">DAILY</div>
+</div>
+<h4 class="text-white font-h3 text-lg mb-2">Morning Blitz</h4>
+<p class="text-white/40 text-xs mb-6">Complete a high-intensity session before 09:00 AM.</p>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-sm text-[#B7FF3C]" style="font-variation-settings: 'FILL' 1;">monetization_on</span>
+<span class="text-white font-bold text-sm">+150 PTS</span>
+</div>
+<button class="text-white border border-white/10 px-4 py-1 rounded-md text-[10px] uppercase font-bold tracking-widest hover:bg-[#B7FF3C] hover:text-[#07080A] transition-all">Start</button>
+</div>
+</div>
+<!-- Mission 2 -->
+<div class="bg-[#12151C] border border-[#B7FF3C]/30 p-6 rounded-xl hover:bg-white/[0.03] transition-all relative group">
+<div class="absolute top-2 right-2">
+<span class="material-symbols-outlined text-[#B7FF3C] text-sm" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div class="flex items-start justify-between mb-4 opacity-50">
+<div class="w-12 h-12 rounded-lg bg-[#5DDCFF]/10 flex items-center justify-center text-[#5DDCFF]">
+<span class="material-symbols-outlined text-2xl">restaurant</span>
+</div>
+<div class="bg-white/5 px-2 py-1 rounded text-[10px] font-code-data text-white/40">DONE</div>
+</div>
+<h4 class="text-white/50 font-h3 text-lg mb-2 line-through">Clean Fuel</h4>
+<p class="text-white/30 text-xs mb-6">Log 3 high-protein meals with no processed sugar today.</p>
+<div class="flex items-center justify-between opacity-50">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-sm text-[#B7FF3C]" style="font-variation-settings: 'FILL' 1;">monetization_on</span>
+<span class="text-white font-bold text-sm">+200 PTS</span>
+</div>
+<span class="text-[#B7FF3C] text-[10px] uppercase font-bold tracking-widest">Completed</span>
+</div>
+</div>
+<!-- Mission 3 -->
+<div class="bg-[#12151C] border border-white/5 p-6 rounded-xl hover:bg-white/[0.03] transition-all relative group">
+<div class="flex items-start justify-between mb-4">
+<div class="w-12 h-12 rounded-lg bg-orange-500/10 flex items-center justify-center text-orange-500">
+<span class="material-symbols-outlined text-2xl">monitoring</span>
+</div>
+<div class="bg-white/5 px-2 py-1 rounded text-[10px] font-code-data text-orange-400">WEEKLY</div>
+</div>
+<h4 class="text-white font-h3 text-lg mb-2">Social Pacer</h4>
+<p class="text-white/40 text-xs mb-6">Encourage 5 teammates in the global community feed.</p>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-sm text-[#B7FF3C]" style="font-variation-settings: 'FILL' 1;">monetization_on</span>
+<span class="text-white font-bold text-sm">+400 PTS</span>
+</div>
+<div class="w-24 h-1.5 bg-white/5 rounded-full overflow-hidden">
+<div class="bg-orange-500 h-full w-[60%]"></div>
+</div>
+</div>
+</div>
+<!-- Mission 4 -->
+<div class="bg-[#12151C] border border-white/5 p-6 rounded-xl hover:bg-white/[0.03] transition-all relative group">
+<div class="flex items-start justify-between mb-4">
+<div class="w-12 h-12 rounded-lg bg-[#5DDCFF]/10 flex items-center justify-center text-[#5DDCFF]">
+<span class="material-symbols-outlined text-2xl">local_fire_department</span>
+</div>
+<div class="bg-white/5 px-2 py-1 rounded text-[10px] font-code-data text-[#5DDCFF]">BONUS</div>
+</div>
+<h4 class="text-white font-h3 text-lg mb-2">Unstoppable Force</h4>
+<p class="text-white/40 text-xs mb-6">Reach a 21-day streak in the monthly constancy challenge.</p>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-sm text-[#B7FF3C]" style="font-variation-settings: 'FILL' 1;">monetization_on</span>
+<span class="text-white font-bold text-sm">+1,000 PTS</span>
+</div>
+<span class="text-white/40 text-[10px] font-code-data">14 / 21 DAYS</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Motivation Section -->
+<div class="mt-8 bento-card rounded-2xl p-8 bg-gradient-to-br from-[#12151C] to-[#07080A]">
+<div class="flex gap-6 items-center">
+<div class="hidden sm:block shrink-0">
+<div class="w-24 h-24 rounded-2xl border-2 border-dashed border-white/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-white/10 text-5xl">military_tech</span>
+</div>
+</div>
+<div>
+<blockquote class="font-h3 text-h3 text-white italic mb-4 leading-snug">"The only way to achieve the impossible is to believe it is possible."</blockquote>
+<div class="flex items-center gap-4">
+<div class="flex -space-x-3">
+<img alt="p1" class="w-8 h-8 rounded-full border-2 border-[#07080A]" data-alt="athlete profile" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBpboTlI8sv9nAfJz5wiX3W6ZQRCnANadGL5TKEq7ycyRQ_cQPduRIupijKXup_o-P0etZeO3ae6IwMrFNiPO3Hu204V_rgSI9mK9LqgtF0wmsWT1FLl6MGgVIZHSvdVV6XPP8jFE2q16jSBYhPJcbh5m9XBLGnj8RDVQxY6UelSM7Rjx7y9MqejaG0y48vPPy31OQ-I1p6x2HuG_rlnynp1dctxZ8COvGcNXbi790l_GCcq-ql9OigMhCDIVfsKmjQtV-9nueF_xU"/>
+<img alt="p2" class="w-8 h-8 rounded-full border-2 border-[#07080A]" data-alt="athlete profile" src="https://lh3.googleusercontent.com/aida-public/AB6AXuClHcu0ecF1xUd9PbFpGrcTCQ0d_BzZ1e9FdOxOOH7BdmX7jkrVLlbhtfd7Scexbn1iSPKkAO_IvGDHNPEFXvdylMK1lBssRLAZCKWxvBrK2eq3iC-1uJ9BM64Wt8CbiGir5uJH-TD4h_GCBx4GF6t0QhZsFTOk0Y-tbdxYq5p5hZESGhyOofDmj54Pyt6NgB9LNNGO7zcU2dqbQYa3ufKt2i1oR4IOe7RerB78SXwa4Az5y7pyjl35xcvMcvQwyigR4rv42rjG9No"/>
+<img alt="p3" class="w-8 h-8 rounded-full border-2 border-[#07080A]" data-alt="athlete profile" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA0ipYK8zfn6BUXuWaJKj7Tel5JZLqgQFkenpRrRuSE31_dWDAf-RFdB2tEdLdZCm-EhRJ7FBYw3kF1MEC075lZNl8XV_MdLu9ZgJNfIqMn_y7YN0UcMnX_5HfyuW0md8GJnnqsZU-pZ8g5Tq6bdKHAvN_sldw5XDujuNCHYRJDxf6vyNVjaRAkZhDSx-RIVvlIFZmoV5W-gtVmmK1mxooDt9V_IerXW9x9S7IEH1AXlb4iWhgJUVQv1bYnPpKILQMbQecb3Nf89TI"/>
+<div class="w-8 h-8 rounded-full bg-white/5 border-2 border-[#07080A] flex items-center justify-center text-[10px] text-white/40 font-bold">+28</div>
+</div>
+<p class="text-xs text-white/40 font-ui-label">28 other Experts completed their daily missions today.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="bg-[#0D0F14]/95 backdrop-blur-md fixed bottom-0 w-full z-50 border-t border-white/10 shadow-2xl flex justify-around items-center px-4 py-3 pb-safe">
+<div class="flex flex-col items-center justify-center text-white/40 hover:text-white transition-all cursor-pointer">
+<span class="material-symbols-outlined">calendar_today</span>
+<span class="font-['Space_Grotesk'] text-[10px] uppercase tracking-widest font-medium mt-1">Today</span>
+</div>
+<div class="flex flex-col items-center justify-center text-white/40 hover:text-white transition-all cursor-pointer">
+<span class="material-symbols-outlined">fitness_center</span>
+<span class="font-['Space_Grotesk'] text-[10px] uppercase tracking-widest font-medium mt-1">Workouts</span>
+</div>
+<div class="flex flex-col items-center justify-center text-white/40 hover:text-white transition-all cursor-pointer">
+<span class="material-symbols-outlined">restaurant</span>
+<span class="font-['Space_Grotesk'] text-[10px] uppercase tracking-widest font-medium mt-1">Diets</span>
+</div>
+<div class="flex flex-col items-center justify-center text-[#B7FF3C] bg-[#B7FF3C]/5 rounded-xl py-1 px-3 active:scale-110 duration-300 ease-out cursor-pointer">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">monitoring</span>
+<span class="font-['Space_Grotesk'] text-[10px] uppercase tracking-widest font-medium mt-1">Evolution</span>
+</div>
+<div class="flex flex-col items-center justify-center text-white/40 hover:text-white transition-all cursor-pointer">
+<span class="material-symbols-outlined">play_circle</span>
+<span class="font-['Space_Grotesk'] text-[10px] uppercase tracking-widest font-medium mt-1">Content</span>
+</div>
+</nav>
+</body></html>

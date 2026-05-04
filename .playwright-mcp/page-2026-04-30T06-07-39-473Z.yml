@@ -1,0 +1,12 @@
+- generic [ref=e4]:
+  - img [ref=e6]
+  - heading "OPS! FALHA NO PAGAMENTO" [level=1] [ref=e8]
+  - paragraph [ref=e9]: Não foi possível processar sua cobrança. Verifique os dados do seu cartão ou tente outro método de pagamento.
+  - generic [ref=e10]:
+    - button "Tentar Novamente" [ref=e11] [cursor=pointer]:
+      - img [ref=e12]
+      - text: Tentar Novamente
+    - button "Voltar para o Início" [ref=e17] [cursor=pointer]:
+      - img [ref=e18]
+      - text: Voltar para o Início
+  - paragraph [ref=e21]: "Suporte: contato@expertclub.com.br"

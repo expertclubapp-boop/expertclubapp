@@ -1,0 +1,36 @@
+- main [ref=e6]:
+  - generic [ref=e7]:
+    - generic [ref=e8]: EXPERT CLUB
+    - heading "Entre no Expert Club" [level=1] [ref=e9]
+    - paragraph [ref=e10]: Acesse sua rotina de treino, dieta e acompanhamento.
+  - generic [ref=e11]:
+    - generic [ref=e12]: Treino
+    - generic [ref=e13]: Dieta
+    - generic [ref=e14]: Check-ins
+  - generic [ref=e15]:
+    - paragraph [ref=e16]: Acesse sua conta
+    - generic [ref=e17]:
+      - generic [ref=e18]:
+        - generic [ref=e19]: E-mail
+        - generic [ref=e20]:
+          - generic:
+            - img
+          - textbox "E-mail" [ref=e21]
+      - generic [ref=e22]:
+        - generic [ref=e23]: Senha
+        - generic [ref=e24]:
+          - generic:
+            - img
+          - textbox "Senha" [ref=e25]
+      - link "Esqueci minha senha" [ref=e27] [cursor=pointer]:
+        - /url: /reset-password
+      - button "Entrar com e-mail" [ref=e28] [cursor=pointer]
+    - generic [ref=e31]: ou
+    - button "Entrar com Google" [ref=e33] [cursor=pointer]:
+      - img [ref=e34]
+      - text: Entrar com Google
+    - generic [ref=e39]:
+      - paragraph [ref=e40]: Ao entrar você aceita nossos Termos e Privacidade.
+      - link "Criar conta com e-mail →" [ref=e41] [cursor=pointer]:
+        - /url: /signup
+  - paragraph [ref=e43]: Precision · Performance · Evolution

@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "primary-container": "#8B5CF6",
+                    "on-secondary-container": "#bfb2da",
+                    "surface-container": "#211f24",
+                    "on-error-container": "#ffdad6",
+                    "surface-tint": "#C4B5FD",
+                    "on-secondary-fixed-variant": "#4b4263",
+                    "surface-dim": "#141218",
+                    "surface-container-high": "#2b292f",
+                    "background": "#07080A",
+                    "inverse-on-surface": "#322f35",
+                    "secondary": "#cdc0e9",
+                    "surface": "#141218",
+                    "on-primary-fixed-variant": "#4f378a",
+                    "tertiary": "#e7c365",
+                    "on-tertiary-fixed": "#241a00",
+                    "outline-variant": "#494551",
+                    "on-primary-container": "#e0d2ff",
+                    "surface-bright": "#3b383e",
+                    "outline": "#948e9c",
+                    "surface-container-lowest": "#0f0d13",
+                    "on-primary": "#381e72",
+                    "tertiary-container": "#c9a74d",
+                    "on-tertiary": "#3e2e00",
+                    "inverse-primary": "#8B5CF6",
+                    "inverse-surface": "#e6e0e9",
+                    "tertiary-fixed-dim": "#e7c365",
+                    "on-tertiary-fixed-variant": "#594400",
+                    "primary-fixed": "#e9ddff",
+                    "on-secondary-fixed": "#1f1635",
+                    "surface-variant": "#36343a",
+                    "tertiary-fixed": "#ffdf93",
+                    "error": "#ffb4ab",
+                    "on-secondary": "#342b4b",
+                    "surface-container-highest": "#36343a",
+                    "primary-fixed-dim": "#C4B5FD",
+                    "on-primary-fixed": "#22005d",
+                    "secondary-fixed": "#e9ddff",
+                    "on-surface-variant": "#cbc4d2",
+                    "on-tertiary-container": "#503d00",
+                    "secondary-container": "#4d4465",
+                    "on-error": "#690005",
+                    "error-container": "#93000a",
+                    "on-surface": "#e6e0e9",
+                    "surface-container-low": "#1d1b20",
+                    "secondary-fixed-dim": "#cdc0e9",
+                    "on-background": "#e6e0e9",
+                    "primary": "#C4B5FD",
+                    "accent-lime": "#B7FF3C",
+                    "accent-sky": "#5DDCFF",
+                    "surface-dark": "#0D0F14",
+                    "surface-card": "#12151C"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "md": "16px",
+                    "margin": "32px",
+                    "xl": "32px",
+                    "sm": "8px",
+                    "lg": "24px",
+                    "xs": "4px",
+                    "xxl": "48px",
+                    "gutter": "20px"
+            },
+            "fontFamily": {
+                    "body-lg": ["Inter"],
+                    "h2": ["Space Grotesk"],
+                    "h3": ["Space Grotesk"],
+                    "ui-label": ["Inter"],
+                    "code-data": ["Inter"],
+                    "body-md": ["Inter"],
+                    "h1": ["Space Grotesk"],
+                    "display-xl": ["Space Grotesk"]
+            },
+            "fontSize": {
+                    "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "h2": ["32px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                    "h3": ["24px", {"lineHeight": "1.4", "fontWeight": "600"}],
+                    "ui-label": ["14px", {"lineHeight": "1", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                    "code-data": ["12px", {"lineHeight": "1", "fontWeight": "600"}],
+                    "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "h1": ["40px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "display-xl": ["64px", {"lineHeight": "1.1", "letterSpacing": "-0.04em", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #07080A;
+            color: #e6e0e9;
+        }
+        .bento-glow {
+            background: radial-gradient(circle at top right, rgba(183, 255, 60, 0.05), transparent 40%);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-body-md antialiased min-h-screen selection:bg-accent-lime selection:text-black">
+<div class="fixed inset-0 pointer-events-none bento-glow z-0"></div>
+<main class="relative z-10 max-w-[500px] mx-auto px-6 py-12 flex flex-col min-h-screen">
+<header class="mb-12">
+<div class="flex justify-center mb-10">
+<div class="flex space-x-1">
+<div class="h-1 w-8 rounded-full bg-accent-lime"></div>
+<div class="h-1 w-8 rounded-full bg-accent-lime"></div>
+<div class="h-1 w-8 rounded-full bg-accent-lime"></div>
+<div class="h-1 w-8 rounded-full bg-white/10"></div>
+</div>
+</div>
+<h1 class="font-h1 text-h1 text-white leading-tight mb-4">
+                Qual o seu <span class="text-accent-lime">objetivo</span> principal?
+            </h1>
+<p class="font-body-md text-on-surface-variant">
+                Selecione a opção que melhor descreve onde você quer chegar. Adaptaremos seu plano de acordo.
+            </p>
+</header>
+<section class="flex-grow space-y-4">
+<button class="w-full text-left bg-surface-card border border-white/5 p-lg rounded-xl hover:border-accent-lime/40 transition-all group relative overflow-hidden">
+<div class="flex items-center space-x-4 relative z-10">
+<div class="flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-lg bg-white/5 group-hover:bg-accent-lime/10 transition-colors">
+<span class="material-symbols-outlined text-accent-lime" data-icon="fitness_center">fitness_center</span>
+</div>
+<div class="flex-grow">
+<h3 class="font-h3 text-body-lg font-bold text-white mb-1">Hipertrofia</h3>
+<p class="font-ui-label text-xs text-white/40 group-hover:text-white/60 transition-colors uppercase">Ganho de massa muscular e volume</p>
+</div>
+<div class="opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-accent-lime" data-icon="check_circle" data-weight="fill" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+</div>
+<div class="absolute inset-0 bg-gradient-to-r from-accent-lime/0 via-accent-lime/[0.02] to-accent-lime/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
+</button>
+<button class="w-full text-left bg-surface-card border border-accent-lime p-lg rounded-xl transition-all group relative overflow-hidden ring-1 ring-accent-lime ring-inset shadow-[0_0_20px_rgba(183,255,60,0.1)]">
+<div class="flex items-center space-x-4 relative z-10">
+<div class="flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-lg bg-accent-lime/10">
+<span class="material-symbols-outlined text-accent-lime" data-icon="local_fire_department">local_fire_department</span>
+</div>
+<div class="flex-grow">
+<h3 class="font-h3 text-body-lg font-bold text-white mb-1">Emagrecimento</h3>
+<p class="font-ui-label text-xs text-white/40 uppercase">Redução de gordura corporal e definição</p>
+</div>
+<div class="opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-accent-lime" data-icon="check_circle" data-weight="fill" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+</div>
+</button>
+<button class="w-full text-left bg-surface-card border border-white/5 p-lg rounded-xl hover:border-accent-lime/40 transition-all group relative overflow-hidden">
+<div class="flex items-center space-x-4 relative z-10">
+<div class="flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-lg bg-white/5 group-hover:bg-accent-lime/10 transition-colors">
+<span class="material-symbols-outlined text-accent-lime" data-icon="body_system">body_system</span>
+</div>
+<div class="flex-grow">
+<h3 class="font-h3 text-body-lg font-bold text-white mb-1">Recomposição corporal</h3>
+<p class="font-ui-label text-xs text-white/40 group-hover:text-white/60 transition-colors uppercase">Perda de gordura e ganho de massa simultâneos</p>
+</div>
+<div class="opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-accent-lime" data-icon="check_circle" data-weight="fill" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+</div>
+</button>
+<button class="w-full text-left bg-surface-card border border-white/5 p-lg rounded-xl hover:border-accent-lime/40 transition-all group relative overflow-hidden">
+<div class="flex items-center space-x-4 relative z-10">
+<div class="flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-lg bg-white/5 group-hover:bg-accent-lime/10 transition-colors">
+<span class="material-symbols-outlined text-accent-lime" data-icon="spa">spa</span>
+</div>
+<div class="flex-grow">
+<h3 class="font-h3 text-body-lg font-bold text-white mb-1">Rotina saudável</h3>
+<p class="font-ui-label text-xs text-white/40 group-hover:text-white/60 transition-colors uppercase">Longevidade, energia e bem-estar geral</p>
+</div>
+<div class="opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-accent-lime" data-icon="check_circle" data-weight="fill" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+</div>
+</button>
+<button class="w-full text-left bg-surface-card border border-white/5 p-lg rounded-xl hover:border-accent-lime/40 transition-all group relative overflow-hidden">
+<div class="flex items-center space-x-4 relative z-10">
+<div class="flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-lg bg-white/5 group-hover:bg-accent-lime/10 transition-colors">
+<span class="material-symbols-outlined text-accent-lime" data-icon="bolt">bolt</span>
+</div>
+<div class="flex-grow">
+<h3 class="font-h3 text-body-lg font-bold text-white mb-1">Performance</h3>
+<p class="font-ui-label text-xs text-white/40 group-hover:text-white/60 transition-colors uppercase">Otimização de força e rendimento atlético</p>
+</div>
+<div class="opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-accent-lime" data-icon="check_circle" data-weight="fill" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+</div>
+</button>
+</section>
+<footer class="mt-12 sticky bottom-8 bg-background/80 backdrop-blur-md py-4 -mx-6 px-6">
+<button class="w-full bg-accent-lime text-background font-h3 text-body-lg font-bold py-5 rounded-xl flex items-center justify-center space-x-2 active:scale-[0.98] transition-transform shadow-[0_0_30px_rgba(183,255,60,0.15)]">
+<span>Próximo</span>
+<span class="material-symbols-outlined" data-icon="arrow_forward">arrow_forward</span>
+</button>
+<p class="text-center text-white/20 font-ui-label text-[10px] uppercase tracking-widest mt-4">
+                Você pode alterar seu objetivo a qualquer momento
+            </p>
+</footer>
+</main>
+<div class="fixed bottom-0 left-0 w-full h-[300px] overflow-hidden opacity-10 pointer-events-none">
+<img class="w-full h-full object-cover" data-alt="abstract dynamic background showing athletic motion with deep shadows and sharp lime green light highlights" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAyyCP-tv19nU47kJQdn4-Y-JuMpV3xVjICsWqHgmXBVtHoXtytuy3Q1GwZJyg3O1Br7Fl5AQcoUW7Ne_X0TemdE8N0Qe76ODIb416JEvU23PXa_NEpHkRt56lMIvqUuBsQBlX7rETq2Vyq8FBDfbxlXaFs3_Dk7c2exdpDf0XJXXMJCM6DbV3IVRyDP5eZIEsbzAkFONR8q9nW19Z-dn-KS4TMcCW8uIH0hAOqNq7FoREBreWmvXCe7oz9UzF1qygHZ2KCtIGj_Js"/>
+<div class="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent"></div>
+</div>
+</body></html>

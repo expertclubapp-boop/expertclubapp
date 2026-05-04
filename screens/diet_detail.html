@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="pt-br"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Diet Detail - Expert Club</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-container": "#8B5CF6",
+                        "on-secondary-container": "#bfb2da",
+                        "surface-container": "#211f24",
+                        "on-error-container": "#ffdad6",
+                        "surface-tint": "#C4B5FD",
+                        "on-secondary-fixed-variant": "#4b4263",
+                        "surface-dim": "#141218",
+                        "surface-container-high": "#2b292f",
+                        "background": "#07080A",
+                        "inverse-on-surface": "#322f35",
+                        "secondary": "#cdc0e9",
+                        "surface": "#141218",
+                        "on-primary-fixed-variant": "#4f378a",
+                        "tertiary": "#e7c365",
+                        "on-tertiary-fixed": "#241a00",
+                        "outline-variant": "#494551",
+                        "on-primary-container": "#e0d2ff",
+                        "surface-bright": "#3b383e",
+                        "outline": "#948e9c",
+                        "surface-container-lowest": "#0f0d13",
+                        "on-primary": "#381e72",
+                        "tertiary-container": "#c9a74d",
+                        "on-tertiary": "#3e2e00",
+                        "inverse-primary": "#8B5CF6",
+                        "inverse-surface": "#e6e0e9",
+                        "tertiary-fixed-dim": "#e7c365",
+                        "on-tertiary-fixed-variant": "#594400",
+                        "primary-fixed": "#e9ddff",
+                        "on-secondary-fixed": "#1f1635",
+                        "surface-variant": "#36343a",
+                        "tertiary-fixed": "#ffdf93",
+                        "error": "#ffb4ab",
+                        "on-secondary": "#342b4b",
+                        "surface-container-highest": "#36343a",
+                        "primary-fixed-dim": "#C4B5FD",
+                        "on-primary-fixed": "#22005d",
+                        "secondary-fixed": "#e9ddff",
+                        "on-surface-variant": "#cbc4d2",
+                        "on-tertiary-container": "#503d00",
+                        "secondary-container": "#4d4465",
+                        "on-error": "#690005",
+                        "error-container": "#93000a",
+                        "on-surface": "#e6e0e9",
+                        "surface-container-low": "#1d1b20",
+                        "secondary-fixed-dim": "#cdc0e9",
+                        "on-background": "#e6e0e9",
+                        "primary": "#C4B5FD"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "md": "16px",
+                        "margin": "32px",
+                        "xl": "32px",
+                        "sm": "8px",
+                        "lg": "24px",
+                        "xs": "4px",
+                        "xxl": "48px",
+                        "gutter": "20px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Inter"],
+                        "h2": ["Space Grotesk"],
+                        "h3": ["Space Grotesk"],
+                        "ui-label": ["Inter"],
+                        "code-data": ["Inter"],
+                        "body-md": ["Inter"],
+                        "h1": ["Space Grotesk"],
+                        "display-xl": ["Space Grotesk"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "h2": ["32px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                        "h3": ["24px", {"lineHeight": "1.4", "fontWeight": "600"}],
+                        "ui-label": ["14px", {"lineHeight": "1", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                        "code-data": ["12px", {"lineHeight": "1", "fontWeight": "600"}],
+                        "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "h1": ["40px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "display-xl": ["64px", {"lineHeight": "1.1", "letterSpacing": "-0.04em", "fontWeight": "700"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .bg-grid-white {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Cpath d='M0 40L40 40L40 0L39 0L39 39L0 39L0 40Z' fill='%23ffffff' fill-opacity='0.03'/%3E%3C/svg%3E");
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface font-body-md selection:bg-[#B7FF3C] selection:text-[#07080A]">
+<!-- TopAppBar -->
+<header class="bg-[#07080A]/80 backdrop-blur-xl border-b border-white/10 docked full-width top-0 sticky z-50 flex justify-between items-center w-full px-6 py-4">
+<div class="flex items-center gap-4">
+<button class="text-white/60 hover:text-[#B7FF3C] transition-all active:scale-95">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<h1 class="text-xl font-black italic text-[#B7FF3C] tracking-widest font-['Space_Grotesk'] uppercase">EXPERT CLUB</h1>
+</div>
+<div class="flex items-center gap-4">
+<div class="w-8 h-8 rounded-full bg-[#12151C] border border-white/10 flex items-center justify-center overflow-hidden">
+<img alt="Profile" data-alt="close-up professional portrait of a fit athlete with sharp lighting and dark background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCNpAyEqIe18tNBcfKxxbMrS17Ug2Ec_uoGxKb--wrvxurYdALya6GlXPUmAyMVKqzKQlLPL8LqkleM5IeJ1E0G-lpH-c4gQySlFE8GHjPs-0fJSMw0DmW4lCU0oMVageNU0jRgrvYsaV2DmOv8bIJPoaviCM1uI1ETDiKAXrUj4XE3Oixpekqw1R6pGsa7LsDXM_LVcH34AK7Lbbu5ONa3NZcuGcmCnFrEFU-pz25Ui5hEAfJc1Cg_kDFXY8I9jvL4oR7sFTo6k5s"/>
+</div>
+<span class="material-symbols-outlined text-white/60">notifications</span>
+</div>
+</header>
+<main class="max-w-4xl mx-auto px-6 py-8 pb-32">
+<!-- Hero Header -->
+<section class="mb-xl">
+<div class="inline-flex items-center gap-2 px-3 py-1 bg-[#B7FF3C]/10 border border-[#B7FF3C]/20 rounded-full mb-4">
+<span class="w-2 h-2 rounded-full bg-[#B7FF3C] animate-pulse"></span>
+<span class="text-xs font-code-data text-[#B7FF3C] uppercase tracking-widest">Plano Ativo</span>
+</div>
+<h2 class="font-h1 text-h1 text-white mb-2">Emagrecimento Base 1800 kcal</h2>
+<p class="text-on-surface-variant font-body-lg">Protocolo focado em densidade nutricional e preservação de massa magra.</p>
+</section>
+<!-- Macros Summary Bento Grid -->
+<section class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-xl">
+<div class="md:col-span-1 bg-[#0D0F14] border border-white/5 p-lg rounded-xl flex flex-col justify-center items-center relative overflow-hidden group">
+<div class="absolute inset-0 bg-grid-white pointer-events-none"></div>
+<span class="text-on-surface-variant text-ui-label uppercase mb-2">Calorias</span>
+<span class="text-h2 font-h2 text-[#B7FF3C]">1800</span>
+<span class="text-xs font-code-data text-white/40">kcal/dia</span>
+</div>
+<div class="md:col-span-3 grid grid-cols-3 gap-4">
+<!-- Protein -->
+<div class="bg-[#12151C] border border-white/5 p-lg rounded-xl flex flex-col justify-between">
+<div class="flex justify-between items-start mb-4">
+<span class="text-on-surface-variant font-ui-label text-[10px] uppercase">Proteína</span>
+<span class="material-symbols-outlined text-[#B7FF3C] text-sm">fitness_center</span>
+</div>
+<div>
+<div class="text-h3 font-h3 text-white">160g</div>
+<div class="w-full bg-white/5 h-1.5 rounded-full mt-2 overflow-hidden">
+<div class="bg-[#B7FF3C] h-full w-[45%]"></div>
+</div>
+</div>
+</div>
+<!-- Carbs -->
+<div class="bg-[#12151C] border border-white/5 p-lg rounded-xl flex flex-col justify-between">
+<div class="flex justify-between items-start mb-4">
+<span class="text-on-surface-variant font-ui-label text-[10px] uppercase">Carbo</span>
+<span class="material-symbols-outlined text-[#5DDCFF] text-sm">bolt</span>
+</div>
+<div>
+<div class="text-h3 font-h3 text-white">180g</div>
+<div class="w-full bg-white/5 h-1.5 rounded-full mt-2 overflow-hidden">
+<div class="bg-[#5DDCFF] h-full w-[35%]"></div>
+</div>
+</div>
+</div>
+<!-- Fats -->
+<div class="bg-[#12151C] border border-white/5 p-lg rounded-xl flex flex-col justify-between">
+<div class="flex justify-between items-start mb-4">
+<span class="text-on-surface-variant font-ui-label text-[10px] uppercase">Gordura</span>
+<span class="material-symbols-outlined text-tertiary text-sm">opacity</span>
+</div>
+<div>
+<div class="text-h3 font-h3 text-white">40g</div>
+<div class="w-full bg-white/5 h-1.5 rounded-full mt-2 overflow-hidden">
+<div class="bg-tertiary h-full w-[20%]"></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Meals List -->
+<section class="space-y-4 mb-xl">
+<h3 class="font-h3 text-h3 text-white px-2">Refeições</h3>
+<!-- Café da Manhã -->
+<div class="bg-[#12151C] border border-white/5 rounded-xl overflow-hidden group">
+<div class="p-lg flex justify-between items-center bg-white/[0.02] border-b border-white/5">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-[#B7FF3C]/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-[#B7FF3C]">coffee</span>
+</div>
+<div>
+<h4 class="text-white font-bold">Café da Manhã</h4>
+<p class="text-xs text-white/40 uppercase tracking-widest">08:00 • 350 kcal</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-white/20 group-hover:text-white/60 transition-colors">expand_more</span>
+</div>
+<div class="p-lg space-y-3">
+<div class="flex justify-between items-center text-body-md text-on-surface-variant">
+<span>Ovos mexidos (3 unidades)</span>
+<span class="font-code-data text-white">150g</span>
+</div>
+<div class="flex justify-between items-center text-body-md text-on-surface-variant">
+<span>Pão integral</span>
+<span class="font-code-data text-white">50g</span>
+</div>
+<div class="flex justify-between items-center text-body-md text-on-surface-variant">
+<span>Fruta (Mamão ou Morango)</span>
+<span class="font-code-data text-white">100g</span>
+</div>
+</div>
+</div>
+<!-- Almoço -->
+<div class="bg-[#12151C] border border-white/5 rounded-xl overflow-hidden group">
+<div class="p-lg flex justify-between items-center bg-white/[0.02] border-b border-white/5">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-[#5DDCFF]/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-[#5DDCFF]">restaurant</span>
+</div>
+<div>
+<h4 class="text-white font-bold">Almoço</h4>
+<p class="text-xs text-white/40 uppercase tracking-widest">12:30 • 600 kcal</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-white/20 group-hover:text-white/60 transition-colors">expand_more</span>
+</div>
+<div class="p-lg space-y-3">
+<div class="flex justify-between items-center text-body-md text-on-surface-variant">
+<span>Arroz branco/integral</span>
+<span class="font-code-data text-white">120g</span>
+</div>
+<div class="flex justify-between items-center text-body-md text-on-surface-variant">
+<span>Feijão (qualquer tipo)</span>
+<span class="font-code-data text-white">80g</span>
+</div>
+<div class="flex justify-between items-center text-body-md text-on-surface-variant">
+<span>Peito de frango grelhado</span>
+<span class="font-code-data text-white">150g</span>
+</div>
+<div class="flex justify-between items-center text-body-md text-on-surface-variant">
+<span>Salada verde (vontade)</span>
+<span class="font-code-data text-white">Livre</span>
+</div>
+</div>
+</div>
+<!-- Lanche da Tarde -->
+<div class="bg-[#12151C] border border-white/5 rounded-xl overflow-hidden group">
+<div class="p-lg flex justify-between items-center bg-white/[0.02] border-b border-white/5">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-tertiary/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-tertiary">nutrition</span>
+</div>
+<div>
+<h4 class="text-white font-bold">Lanche da Tarde</h4>
+<p class="text-xs text-white/40 uppercase tracking-widest">16:00 • 250 kcal</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-white/20 group-hover:text-white/60 transition-colors">expand_more</span>
+</div>
+<div class="p-lg space-y-3">
+<div class="flex justify-between items-center text-body-md text-on-surface-variant">
+<span>Whey Protein (1 scoop)</span>
+<span class="font-code-data text-white">30g</span>
+</div>
+<div class="flex justify-between items-center text-body-md text-on-surface-variant">
+<span>Mix de castanhas</span>
+<span class="font-code-data text-white">15g</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Action Buttons -->
+<section class="grid grid-cols-2 gap-4 mb-xl">
+<button class="flex items-center justify-center gap-2 bg-[#B7FF3C] text-[#07080A] py-4 px-6 rounded-xl font-bold hover:opacity-90 transition-all active:scale-95">
+<span class="material-symbols-outlined">shopping_cart</span>
+<span>Lista de compras</span>
+</button>
+<button class="flex items-center justify-center gap-2 bg-transparent border border-white/10 text-white py-4 px-6 rounded-xl font-bold hover:bg-white/5 transition-all active:scale-95">
+<span class="material-symbols-outlined">swap_horiz</span>
+<span>Substituições</span>
+</button>
+</section>
+<!-- Safety Warning Footer -->
+<footer class="bg-[#0D0F14] border border-white/5 p-lg rounded-xl text-center">
+<div class="flex justify-center mb-3">
+<span class="material-symbols-outlined text-error text-3xl">warning</span>
+</div>
+<p class="text-on-surface-variant text-sm leading-relaxed max-w-xl mx-auto">
+                Este plano alimentar é uma sugestão baseada em perfis médios. Consulte sempre um nutricionista antes de iniciar qualquer mudança drástica em sua dieta. Em caso de tonturas ou mal-estar, interrompa e procure orientação médica.
+            </p>
+</footer>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-3 pb-safe bg-[#0D0F14]/95 backdrop-blur-md border-t border-white/10 shadow-2xl">
+<a class="flex flex-col items-center justify-center text-white/40 hover:text-white transition-all" href="#">
+<span class="material-symbols-outlined">calendar_today</span>
+<span class="font-['Space_Grotesk'] text-[10px] uppercase tracking-widest font-medium mt-1">Today</span>
+</a>
+<a class="flex flex-col items-center justify-center text-white/40 hover:text-white transition-all" href="#">
+<span class="material-symbols-outlined">fitness_center</span>
+<span class="font-['Space_Grotesk'] text-[10px] uppercase tracking-widest font-medium mt-1">Workouts</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#B7FF3C] bg-[#B7FF3C]/5 rounded-xl py-1 px-3 scale-110 duration-300 ease-out" href="#">
+<span class="material-symbols-outlined">restaurant</span>
+<span class="font-['Space_Grotesk'] text-[10px] uppercase tracking-widest font-medium mt-1">Diets</span>
+</a>
+<a class="flex flex-col items-center justify-center text-white/40 hover:text-white transition-all" href="#">
+<span class="material-symbols-outlined">monitoring</span>
+<span class="font-['Space_Grotesk'] text-[10px] uppercase tracking-widest font-medium mt-1">Evolution</span>
+</a>
+<a class="flex flex-col items-center justify-center text-white/40 hover:text-white transition-all" href="#">
+<span class="material-symbols-outlined">play_circle</span>
+<span class="font-['Space_Grotesk'] text-[10px] uppercase tracking-widest font-medium mt-1">Content</span>
+</a>
+</nav>
+</body></html>

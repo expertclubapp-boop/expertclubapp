@@ -1,0 +1,12 @@
+- generic [ref=e4]:
+  - img [ref=e6]
+  - heading "PAGAMENTO CONFIRMADO!" [level=1] [ref=e9]
+  - paragraph [ref=e10]: Sua assinatura foi processada com sucesso. Em alguns minutos, todo o conteúdo premium será liberado automaticamente.
+  - generic [ref=e11]:
+    - button "Acessar Plataforma" [ref=e12] [cursor=pointer]:
+      - img [ref=e13]
+      - text: Acessar Plataforma
+    - button "Ver detalhes da assinatura" [ref=e15] [cursor=pointer]:
+      - text: Ver detalhes da assinatura
+      - img [ref=e16]
+  - paragraph [ref=e19]: Expert Club Platinum

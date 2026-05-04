@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html class="dark" lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Expert Club — Check-in Semanal</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+tailwind.config={darkMode:"class",theme:{extend:{colors:{
+  "bg-primary":"#07080A","surface-1":"#12151C","surface-2":"#181C24",
+  "accent-lime":"#B7FF3C","accent-sky":"#5DDCFF","accent-purple":"#8B5CF6",
+  "accent-yellow":"#FACC15","text-primary":"#F5F7FA","text-secondary":"#A8B0BD","text-muted":"#707987",
+}}}}
+</script>
+<style>
+  body { background:#07080A; color:#F5F7FA; font-family:'Inter',sans-serif; min-height:max(884px,100dvh); }
+  .material-symbols-outlined { font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24; }
+  .filled { font-variation-settings:'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24; }
+  .card { background:#12151C; border:1px solid rgba(255,255,255,0.08); border-radius:20px; padding:20px; margin-bottom:12px; }
+  .input-dark { background:#07080A; border:1px solid rgba(255,255,255,0.10); border-radius:10px; color:#F5F7FA; width:100%; padding:12px 14px; font-size:15px; transition:border-color 0.2s; outline:none; font-family:'Inter',sans-serif; }
+  .input-dark:focus { border-color:#5DDCFF; }
+  .input-sm { padding:10px 12px; font-size:14px; }
+  .label { font-size:11px; font-weight:700; color:#707987; letter-spacing:0.1em; text-transform:uppercase; margin-bottom:6px; display:block; }
+  .section-title { font-family:'Space Grotesk',sans-serif; font-size:13px; font-weight:700; color:#B7FF3C; letter-spacing:0.12em; text-transform:uppercase; margin-bottom:14px; display:flex; align-items:center; gap:8px; }
+  .yesno-row { display:flex; gap:8px; }
+  .yesno-btn { flex:1; padding:11px; border-radius:10px; font-size:13px; font-weight:600; cursor:pointer; border:1px solid rgba(255,255,255,0.08); background:rgba(255,255,255,0.03); color:#A8B0BD; transition:all 0.15s; text-align:center; }
+  .yesno-btn.yes-active { background:rgba(183,255,60,0.12); border-color:rgba(183,255,60,0.30); color:#B7FF3C; }
+  .yesno-btn.no-active { background:rgba(255,59,59,0.10); border-color:rgba(255,59,59,0.25); color:#FF3B3B; }
+  .scale-row { display:flex; gap:5px; }
+  .scale-btn { flex:1; padding:9px 4px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer; border:1px solid rgba(255,255,255,0.06); background:rgba(255,255,255,0.03); color:#707987; transition:all 0.15s; text-align:center; }
+  .scale-btn.selected { background:rgba(183,255,60,0.14); border-color:rgba(183,255,60,0.28); color:#B7FF3C; }
+  .photo-slot { width:80px; height:80px; border-radius:12px; border:1px dashed rgba(255,255,255,0.15); background:rgba(255,255,255,0.03); display:flex; align-items:center; justify-content:center; flex-direction:column; gap:4px; cursor:pointer; transition:border-color 0.15s; }
+  .photo-slot:hover { border-color:rgba(183,255,60,0.30); }
+  .difficulty-chip { padding:8px 14px; border-radius:999px; font-size:12px; font-weight:600; cursor:pointer; border:1px solid rgba(255,255,255,0.08); background:rgba(255,255,255,0.03); color:#A8B0BD; transition:all 0.15s; white-space:nowrap; }
+  .difficulty-chip.selected { background:rgba(93,220,255,0.12); border-color:rgba(93,220,255,0.28); color:#5DDCFF; }
+  .metric-input-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .metric-field label { display:block; font-size:11px; font-weight:700; color:#707987; letter-spacing:0.08em; text-transform:uppercase; margin-bottom:5px; }
+  .metric-field input { background:#07080A; border:1px solid rgba(255,255,255,0.10); border-radius:10px; color:#F5F7FA; width:100%; padding:11px 12px; font-size:15px; outline:none; transition:border-color 0.2s; font-family:'Inter',sans-serif; }
+  .metric-field input:focus { border-color:#5DDCFF; }
+  .unit-badge { font-size:11px; color:#707987; margin-left:4px; }
+  .progress-weeks { display:flex; gap:6px; margin-bottom:20px; }
+  .week-dot { width:8px; height:8px; border-radius:50%; background:rgba(183,255,60,0.25); }
+  .week-dot.done { background:#B7FF3C; }
+  .week-dot.current { background:#B7FF3C; box-shadow:0 0 6px rgba(183,255,60,0.5); }
+</style>
+</head>
+<body style="padding-bottom:40px;">
+
+<!-- BG Glow -->
+<div style="position:fixed;top:-10%;right:-10%;width:450px;height:450px;background:rgba(183,255,60,0.03);filter:blur(120px);border-radius:50%;pointer-events:none;z-index:0;"></div>
+
+<!-- Header -->
+<header style="background:rgba(7,8,10,0.90);backdrop-filter:blur(16px);border-bottom:1px solid rgba(255,255,255,0.07);padding:14px 20px;position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:12px;">
+  <button style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:8px;color:#A8B0BD;cursor:pointer;display:flex;align-items:center;">
+    <span class="material-symbols-outlined" style="font-size:20px;">arrow_back</span>
+  </button>
+  <div style="flex:1;">
+    <div style="font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:700;color:#F5F7FA;">Check-in Semanal</div>
+    <div style="font-size:11px;color:#707987;letter-spacing:0.08em;text-transform:uppercase;">Semana 18 · 2026</div>
+  </div>
+  <div style="text-align:right;">
+    <div style="font-size:11px;color:#707987;">Progresso</div>
+    <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#B7FF3C;">3 / 8</div>
+  </div>
+</header>
+
+<!-- Progress bar -->
+<div style="height:3px;background:rgba(255,255,255,0.05);">
+  <div style="height:100%;width:37%;background:linear-gradient(90deg,#B7FF3C,#5DDCFF);border-radius:999px;"></div>
+</div>
+
+<main style="max-width:480px;margin:0 auto;padding:20px 16px;position:relative;z-index:1;">
+
+  <!-- Intro -->
+  <div style="margin-bottom:24px;">
+    <div style="font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;color:#F5F7FA;margin-bottom:6px;">Como foi sua semana?</div>
+    <p style="font-size:14px;color:#A8B0BD;line-height:1.6;">Este registro é seu acompanhamento semanal. Seja honesto — é para você evoluir, não para parecer perfeito.</p>
+    <!-- Week dots -->
+    <div class="progress-weeks" style="margin-top:14px;">
+      <div class="week-dot done"></div>
+      <div class="week-dot done"></div>
+      <div class="week-dot done"></div>
+      <div class="week-dot done"></div>
+      <div class="week-dot current"></div>
+      <div class="week-dot"></div>
+      <div class="week-dot"></div>
+      <div class="week-dot"></div>
+      <div class="week-dot"></div>
+      <div class="week-dot"></div>
+      <div class="week-dot"></div>
+      <div class="week-dot"></div>
+    </div>
+    <div style="font-size:11px;color:#707987;">Semana 5 de 12 · 4 semanas completadas</div>
+  </div>
+
+  <!-- SECTION: Medidas -->
+  <div class="card">
+    <div class="section-title">
+      <span class="material-symbols-outlined filled" style="font-size:16px;color:#B7FF3C;">straighten</span>
+      Medidas corporais
+    </div>
+    <div class="metric-input-row">
+      <div class="metric-field">
+        <label>Peso <span class="unit-badge">kg</span></label>
+        <input type="number" placeholder="82.0" step="0.1"/>
+      </div>
+      <div class="metric-field">
+        <label>Cintura <span class="unit-badge">cm</span></label>
+        <input type="number" placeholder="84"/>
+      </div>
+      <div class="metric-field">
+        <label>Abdômen <span class="unit-badge">cm</span></label>
+        <input type="number" placeholder="88"/>
+      </div>
+      <div class="metric-field">
+        <label>Quadril <span class="unit-badge">cm</span></label>
+        <input type="number" placeholder="100"/>
+      </div>
+    </div>
+    <!-- Delta hint -->
+    <div style="margin-top:12px;padding:10px 12px;background:rgba(34,197,94,0.07);border:1px solid rgba(34,197,94,0.15);border-radius:10px;display:flex;align-items:center;gap:8px;">
+      <span class="material-symbols-outlined filled" style="font-size:16px;color:#22C55E;">trending_down</span>
+      <span style="font-size:12px;color:#A8B0BD;">Semana passada: <strong style="color:#F5F7FA;">82.8 kg</strong> — você está na direção certa.</span>
+    </div>
+  </div>
+
+  <!-- SECTION: Fotos -->
+  <div class="card">
+    <div class="section-title">
+      <span class="material-symbols-outlined filled" style="font-size:16px;color:#8B5CF6;">photo_camera</span>
+      Fotos de evolução
+    </div>
+    <p style="font-size:13px;color:#707987;margin-bottom:14px;line-height:1.5;">Fotos de frente, costas e lateral. Mesma iluminação, mesmo horário — facilita a comparação real.</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <div class="photo-slot">
+        <span class="material-symbols-outlined" style="font-size:22px;color:rgba(255,255,255,0.2);">add_a_photo</span>
+        <span style="font-size:10px;color:#707987;font-weight:600;">Frente</span>
+      </div>
+      <div class="photo-slot">
+        <span class="material-symbols-outlined" style="font-size:22px;color:rgba(255,255,255,0.2);">add_a_photo</span>
+        <span style="font-size:10px;color:#707987;font-weight:600;">Costas</span>
+      </div>
+      <div class="photo-slot">
+        <span class="material-symbols-outlined" style="font-size:22px;color:rgba(255,255,255,0.2);">add_a_photo</span>
+        <span style="font-size:10px;color:#707987;font-weight:600;">Lateral</span>
+      </div>
+      <div class="photo-slot" style="border-style:solid;border-color:rgba(255,255,255,0.04);">
+        <span class="material-symbols-outlined" style="font-size:22px;color:rgba(255,255,255,0.2);">add</span>
+        <span style="font-size:10px;color:#707987;font-weight:600;">Extra</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION: Adesão -->
+  <div class="card">
+    <div class="section-title">
+      <span class="material-symbols-outlined filled" style="font-size:16px;color:#5DDCFF;">event_available</span>
+      Adesão da semana
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px;">
+
+      <div>
+        <label class="label">Treinos concluídos</label>
+        <div class="scale-row">
+          <div class="scale-btn" onclick="selectScale(this,'treinos')">0</div>
+          <div class="scale-btn" onclick="selectScale(this,'treinos')">1</div>
+          <div class="scale-btn" onclick="selectScale(this,'treinos')">2</div>
+          <div class="scale-btn selected" onclick="selectScale(this,'treinos')">3</div>
+          <div class="scale-btn" onclick="selectScale(this,'treinos')">4</div>
+          <div class="scale-btn" onclick="selectScale(this,'treinos')">5</div>
+          <div class="scale-btn" onclick="selectScale(this,'treinos')">6+</div>
+        </div>
+      </div>
+
+      <div>
+        <label class="label">Dias seguindo a dieta</label>
+        <div class="scale-row">
+          <div class="scale-btn" onclick="selectScale(this,'dieta')">0</div>
+          <div class="scale-btn" onclick="selectScale(this,'dieta')">1</div>
+          <div class="scale-btn" onclick="selectScale(this,'dieta')">2</div>
+          <div class="scale-btn" onclick="selectScale(this,'dieta')">3</div>
+          <div class="scale-btn" onclick="selectScale(this,'dieta')">4</div>
+          <div class="scale-btn selected" onclick="selectScale(this,'dieta')">5</div>
+          <div class="scale-btn" onclick="selectScale(this,'dieta')">6</div>
+          <div class="scale-btn" onclick="selectScale(this,'dieta')">7</div>
+        </div>
+      </div>
+
+      <div>
+        <label class="label">Dias batendo água</label>
+        <div class="scale-row">
+          <div class="scale-btn" onclick="selectScale(this,'agua')">0</div>
+          <div class="scale-btn" onclick="selectScale(this,'agua')">1</div>
+          <div class="scale-btn" onclick="selectScale(this,'agua')">2</div>
+          <div class="scale-btn" onclick="selectScale(this,'agua')">3</div>
+          <div class="scale-btn" onclick="selectScale(this,'agua')">4</div>
+          <div class="scale-btn selected" onclick="selectScale(this,'agua')">5</div>
+          <div class="scale-btn" onclick="selectScale(this,'agua')">6</div>
+          <div class="scale-btn" onclick="selectScale(this,'agua')">7</div>
+        </div>
+      </div>
+
+      <div>
+        <label class="label">Sessões de cardio</label>
+        <div class="yesno-row">
+          <div class="yesno-btn yes-active">Sim</div>
+          <div class="yesno-btn">Não</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- SECTION: Sensações -->
+  <div class="card">
+    <div class="section-title">
+      <span class="material-symbols-outlined filled" style="font-size:16px;color:#FACC15;">mood</span>
+      Como você se sentiu
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px;">
+
+      <div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <label class="label" style="margin:0;">Sono médio</label>
+          <span id="sono-val" style="font-size:13px;font-weight:700;color:#B7FF3C;font-family:'Space Grotesk',sans-serif;">7</span>
+        </div>
+        <input type="range" min="1" max="10" value="7" style="width:100%;accent-color:#B7FF3C;" oninput="document.getElementById('sono-val').textContent=this.value"/>
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:#707987;margin-top:4px;"><span>Péssimo</span><span>Ótimo</span></div>
+      </div>
+
+      <div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <label class="label" style="margin:0;">Fome média</label>
+          <span id="fome-val" style="font-size:13px;font-weight:700;color:#5DDCFF;font-family:'Space Grotesk',sans-serif;">5</span>
+        </div>
+        <input type="range" min="1" max="10" value="5" style="width:100%;accent-color:#5DDCFF;" oninput="document.getElementById('fome-val').textContent=this.value"/>
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:#707987;margin-top:4px;"><span>Sem fome</span><span>Fome intensa</span></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- SECTION: Reflexão -->
+  <div class="card">
+    <div class="section-title">
+      <span class="material-symbols-outlined" style="font-size:16px;color:#8B5CF6;">psychology</span>
+      Reflexão da semana
+    </div>
+
+    <div style="margin-bottom:16px;">
+      <label class="label">Principal dificuldade</label>
+      <div style="display:flex;flex-wrap:wrap;gap:7px;">
+        <div class="difficulty-chip selected">Final de semana</div>
+        <div class="difficulty-chip">Fome noturna</div>
+        <div class="difficulty-chip">Falta de tempo</div>
+        <div class="difficulty-chip">Constância</div>
+        <div class="difficulty-chip">Sono ruim</div>
+        <div class="difficulty-chip">Estagnação</div>
+        <div class="difficulty-chip">Viagem</div>
+        <div class="difficulty-chip">Nenhuma</div>
+      </div>
+    </div>
+
+    <div style="margin-bottom:16px;">
+      <label class="label">Maior vitória da semana 🏆</label>
+      <textarea class="input-dark" rows="2" placeholder="Ex: Treinei 4x e não falhei na dieta no final de semana..." style="resize:none;line-height:1.5;"></textarea>
+    </div>
+
+    <div>
+      <label class="label">Observações livres</label>
+      <textarea class="input-dark" rows="2" placeholder="Qualquer coisa relevante para seu acompanhamento..." style="resize:none;line-height:1.5;"></textarea>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div style="margin-top:8px;">
+    <button onclick="submitCheckin()" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;background:#B7FF3C;color:#07080A;font-weight:700;font-size:16px;border-radius:14px;padding:17px;cursor:pointer;border:none;font-family:'Inter',sans-serif;transition:opacity 0.15s,transform 0.1s;" onmouseover="this.style.opacity='0.92'" onmouseout="this.style.opacity='1'" onmousedown="this.style.transform='scale(0.97)'" onmouseup="this.style.transform='scale(1)'">
+      <span class="material-symbols-outlined filled" style="font-size:22px;">check_circle</span>
+      Salvar check-in semanal
+    </button>
+    <p style="text-align:center;font-size:12px;color:#707987;margin-top:10px;">+20 XP · Missão semanal concluída</p>
+  </div>
+
+  <!-- Post-submit success state (hidden) -->
+  <div id="success-state" style="display:none;text-align:center;padding:32px 20px;background:#12151C;border:1px solid rgba(183,255,60,0.20);border-radius:20px;margin-top:16px;">
+    <div style="width:56px;height:56px;background:rgba(183,255,60,0.12);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+      <span class="material-symbols-outlined filled" style="font-size:28px;color:#B7FF3C;">check_circle</span>
+    </div>
+    <div style="font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;color:#F5F7FA;margin-bottom:8px;">Check-in registrado!</div>
+    <p style="font-size:14px;color:#A8B0BD;line-height:1.6;">Você completou 3 treinos, seguiu a dieta 5 dias e bateu água 5 dias. Seu ponto de atenção foi o final de semana. Continue com constância — resultado é acúmulo.</p>
+  </div>
+
+</main>
+
+<script>
+function selectScale(el, group) {
+  const parent = el.parentElement;
+  parent.querySelectorAll('.scale-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+}
+function selectChip(el) {
+  el.classList.toggle('selected');
+}
+document.querySelectorAll('.difficulty-chip').forEach(c => c.addEventListener('click', () => selectChip(c)));
+function submitCheckin() {
+  document.getElementById('success-state').style.display = 'block';
+  document.getElementById('success-state').scrollIntoView({behavior:'smooth'});
+}
+</script>
+</body>
+</html>
