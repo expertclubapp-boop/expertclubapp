@@ -134,7 +134,7 @@ export async function ensureUserExists(user: FirebaseUser, fallbackDisplayName =
       uid: user.uid,
       planId: 'founder',
       planName: 'Expert Club Fundador',
-      status: 'pending',
+      status: 'active', // Set to active for testing purposes
       provider: 'manual',
       price: 49,
       currency: 'BRL',
@@ -145,5 +145,11 @@ export async function ensureUserExists(user: FirebaseUser, fallbackDisplayName =
       createdAt: nowIso,
       updatedAt: nowIso,
     })
+  } else {
+    // For testing: Force any pending subscription to active
+    const subData = subscriptionSnap.data()
+    if (subData.status === 'pending') {
+      await setDoc(subscriptionRef, { status: 'active', updatedAt: nowIso }, { merge: true })
+    }
   }
 }
