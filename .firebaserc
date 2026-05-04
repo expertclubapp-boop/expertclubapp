@@ -1,5 +1,7 @@
 {
   "projects": {
     "default": "expertcoaching-b91e2"
-  }
+  },
+  "targets": {},
+  "etags": {}
 }
