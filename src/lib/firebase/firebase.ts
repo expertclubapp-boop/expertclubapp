@@ -14,6 +14,14 @@ const firebaseConfig = {
 }
 
 // Initialize Firebase
+const missingVars = Object.entries(firebaseConfig)
+  .filter(([_, value]) => !value)
+  .map(([key]) => key)
+
+if (missingVars.length > 0 && import.meta.env.PROD) {
+  console.warn('⚠️ Missing Firebase environment variables:', missingVars.join(', '))
+}
+
 const app = initializeApp(firebaseConfig)
 
 export const auth = getAuth(app)
