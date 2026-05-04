@@ -7,7 +7,6 @@ import { AffiliateRoute } from './AffiliateRoute'
 import { AppRoute } from './AppRoute'
 import { OnboardingRoute } from './OnboardingRoute'
 import { PublicRoute } from './PublicRoute'
-import { RouteLoader } from './RouteLoader'
 import { useAuth } from '../contexts/AuthContext'
 import { useSubscription } from '../hooks/useSubscription'
 import { getDefaultRouteForUser, getUserRole } from './utils'
@@ -71,20 +70,11 @@ const AffiliatePortalScreen = lazy(() => import('../screens/affiliate/AffiliateP
 const AffiliateDashboardScreen = lazy(() => import('../screens/affiliate/AffiliateDashboardScreen').then(m => ({ default: m.AffiliateDashboardScreen })))
 const WhoAmIScreen = lazy(() => import('../screens/dev/WhoAmIScreen').then(m => ({ default: m.WhoAmIScreen })))
 const PublicLandingScreen = lazy(() => import('../screens/landing/PublicLandingScreen').then(m => ({ default: m.PublicLandingScreen })))
+const DesignSystemScreen = lazy(() => import('../screens/design-system/DesignSystemScreen').then(m => ({ default: m.DesignSystemScreen })))
+const UxBlueprintScreen = lazy(() => import('../screens/design-system/UxBlueprintScreen').then(m => ({ default: m.UxBlueprintScreen })))
+const StudentDashboardScreen = lazy(() => import('../screens/student/StudentDashboardScreen').then(m => ({ default: m.StudentDashboardScreen })))
+const MentorDashboardScreen = lazy(() => import('../screens/mentor/MentorDashboardScreen').then(m => ({ default: m.MentorDashboardScreen })))
 function RootRoute() {
-  const { firebaseUser, user, isLoading } = useAuth()
-  const { subscription, isLoading: isSubscriptionLoading } = useSubscription()
-  const shouldWaitForSubscription =
-    Boolean(firebaseUser && user && getUserRole(user) === 'member' && isSubscriptionLoading)
-
-  if (isLoading || shouldWaitForSubscription) {
-    return <RouteLoader />
-  }
-
-  if (firebaseUser && user) {
-    return <Navigate to={getDefaultRouteForUser(user, null, subscription)} replace />
-  }
-
   return <PublicLandingScreen />
 }
 
@@ -93,7 +83,7 @@ function AppIndexRedirect() {
   const { subscription } = useSubscription()
 
   if (!user) return <Navigate to="/login" replace />
-  if (getUserRole(user) === 'admin') return <Navigate to="/app/today" replace />
+  if (getUserRole(user) === 'admin') return <Navigate to="/admin/dashboard" replace />
 
   return <Navigate to={getDefaultRouteForUser(user, null, subscription)} replace />
 }
@@ -103,6 +93,13 @@ export const router = createBrowserRouter([
     path: '/',
     element: <RootRoute />,
   },
+  { path: '/expert-club', element: <PublicLandingScreen /> },
+  { path: '/design-system', element: <DesignSystemScreen /> },
+  { path: '/ux-blueprint', element: <UxBlueprintScreen /> },
+  { path: '/student/dashboard', element: <StudentDashboardScreen /> },
+  { path: '/dashboard/aluno', element: <StudentDashboardScreen /> },
+  { path: '/mentor/dashboard', element: <MentorDashboardScreen /> },
+  { path: '/dashboard/mentor', element: <MentorDashboardScreen /> },
   {
     path: '/login',
     element: (

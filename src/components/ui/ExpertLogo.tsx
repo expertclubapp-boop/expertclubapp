@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 interface LogoProps {
   className?: string
   variant?: 'full' | 'icon' | 'compact'
-  color?: 'default' | 'white' | 'violet'
+  color?: 'default' | 'white' | 'violet' | 'dark'
   animate?: boolean
 }
 
@@ -14,9 +14,14 @@ export const ExpertLogo: React.FC<LogoProps> = ({
   color = 'default',
   animate = true
 }) => {
-  const violet = '#5B4BFF'
-  const accentColor = color === 'white' ? '#FFFFFF' : color === 'violet' ? violet : violet
-  const organicColor = color === 'white' ? '#FFFFFF' : '#FFFFFF'
+  const violet = '#6C4DFF'
+  const isDarkLogo = color === 'dark'
+  const accentColor = color === 'white' ? '#FFFFFF' : violet
+  const organicColor = isDarkLogo ? '#111318' : color === 'violet' ? violet : '#FFFFFF'
+  const nodeFill = isDarkLogo ? '#FFFFFF' : '#050A12'
+  const expertTextColor = isDarkLogo ? 'text-[#111318]' : color === 'violet' ? 'text-[#6C4DFF]' : 'text-white'
+  const clubTextColor = isDarkLogo || color === 'violet' ? 'text-[#6C4DFF]' : 'text-white'
+  const bylineColor = isDarkLogo ? 'text-[#2A2E36]' : 'text-white/58'
 
   const BrainIcon = () => (
     <motion.svg 
@@ -81,10 +86,10 @@ export const ExpertLogo: React.FC<LogoProps> = ({
         />
         <motion.circle 
           cx="78" cy="18" r="4.5" 
-          fill="black" 
+          fill={nodeFill}
           stroke={accentColor} 
           strokeWidth="3"
-          animate={animate ? { r: [4.5, 5.5, 4.5], fill: [accentColor, 'black', accentColor] } : {}}
+          animate={animate ? { r: [4.5, 5.5, 4.5], fill: [accentColor, nodeFill, accentColor] } : {}}
           transition={{ duration: 2, repeat: Infinity }}
         />
 
@@ -101,7 +106,7 @@ export const ExpertLogo: React.FC<LogoProps> = ({
         />
         <motion.circle 
           cx="82" cy="42" r="4.5" 
-          fill="black" 
+          fill={nodeFill}
           stroke={accentColor} 
           strokeWidth="3"
           animate={animate ? { scale: [1, 1.3, 1] } : {}}
@@ -121,7 +126,7 @@ export const ExpertLogo: React.FC<LogoProps> = ({
         />
         <motion.circle 
           cx="85" cy="78" r="4.5" 
-          fill="black" 
+          fill={nodeFill}
           stroke={accentColor} 
           strokeWidth="3"
           animate={animate ? { opacity: [0.5, 1, 0.5] } : {}}
@@ -131,7 +136,7 @@ export const ExpertLogo: React.FC<LogoProps> = ({
         {/* Node with extension */}
         <motion.circle 
           cx="68" cy="55" r="4.5" 
-          fill="black" 
+          fill={nodeFill}
           stroke={accentColor} 
           strokeWidth="3"
           animate={animate ? { strokeWidth: [3, 5, 3] } : {}}
@@ -154,7 +159,7 @@ export const ExpertLogo: React.FC<LogoProps> = ({
   }
 
   return (
-    <div className={`flex items-center gap-4 ${className}`}>
+    <div className={`flex items-center gap-4 ${className} ${variant === 'compact' ? 'ec-ref-logo--compact' : ''}`}>
       <div className="h-full aspect-square relative flex items-center justify-center">
         <BrainIcon />
         {animate && (
@@ -172,23 +177,18 @@ export const ExpertLogo: React.FC<LogoProps> = ({
       {(variant === 'full' || variant === 'compact') && (
         <div className="flex flex-col justify-center">
           <div className="flex flex-col leading-none">
-            <span className="font-display text-[1.6em] font-black uppercase tracking-[0.02em] text-white italic drop-shadow-lg">
+            <span className={`font-display text-[1.6em] font-black uppercase tracking-[0.2em] ${expertTextColor}`}>
               EXPERT
             </span>
-            <span className="font-display text-[1.6em] font-extralight uppercase tracking-[0.38em] text-white -mt-1.5 opacity-85">
+            <span className={`font-display text-[1.6em] font-semibold uppercase tracking-[0.32em] ${clubTextColor} -mt-1.5`}>
               CLUB
             </span>
           </div>
           {variant === 'full' && (
             <div className="mt-2.5 flex items-center gap-2">
-              {['Inteligência', 'Sistema', 'Evolução'].map((word, i) => (
-                <React.Fragment key={word}>
-                  <span className="text-[0.44em] font-black uppercase tracking-[0.22em] text-ec-violet/70">
-                    {word}
-                  </span>
-                  {i < 2 && <span className="text-[0.6em] font-bold text-white/10">|</span>}
-                </React.Fragment>
-              ))}
+              <span className={`text-[0.44em] font-black uppercase tracking-[0.28em] ${bylineColor}`}>
+                BY EXPERT COACHING
+              </span>
             </div>
           )}
         </div>

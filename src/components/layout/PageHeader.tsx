@@ -62,7 +62,7 @@ export function PageHeader({ showGreeting = true, className = '' }: PageHeaderPr
 
         <div className="flex items-center gap-3">
           <div className="hidden sm:block">
-            <ExpertLogo variant="compact" className="h-8" />
+            <ExpertLogo variant="compact" className="h-10 w-auto" />
           </div>
           <NotificationsDrawer uid={user?.uid} />
           <button

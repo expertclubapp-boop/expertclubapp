@@ -15,8 +15,8 @@ const config: Config = {
         'surface-3': '#1A1F2C',
 
         /* === Brand Primary — Violeta Elétrico === */
-        'ec-violet': '#5B4BFF',
-        'ec-violet-2': '#684CFF',
+        'ec-violet': '#6C4DFF',
+        'ec-violet-2': '#5637F5',
 
         /* === Accents (secondary) === */
         'accent-lime': '#B7FF3C',
