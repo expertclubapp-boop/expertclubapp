@@ -1,0 +1,77 @@
+{
+  "handoffMode": "reference-first",
+  "instruction": "Use assets/*.png as the visual source of truth. The HTML index is a reference viewer; do not treat it as the final app implementation. Implement real components in the project while matching the reference images pixel-close.",
+  "screens": [
+    {
+      "id": "mentor-dashboard",
+      "name": "Visão geral do mentor",
+      "asset": "assets/mentor-dashboard.png",
+      "routeSuggestion": "/mentor/overview",
+      "navActive": "Visão geral",
+      "modules": ["sidebar", "topbar", "kpi-strip", "adherence-chart", "alerts-list", "student-activity-table", "student-ranking", "side-widgets", "quick-actions", "insight-banner"],
+      "acceptance": ["KPI row with 6 cards", "main chart exactly follows reference composition", "right widgets are stacked", "alert badges do not overlap", "sidebar spacing matches reference"]
+    },
+    {
+      "id": "financeiro",
+      "name": "Financeiro",
+      "asset": "assets/financeiro.png",
+      "routeSuggestion": "/mentor/financeiro",
+      "navActive": "Financeiro",
+      "modules": ["financial-kpis", "revenue-chart", "plan-mix-donut", "subscription-table", "payouts-panel", "delinquency-card", "discounts-card"],
+      "acceptance": ["Financeiro sidebar item active", "top KPI row has 6 cards", "receipt chart and plan mix side by side", "payout panel right column", "table rows and chips follow visual reference"]
+    },
+    {
+      "id": "prescritor-treino",
+      "name": "Prescritor de treino",
+      "asset": "assets/prescritor-treino.png",
+      "routeSuggestion": "/mentor/treinos/prescritor",
+      "navActive": "Treinos",
+      "modules": ["student-context-card", "tabs", "day-selector", "workout-builder-table", "exercise-library", "mentor-note", "attachments", "template-bar"],
+      "acceptance": ["builder table supports editable cells", "right library has search and filters", "day tabs match reference", "publish button is primary violet", "row density matches image"]
+    },
+    {
+      "id": "prescritor-dieta",
+      "name": "Prescritor de dieta",
+      "asset": "assets/prescritor-dieta.png",
+      "routeSuggestion": "/mentor/dietas/prescritor",
+      "navActive": "Dietas",
+      "modules": ["student-nutrition-context", "diet-tabs", "meal-builder", "macro-summary", "food-library", "smart-substitutions", "floating-ai-action"],
+      "acceptance": ["meal rows show kcal and macro columns", "macro summary ring and bars match", "food library right panel included", "publish diet button primary violet"]
+    },
+    {
+      "id": "alunos-ativos",
+      "name": "Alunos ativos",
+      "asset": "assets/alunos-ativos.png",
+      "routeSuggestion": "/mentor/alunos",
+      "navActive": "Alunos",
+      "modules": ["student-kpis", "search-filters", "bulk-actions", "student-table", "base-summary", "attention-queue", "recommendation-banner"],
+      "acceptance": ["CRM table is main focus", "right summary panel included", "risk chips colored correctly", "pagination visible", "bulk action bar visible"]
+    },
+    {
+      "id": "influencers-afiliados",
+      "name": "Influencers e afiliados",
+      "asset": "assets/influencers-afiliados.png",
+      "routeSuggestion": "/mentor/influencers",
+      "navActive": "Influencers",
+      "modules": ["affiliate-kpis", "performance-chart", "conversion-funnel", "creator-table", "payouts", "coupon-links", "affiliate-program-card"],
+      "acceptance": ["influencer nav active", "funnel visual appears right of chart", "top creators table includes commission/status", "register influencer CTA primary"]
+    },
+    {
+      "id": "admin-produto",
+      "name": "Administração do produto",
+      "asset": "assets/admin-produto.png",
+      "routeSuggestion": "/admin/overview",
+      "navActive": "Visão geral",
+      "modules": ["admin-sidebar", "saas-kpis", "mrr-chart", "plan-distribution", "operation-alerts", "revenue-origin", "operation-health", "activation-funnel", "feature-adoption", "workspaces-table", "quick-actions"],
+      "acceptance": ["admin sidebar modules differ from mentor sidebar", "MRR chart dominates left", "alerts and actions in right column", "workspace table spans bottom"]
+    }
+  ],
+  "globalAcceptance": [
+    "Do not invent a dark theme for these screens; use light mode.",
+    "Do not simplify tables into cards on desktop.",
+    "Do not use emoji icons in final app; use lucide or project icon system with 2px rounded stroke.",
+    "All panels must use white surfaces, 1px #E8EAF2 borders, 18px radius, soft shadows.",
+    "All charts must be componentized and match reference colors, line thickness and spacing.",
+    "Responsive behavior may stack gracefully below 1200px, but desktop reference must match 1440px+ first."
+  ]
+}

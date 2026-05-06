@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Expert Club — Mentor/Admin Handoff V2</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="viewer-shell">
+    <aside class="toc">
+      <div class="brand">
+        <div class="brand-mark">EC</div>
+        <div class="brand-word"><strong>EXPERT</strong><span>CLUB</span><small>BY EXPERT COACHING</small></div>
+      </div>
+      <div>
+        <div class="eyebrow">Handoff V2</div>
+        <h1>Mentor/Admin Visual Reference</h1>
+        <p>Este arquivo não tenta redesenhar as telas manualmente. Ele usa as imagens aprovadas como fonte visual obrigatória para implementação pixel-close no Codex.</p>
+      </div>
+      <nav class="toc-nav">
+        <a href="#mentor-dashboard">Visão geral <span>↗</span></a>
+        <a href="#financeiro">Financeiro <span>↗</span></a>
+        <a href="#prescritor-treino">Prescritor treino <span>↗</span></a>
+        <a href="#prescritor-dieta">Prescritor dieta <span>↗</span></a>
+        <a href="#alunos-ativos">Alunos ativos <span>↗</span></a>
+        <a href="#influencers-afiliados">Influencers <span>↗</span></a>
+        <a href="#admin-produto">Admin produto <span>↗</span></a>
+      </nav>
+      <div class="download-note"><b>Regra para Codex:</b><br>usar os PNGs em <code>assets/</code> como comparação visual. O app final deve ser componentizado, mas o visual precisa bater com as referências.</div>
+    </aside>
+
+    <main class="main">
+      <section class="hero">
+        <div>
+          <div class="eyebrow">Expert Club</div>
+          <h2>Telas Mentor/Admin — referência final</h2>
+          <p>Dashboard do mentor, financeiro, prescritores, alunos ativos, influencers/afiliados e administração do produto.</p>
+        </div>
+        <span class="pill">Light-first · Premium SaaS · Violet UI</span>
+      </section>
+
+      <section class="screen-block">
+        <div class="screen-head"><div><h3>Design tokens essenciais</h3><p>Base mínima para manter consistência visual entre todas as telas.</p></div></div>
+        <div class="tokens">
+          <div class="swatch"><div class="color" style="background:#6C4DFF"></div><strong>Violet Electric</strong><small>#6C4DFF</small></div>
+          <div class="swatch"><div class="color" style="background:#F1EAFE"></div><strong>Violet Soft</strong><small>#F1EAFE</small></div>
+          <div class="swatch"><div class="color" style="background:#FAFAFC"></div><strong>App BG</strong><small>#FAFAFC</small></div>
+          <div class="swatch"><div class="color" style="background:#FFFFFF"></div><strong>Surface</strong><small>#FFFFFF</small></div>
+          <div class="swatch"><div class="color" style="background:#111827"></div><strong>Text</strong><small>#111827</small></div>
+          <div class="swatch"><div class="color" style="background:#E8EAF2"></div><strong>Border</strong><small>#E8EAF2</small></div>
+        </div>
+        <div class="warnbox"><b>Importante:</b> o protótipo anterior tentou recriar as telas com HTML simplificado e por isso ficou diferente. Esta V2 corrige isso: as imagens entram como verdade visual, e o Codex deve implementar componentes reais comparando contra elas.</div>
+      </section>
+
+      <section id="mentor-dashboard" class="screen-block">
+        <div class="screen-head"><div><h3>Visão geral do mentor</h3><p>Rota sugerida: /mentor/overview</p></div><div class="actions"><a class="btn primary" href="assets/mentor-dashboard.png" target="_blank">Abrir PNG</a></div></div>
+        <figure class="ref-frame"><img src="assets/mentor-dashboard.png" alt="Visão geral do mentor" /></figure>
+        <div class="spec-grid"><div class="spec-card"><b>Módulos</b><ul><li>Sidebar mentor</li><li>Topbar + filtros</li><li>KPI strip</li><li>Gráfico de adesão</li></ul></div><div class="spec-card"><b>Widgets</b><ul><li>Alertas</li><li>Atividade recente</li><li>Ranking de alunos</li><li>Ações rápidas</li></ul></div><div class="spec-card"><b>Detalhes</b><ul><li>Cards 18px radius</li><li>Ícones lineares violetas</li><li>Badges sem overlap</li><li>Sombras suaves</li></ul></div><div class="spec-card"><b>Critério</b><ul><li>Igual ao PNG</li><li>Desktop 1440+</li><li>Sem dark mode aqui</li><li>Sem emoji no app final</li></ul></div></div>
+      </section>
+
+      <section id="financeiro" class="screen-block"><div class="screen-head"><div><h3>Financeiro</h3><p>Rota sugerida: /mentor/financeiro</p></div><div class="actions"><a class="btn primary" href="assets/financeiro.png" target="_blank">Abrir PNG</a></div></div><figure class="ref-frame"><img src="assets/financeiro.png" alt="Financeiro" /></figure></section>
+      <section id="prescritor-treino" class="screen-block"><div class="screen-head"><div><h3>Prescritor de treino</h3><p>Rota sugerida: /mentor/treinos/prescritor</p></div><div class="actions"><a class="btn primary" href="assets/prescritor-treino.png" target="_blank">Abrir PNG</a></div></div><figure class="ref-frame"><img src="assets/prescritor-treino.png" alt="Prescritor de treino" /></figure></section>
+      <section id="prescritor-dieta" class="screen-block"><div class="screen-head"><div><h3>Prescritor de dieta</h3><p>Rota sugerida: /mentor/dietas/prescritor</p></div><div class="actions"><a class="btn primary" href="assets/prescritor-dieta.png" target="_blank">Abrir PNG</a></div></div><figure class="ref-frame"><img src="assets/prescritor-dieta.png" alt="Prescritor de dieta" /></figure></section>
+      <section id="alunos-ativos" class="screen-block"><div class="screen-head"><div><h3>Alunos ativos</h3><p>Rota sugerida: /mentor/alunos</p></div><div class="actions"><a class="btn primary" href="assets/alunos-ativos.png" target="_blank">Abrir PNG</a></div></div><figure class="ref-frame"><img src="assets/alunos-ativos.png" alt="Alunos ativos" /></figure></section>
+      <section id="influencers-afiliados" class="screen-block"><div class="screen-head"><div><h3>Influencers e afiliados</h3><p>Rota sugerida: /mentor/influencers</p></div><div class="actions"><a class="btn primary" href="assets/influencers-afiliados.png" target="_blank">Abrir PNG</a></div></div><figure class="ref-frame"><img src="assets/influencers-afiliados.png" alt="Influencers e afiliados" /></figure></section>
+      <section id="admin-produto" class="screen-block"><div class="screen-head"><div><h3>Administração do produto</h3><p>Rota sugerida: /admin/overview</p></div><div class="actions"><a class="btn primary" href="assets/admin-produto.png" target="_blank">Abrir PNG</a></div></div><figure class="ref-frame"><img src="assets/admin-produto.png" alt="Administração do produto" /></figure></section>
+    </main>
+  </div>
+</body>
+</html>

@@ -1,0 +1,70 @@
+{
+  "brand": {
+    "product": "Expert Club",
+    "parentBrand": "Expert Coaching",
+    "visualDirection": "light-first premium SaaS dashboard",
+    "principles": ["clean", "premium", "light-first", "violet-accent", "feminino-friendly", "data-rich", "production-ready"]
+  },
+  "colors": {
+    "violetElectric": "#6C4DFF",
+    "violetDeep": "#4D35E8",
+    "violetSoft": "#F1EAFE",
+    "violetSoft2": "#F7F4FF",
+    "violetBorder": "#D9CEFF",
+    "charcoal": "#111318",
+    "graphite": "#2A2E36",
+    "textPrimary": "#111827",
+    "textSecondary": "#667085",
+    "textTertiary": "#98A2B3",
+    "surface": "#FFFFFF",
+    "background": "#FAFAFC",
+    "backgroundWarm": "#FCFBFF",
+    "border": "#E8EAF2",
+    "success": "#22C55E",
+    "successBg": "#EAFBF1",
+    "warning": "#F59E0B",
+    "warningBg": "#FFF7E8",
+    "danger": "#EF4444",
+    "dangerBg": "#FDECEF",
+    "info": "#3B82F6",
+    "infoBg": "#EDF5FF",
+    "pink": "#EC4899",
+    "mint": "#E9F7F1",
+    "yellow": "#FBC647"
+  },
+  "typography": {
+    "family": "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif",
+    "weights": {"regular": 400, "medium": 500, "semibold": 650, "bold": 750, "black": 850},
+    "scale": {
+      "eyebrow": {"fontSize": "12px", "lineHeight": "16px", "letterSpacing": "0.12em", "fontWeight": 800},
+      "h1": {"fontSize": "30px", "lineHeight": "36px", "letterSpacing": "-0.035em", "fontWeight": 850},
+      "h2": {"fontSize": "22px", "lineHeight": "30px", "letterSpacing": "-0.025em", "fontWeight": 800},
+      "h3": {"fontSize": "16px", "lineHeight": "22px", "fontWeight": 750},
+      "body": {"fontSize": "14px", "lineHeight": "22px", "fontWeight": 450},
+      "caption": {"fontSize": "12px", "lineHeight": "16px", "fontWeight": 600},
+      "micro": {"fontSize": "11px", "lineHeight": "14px", "fontWeight": 700}
+    }
+  },
+  "spacing": {"4": 4, "8": 8, "10": 10, "12": 12, "14": 14, "16": 16, "18": 18, "20": 20, "24": 24, "28": 28, "32": 32, "40": 40, "48": 48, "64": 64},
+  "radius": {"sm": 10, "md": 14, "lg": 18, "xl": 22, "pill": 999},
+  "shadows": {
+    "soft": "0 10px 28px rgba(17, 19, 24, 0.06)",
+    "card": "0 18px 44px rgba(17, 19, 24, 0.07)",
+    "violet": "0 18px 40px rgba(108, 77, 255, 0.22)"
+  },
+  "layout": {
+    "desktopCanvas": {"width": 1586, "height": 992, "ratio": "16:10"},
+    "sidebar": {"width": 220, "padding": 24, "itemHeight": 44},
+    "mainPadding": "28px 32px 32px",
+    "topbarHeightApprox": 74,
+    "kpiHeight": 118,
+    "cardGap": 16
+  },
+  "motion": {
+    "durationFast": "160ms",
+    "durationBase": "220ms",
+    "easing": "cubic-bezier(.2,.8,.2,1)",
+    "hoverLift": "translateY(-2px)",
+    "reduceMotion": "respect prefers-reduced-motion"
+  }
+}
