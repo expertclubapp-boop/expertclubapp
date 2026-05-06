@@ -15,7 +15,7 @@ export function LoginScreen() {
   const location = useLocation()
   const { loginWithGoogle, loginWithEmail, isLoading } = useAuth()
   const from = (location.state as { from?: { pathname: string; search?: string; hash?: string } } | null)?.from
-  const redirectTo = from ? `${from.pathname}${from.search || ''}${from.hash || ''}` : '/'
+  const redirectTo = from ? `${from.pathname}${from.search || ''}${from.hash || ''}` : '/app'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [errorMessage, setErrorMessage] = useState('')

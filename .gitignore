@@ -1,6 +1,8 @@
 node_modules
 dist
 build
+.playwright-mcp
+*.tsbuildinfo
 .env
 .env.local
 .env.production

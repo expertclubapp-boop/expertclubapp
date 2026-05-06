@@ -89,7 +89,8 @@ export const ExpertLogo: React.FC<LogoProps> = ({
           fill={nodeFill}
           stroke={accentColor} 
           strokeWidth="3"
-          animate={animate ? { r: [4.5, 5.5, 4.5], fill: [accentColor, nodeFill, accentColor] } : {}}
+          style={{ transformBox: 'fill-box', transformOrigin: 'center' }}
+          animate={animate ? { scale: [1, 1.18, 1], fill: [accentColor, nodeFill, accentColor] } : {}}
           transition={{ duration: 2, repeat: Infinity }}
         />
 
