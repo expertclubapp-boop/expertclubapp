@@ -74,6 +74,18 @@ const DesignSystemScreen = lazy(() => import('../screens/design-system/DesignSys
 const UxBlueprintScreen = lazy(() => import('../screens/design-system/UxBlueprintScreen').then(m => ({ default: m.UxBlueprintScreen })))
 const StudentDashboardScreen = lazy(() => import('../screens/student/StudentDashboardScreen').then(m => ({ default: m.StudentDashboardScreen })))
 const MentorDashboardScreen = lazy(() => import('../screens/mentor/MentorDashboardScreen').then(m => ({ default: m.MentorDashboardScreen })))
+const StudentMobileDashboardScreen = lazy(() => import('../screens/handoff/ExpertClubV2Screens').then(m => ({ default: m.StudentMobileDashboardScreen })))
+const StudentWorkoutPreviewScreen = lazy(() => import('../screens/handoff/ExpertClubV2Screens').then(m => ({ default: m.StudentWorkoutPreviewScreen })))
+const StudentWorkoutSessionScreen = lazy(() => import('../screens/handoff/ExpertClubV2Screens').then(m => ({ default: m.StudentWorkoutSessionScreen })))
+const StudentDietMobileScreen = lazy(() => import('../screens/handoff/ExpertClubV2Screens').then(m => ({ default: m.StudentDietMobileScreen })))
+const StudentRankingMobileScreen = lazy(() => import('../screens/handoff/ExpertClubV2Screens').then(m => ({ default: m.StudentRankingMobileScreen })))
+const MentorOverviewScreen = lazy(() => import('../screens/handoff/ExpertClubV2Screens').then(m => ({ default: m.MentorOverviewScreen })))
+const MentorFinanceScreen = lazy(() => import('../screens/handoff/ExpertClubV2Screens').then(m => ({ default: m.MentorFinanceScreen })))
+const MentorWorkoutPrescriptorScreen = lazy(() => import('../screens/handoff/ExpertClubV2Screens').then(m => ({ default: m.MentorWorkoutPrescriptorScreen })))
+const MentorDietPrescriptorScreen = lazy(() => import('../screens/handoff/ExpertClubV2Screens').then(m => ({ default: m.MentorDietPrescriptorScreen })))
+const MentorStudentsScreen = lazy(() => import('../screens/handoff/ExpertClubV2Screens').then(m => ({ default: m.MentorStudentsScreen })))
+const MentorInfluencersScreen = lazy(() => import('../screens/handoff/ExpertClubV2Screens').then(m => ({ default: m.MentorInfluencersScreen })))
+const AdminProductOverviewScreen = lazy(() => import('../screens/handoff/ExpertClubV2Screens').then(m => ({ default: m.AdminProductOverviewScreen })))
 function RootRoute() {
   return <PublicLandingScreen />
 }
@@ -96,10 +108,32 @@ export const router = createBrowserRouter([
   { path: '/expert-club', element: <PublicLandingScreen /> },
   { path: '/design-system', element: <DesignSystemScreen /> },
   { path: '/ux-blueprint', element: <UxBlueprintScreen /> },
-  { path: '/student/dashboard', element: <StudentDashboardScreen /> },
-  { path: '/dashboard/aluno', element: <StudentDashboardScreen /> },
-  { path: '/mentor/dashboard', element: <MentorDashboardScreen /> },
-  { path: '/dashboard/mentor', element: <MentorDashboardScreen /> },
+  { path: '/student/dashboard', element: <StudentMobileDashboardScreen /> },
+  { path: '/dashboard/aluno', element: <StudentMobileDashboardScreen /> },
+  { path: '/student/workout', element: <StudentWorkoutPreviewScreen /> },
+  { path: '/student/workouts', element: <StudentWorkoutPreviewScreen /> },
+  { path: '/student/workout/session', element: <StudentWorkoutSessionScreen /> },
+  { path: '/student/workout-monitor', element: <StudentWorkoutSessionScreen /> },
+  { path: '/student/diet', element: <StudentDietMobileScreen /> },
+  { path: '/student/dieta', element: <StudentDietMobileScreen /> },
+  { path: '/student/ranking', element: <StudentRankingMobileScreen /> },
+  { path: '/student/legacy-dashboard', element: <StudentDashboardScreen /> },
+  { path: '/mentor/overview', element: <MentorOverviewScreen /> },
+  { path: '/mentor/dashboard', element: <MentorOverviewScreen /> },
+  { path: '/dashboard/mentor', element: <MentorOverviewScreen /> },
+  { path: '/mentor/financeiro', element: <MentorFinanceScreen /> },
+  { path: '/mentor/finance', element: <MentorFinanceScreen /> },
+  { path: '/mentor/treinos/prescritor', element: <MentorWorkoutPrescriptorScreen /> },
+  { path: '/mentor/workouts/prescriptor', element: <MentorWorkoutPrescriptorScreen /> },
+  { path: '/mentor/dietas/prescritor', element: <MentorDietPrescriptorScreen /> },
+  { path: '/mentor/diets/prescriptor', element: <MentorDietPrescriptorScreen /> },
+  { path: '/mentor/alunos', element: <MentorStudentsScreen /> },
+  { path: '/mentor/students', element: <MentorStudentsScreen /> },
+  { path: '/mentor/influencers', element: <MentorInfluencersScreen /> },
+  { path: '/mentor/legacy-dashboard', element: <MentorDashboardScreen /> },
+  { path: '/admin/overview', element: <AdminProductOverviewScreen /> },
+  { path: '/admin/produto', element: <AdminProductOverviewScreen /> },
+  { path: '/admin/product', element: <AdminProductOverviewScreen /> },
   {
     path: '/login',
     element: (

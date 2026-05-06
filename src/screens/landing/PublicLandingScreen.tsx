@@ -44,12 +44,26 @@ const navItems = [
 
 export function PublicLandingScreen() {
   const navigate = useNavigate()
+  const goToSignup = () => navigate('/signup')
+  const goToLogin = () => navigate('/login')
+  const scrollTo = (id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+  const talkToConsultant = () => {
+    window.open(
+      'https://wa.me/5511999999999?text=Quero%20falar%20com%20um%20consultor%20sobre%20o%20Expert%20Club',
+      '_blank',
+      'noopener,noreferrer',
+    )
+  }
 
   return (
     <div className="ec-reference ec-landing-ref">
       <header className="ec-landing-nav">
         <div className="ec-landing-nav-inner">
-          <ExpertLogo className="ec-ref-logo ec-landing-logo" />
+          <button type="button" className="ec-landing-logo-button" onClick={() => navigate('/')} aria-label="Ir para o início">
+            <ExpertLogo className="ec-ref-logo ec-landing-logo" />
+          </button>
           <nav aria-label="Navegação da landing">
             {navItems.map(([item, href], index) => (
               <a key={item} href={href} className={index === 0 ? 'is-active' : ''}>
@@ -58,8 +72,8 @@ export function PublicLandingScreen() {
             ))}
           </nav>
           <div className="ec-landing-nav-actions">
-            <Button variant="secondary" onClick={() => navigate('/login')}>Entrar</Button>
-            <Button icon={<ArrowRight size={16} />} onClick={() => navigate('/signup')}>Começar agora</Button>
+            <Button variant="secondary" onClick={goToLogin}>Entrar</Button>
+            <Button icon={<ArrowRight size={16} />} onClick={goToSignup}>Começar agora</Button>
           </div>
         </div>
       </header>
@@ -80,8 +94,8 @@ export function PublicLandingScreen() {
               transformar seus hábitos e alcançar seus melhores resultados.
             </p>
             <div className="ec-landing-ctas">
-              <Button icon={<ArrowRight size={17} />} onClick={() => navigate('/signup')}>Começar agora</Button>
-              <Button variant="ghost" icon={<PlayCircle size={17} />}>Ver como funciona</Button>
+              <Button icon={<ArrowRight size={17} />} onClick={goToSignup}>Começar agora</Button>
+              <Button variant="ghost" icon={<PlayCircle size={17} />} onClick={() => scrollTo('recursos')}>Ver como funciona</Button>
             </div>
             <div className="ec-landing-benefits">
               {benefits.map(([title, body], index) => (
@@ -149,8 +163,8 @@ export function PublicLandingScreen() {
             <p>Comece agora e tenha tudo o que precisa para transformar sua rotina e conquistar seus objetivos.</p>
           </div>
           <div className="ec-landing-final-actions">
-            <Button icon={<ArrowRight size={17} />} onClick={() => navigate('/signup')}>Começar agora</Button>
-            <Button variant="ghost" icon={<MessageCircle size={17} />}>Falar com um consultor</Button>
+            <Button icon={<ArrowRight size={17} />} onClick={goToSignup}>Começar agora</Button>
+            <Button variant="ghost" icon={<MessageCircle size={17} />} onClick={talkToConsultant}>Falar com um consultor</Button>
             <div>
               <span><CheckCircle2 /> 7 dias grátis</span>
               <span><CheckCircle2 /> Cancele quando quiser</span>
