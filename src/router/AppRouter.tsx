@@ -77,14 +77,28 @@ const StudentMobileDashboardScreen = lazy(() => import('../screens/handoff/Exper
 const StudentWorkoutPreviewScreen = lazy(() => import('../screens/handoff/ExpertClubV2Screens').then(m => ({ default: m.StudentWorkoutPreviewScreen })))
 const StudentWorkoutSessionScreen = lazy(() => import('../screens/handoff/ExpertClubV2Screens').then(m => ({ default: m.StudentWorkoutSessionScreen })))
 const StudentDietMobileScreen = lazy(() => import('../screens/handoff/ExpertClubV2Screens').then(m => ({ default: m.StudentDietMobileScreen })))
+const StudentProfileMobileScreen = lazy(() => import('../screens/handoff/ExpertClubV2Screens').then(m => ({ default: m.StudentProfileMobileScreen })))
 const StudentRankingMobileScreen = lazy(() => import('../screens/handoff/ExpertClubV2Screens').then(m => ({ default: m.StudentRankingMobileScreen })))
 const MentorOverviewScreen = lazy(() => import('../screens/handoff/ExpertClubV2Screens').then(m => ({ default: m.MentorOverviewScreen })))
+const MentorCheckinsScreen = lazy(() => import('../screens/handoff/ExpertClubV2Screens').then(m => ({ default: m.MentorCheckinsScreen })))
+const MentorAgendaScreen = lazy(() => import('../screens/handoff/ExpertClubV2Screens').then(m => ({ default: m.MentorAgendaScreen })))
 const MentorFinanceScreen = lazy(() => import('../screens/handoff/ExpertClubV2Screens').then(m => ({ default: m.MentorFinanceScreen })))
+const MentorReportsScreen = lazy(() => import('../screens/handoff/ExpertClubV2Screens').then(m => ({ default: m.MentorReportsScreen })))
+const MentorSettingsScreen = lazy(() => import('../screens/handoff/ExpertClubV2Screens').then(m => ({ default: m.MentorSettingsScreen })))
 const MentorWorkoutPrescriptorScreen = lazy(() => import('../screens/handoff/ExpertClubV2Screens').then(m => ({ default: m.MentorWorkoutPrescriptorScreen })))
 const MentorDietPrescriptorScreen = lazy(() => import('../screens/handoff/ExpertClubV2Screens').then(m => ({ default: m.MentorDietPrescriptorScreen })))
 const MentorStudentsScreen = lazy(() => import('../screens/handoff/ExpertClubV2Screens').then(m => ({ default: m.MentorStudentsScreen })))
 const MentorInfluencersScreen = lazy(() => import('../screens/handoff/ExpertClubV2Screens').then(m => ({ default: m.MentorInfluencersScreen })))
 const AdminProductOverviewScreen = lazy(() => import('../screens/handoff/ExpertClubV2Screens').then(m => ({ default: m.AdminProductOverviewScreen })))
+const AdminWorkspacesScreen = lazy(() => import('../screens/handoff/ExpertClubV2Screens').then(m => ({ default: m.AdminWorkspacesScreen })))
+const AdminSubscriptionsV2Screen = lazy(() => import('../screens/handoff/ExpertClubV2Screens').then(m => ({ default: m.AdminSubscriptionsV2Screen })))
+const AdminUsersV2Screen = lazy(() => import('../screens/handoff/ExpertClubV2Screens').then(m => ({ default: m.AdminUsersV2Screen })))
+const AdminInfluencersV2Screen = lazy(() => import('../screens/handoff/ExpertClubV2Screens').then(m => ({ default: m.AdminInfluencersV2Screen })))
+const AdminContentV2Screen = lazy(() => import('../screens/handoff/ExpertClubV2Screens').then(m => ({ default: m.AdminContentV2Screen })))
+const AdminFinanceV2Screen = lazy(() => import('../screens/handoff/ExpertClubV2Screens').then(m => ({ default: m.AdminFinanceV2Screen })))
+const AdminSupportV2Screen = lazy(() => import('../screens/handoff/ExpertClubV2Screens').then(m => ({ default: m.AdminSupportV2Screen })))
+const AdminMetricsV2Screen = lazy(() => import('../screens/handoff/ExpertClubV2Screens').then(m => ({ default: m.AdminMetricsV2Screen })))
+const AdminSettingsV2Screen = lazy(() => import('../screens/handoff/ExpertClubV2Screens').then(m => ({ default: m.AdminSettingsV2Screen })))
 function RootRoute() {
   return <PublicLandingScreen />
 }
@@ -115,13 +129,18 @@ export const router = createBrowserRouter([
   { path: '/student/workout-monitor', element: <AppRoute><StudentWorkoutSessionScreen /></AppRoute> },
   { path: '/student/diet', element: <AppRoute><StudentDietMobileScreen /></AppRoute> },
   { path: '/student/dieta', element: <AppRoute><StudentDietMobileScreen /></AppRoute> },
+  { path: '/student/profile', element: <AppRoute><StudentProfileMobileScreen /></AppRoute> },
   { path: '/student/ranking', element: <AppRoute><StudentRankingMobileScreen /></AppRoute> },
   { path: '/student/legacy-dashboard', element: <StudentDashboardScreen /> },
   { path: '/mentor/overview', element: <AdminRoute><MentorOverviewScreen /></AdminRoute> },
   { path: '/mentor/dashboard', element: <AdminRoute><MentorOverviewScreen /></AdminRoute> },
   { path: '/dashboard/mentor', element: <AdminRoute><MentorOverviewScreen /></AdminRoute> },
+  { path: '/mentor/checkins', element: <AdminRoute><MentorCheckinsScreen /></AdminRoute> },
+  { path: '/mentor/agenda', element: <AdminRoute><MentorAgendaScreen /></AdminRoute> },
   { path: '/mentor/financeiro', element: <AdminRoute><MentorFinanceScreen /></AdminRoute> },
   { path: '/mentor/finance', element: <AdminRoute><MentorFinanceScreen /></AdminRoute> },
+  { path: '/mentor/relatorios', element: <AdminRoute><MentorReportsScreen /></AdminRoute> },
+  { path: '/mentor/configuracoes', element: <AdminRoute><MentorSettingsScreen /></AdminRoute> },
   { path: '/mentor/treinos/prescritor', element: <AdminRoute><MentorWorkoutPrescriptorScreen /></AdminRoute> },
   { path: '/mentor/workouts/prescriptor', element: <AdminRoute><MentorWorkoutPrescriptorScreen /></AdminRoute> },
   { path: '/mentor/dietas/prescritor', element: <AdminRoute><MentorDietPrescriptorScreen /></AdminRoute> },
@@ -134,6 +153,15 @@ export const router = createBrowserRouter([
   { path: '/admin/overview', element: <AdminRoute><AdminProductOverviewScreen /></AdminRoute> },
   { path: '/admin/produto', element: <AdminRoute><AdminProductOverviewScreen /></AdminRoute> },
   { path: '/admin/product', element: <AdminRoute><AdminProductOverviewScreen /></AdminRoute> },
+  { path: '/admin/workspaces', element: <AdminRoute><AdminWorkspacesScreen /></AdminRoute> },
+  { path: '/admin/subscriptions', element: <AdminRoute><AdminSubscriptionsV2Screen /></AdminRoute> },
+  { path: '/admin/users', element: <AdminRoute><AdminUsersV2Screen /></AdminRoute> },
+  { path: '/admin/affiliates', element: <AdminRoute><AdminInfluencersV2Screen /></AdminRoute> },
+  { path: '/admin/content', element: <AdminRoute><AdminContentV2Screen /></AdminRoute> },
+  { path: '/admin/financeiro', element: <AdminRoute><AdminFinanceV2Screen /></AdminRoute> },
+  { path: '/admin/support', element: <AdminRoute><AdminSupportV2Screen /></AdminRoute> },
+  { path: '/admin/metrics', element: <AdminRoute><AdminMetricsV2Screen /></AdminRoute> },
+  { path: '/admin/settings', element: <AdminRoute><AdminSettingsV2Screen /></AdminRoute> },
   {
     path: '/login',
     element: (

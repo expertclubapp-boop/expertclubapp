@@ -31,6 +31,7 @@ import {
   Flame,
   Flag,
   Gift,
+  Globe,
   Heart,
   HelpCircle,
   Home,
@@ -57,6 +58,8 @@ import {
   Target,
   Timer,
   Trophy,
+  TrendingDown,
+  TrendingUp,
   UserPlus,
   UserRound,
   Users,
@@ -88,27 +91,27 @@ type ActiveNav =
 const mentorNav = [
   { label: 'Visão geral', icon: Home, href: '/mentor/overview' },
   { label: 'Alunos', icon: Users, href: '/mentor/alunos' },
-  { label: 'Check-ins', icon: CalendarCheck, href: '/mentor/overview#checkins' },
+  { label: 'Check-ins', icon: CalendarCheck, href: '/mentor/checkins' },
   { label: 'Treinos', icon: Dumbbell, href: '/mentor/treinos/prescritor' },
   { label: 'Dietas', icon: Utensils, href: '/mentor/dietas/prescritor' },
-  { label: 'Agenda', icon: Calendar, href: '/mentor/overview#agenda' },
+  { label: 'Agenda', icon: Calendar, href: '/mentor/agenda' },
   { label: 'Financeiro', icon: CircleDollarSign, href: '/mentor/financeiro' },
   { label: 'Influencers', icon: Trophy, href: '/mentor/influencers' },
-  { label: 'Relatórios', icon: BarChart3, href: '/mentor/overview#relatorios' },
-  { label: 'Configurações', icon: Settings, href: '/mentor/overview#configuracoes' },
+  { label: 'Relatórios', icon: BarChart3, href: '/mentor/relatorios' },
+  { label: 'Configurações', icon: Settings, href: '/mentor/configuracoes' },
 ] as const
 
 const adminNav = [
   { label: 'Visão geral', icon: Home, href: '/admin/dashboard' },
-  { label: 'Workspaces', icon: Building2, href: '/admin/dashboard#workspaces' },
-  { label: 'Assinaturas', icon: CalendarCheck, href: '/admin/dashboard#assinaturas' },
-  { label: 'Usuários', icon: Users, href: '/admin/dashboard#usuarios' },
-  { label: 'Influencers', icon: Trophy, href: '/admin/dashboard#influencers' },
-  { label: 'Conteúdo', icon: BookOpen, href: '/admin/dashboard#conteudo' },
-  { label: 'Financeiro', icon: CircleDollarSign, href: '/admin/dashboard#financeiro' },
-  { label: 'Suporte', icon: HelpCircle, href: '/admin/dashboard#suporte' },
-  { label: 'Métricas SaaS', icon: BarChart3, href: '/admin/dashboard#metricas' },
-  { label: 'Configurações', icon: Settings, href: '/admin/dashboard#configuracoes' },
+  { label: 'Workspaces', icon: Building2, href: '/admin/workspaces' },
+  { label: 'Assinaturas', icon: CalendarCheck, href: '/admin/subscriptions' },
+  { label: 'Usuários', icon: Users, href: '/admin/users' },
+  { label: 'Influencers', icon: Trophy, href: '/admin/affiliates' },
+  { label: 'Conteúdo', icon: BookOpen, href: '/admin/content' },
+  { label: 'Financeiro', icon: CircleDollarSign, href: '/admin/financeiro' },
+  { label: 'Suporte', icon: HelpCircle, href: '/admin/support' },
+  { label: 'Métricas SaaS', icon: BarChart3, href: '/admin/metrics' },
+  { label: 'Configurações', icon: Settings, href: '/admin/settings' },
 ] as const
 
 const people = [
@@ -785,6 +788,148 @@ export function MentorStudentsScreen() {
   )
 }
 
+export function MentorCheckinsScreen() {
+  const rows = people.slice(0, 6).map((name, index) => [
+    <span className="ec-v2-person" key="student"><Avatar name={name} index={index} /> {name}</span>,
+    ['Semanal', 'Diário', 'Semanal', 'Diário', 'Semanal', 'Diário'][index],
+    ['Enviado', 'Pendente', 'Respondido', 'Em revisão', 'Pendente', 'Respondido'][index],
+    ['Sono, energia e foco', 'Humor e hidratação', 'Medidas e percepção corporal', 'Dor muscular', 'Check-in semanal completo', 'Bem-estar geral'][index],
+    ['Hoje, 08:30', 'Hoje, 10:00', 'Ontem, 20:40', 'Ontem, 18:15', '3 dias atrás', 'Hoje, 07:50'][index],
+    <Badge key="status" tone={index === 1 || index === 4 ? 'warning' : index === 3 ? 'info' : 'success'}>{index === 1 || index === 4 ? 'Pendente' : index === 3 ? 'Revisão' : 'Concluído'}</Badge>,
+  ])
+
+  return (
+    <DesktopShell active="Check-ins" title="Check-ins" subtitle="Acompanhe respostas, pendências e sinais de risco dos seus alunos.">
+      <div className="ec-v2-kpi-grid ec-v2-kpi-grid--six">
+        {[
+          { icon: ClipboardCheck, label: 'Recebidos hoje', value: '18', trend: '12%' },
+          { icon: CalendarCheck, label: 'Pendentes', value: '9', trend: '4%', warning: true },
+          { icon: ShieldAlert, label: 'Precisam revisão', value: '6', trend: '2%', danger: true },
+          { icon: Heart, label: 'Bem-estar médio', value: '8,4', trend: '0,6' },
+          { icon: Moon, label: 'Sono médio', value: '7h 18m', trend: '5%' },
+          { icon: Flame, label: 'Consistência', value: '81%', trend: '9%' },
+        ].map((kpi) => <KpiCard key={kpi.label} {...kpi} />)}
+      </div>
+      <div className="ec-v2-dashboard-grid">
+        <Card className="ec-v2-chart-card ec-v2-main-chart">
+          <div className="ec-v2-card-head"><h2>Volume de check-ins <HelpCircle size={16} /></h2><div className="ec-v2-chart-legend"><i /> Respostas <b /> Meta</div></div>
+          <LineAreaChart tall dotted />
+        </Card>
+        <Card className="ec-v2-table-card">
+          <div className="ec-v2-card-head"><h2>Fila de check-ins</h2><button type="button" className="ec-v2-control">Todos <ChevronDown size={15} /></button></div>
+          <DataTable columns={['Aluno', 'Tipo', 'Status', 'Resumo', 'Recebido em', 'Ação']} rows={rows} action />
+        </Card>
+        <Card className="ec-v2-side-metric">
+          <IconBubble icon={ShieldAlert} tone="warning" />
+          <div><span>Alertas prioritários</span><strong>4 alunos</strong><p><TrendChip value="2 novos" warning /> precisam contato hoje</p></div>
+          <Sparkline danger />
+        </Card>
+        <Card className="ec-v2-side-metric">
+          <IconBubble icon={MessageCircle} tone="info" />
+          <div><span>Mensagens preparadas</span><strong>12</strong><p><TrendChip value="7%" /> templates prontos para follow-up</p></div>
+          <Sparkline />
+        </Card>
+      </div>
+    </DesktopShell>
+  )
+}
+
+export function MentorAgendaScreen() {
+  const events = [
+    ['08:00', 'Revisão de check-ins', '12 alunos aguardando retorno'],
+    ['10:30', 'Sessão ao vivo da comunidade', 'Tema: rotina de treino'],
+    ['14:00', 'Ajuste de plano alimentar', 'Juliana Martins'],
+    ['17:30', 'Envio de prescrições', 'Treino de força - turma elite'],
+  ]
+
+  return (
+    <DesktopShell active="Agenda" title="Agenda do mentor" subtitle="Organize seus compromissos, entregas e rituais de acompanhamento.">
+      <div className="ec-v2-kpi-grid ec-v2-kpi-grid--five">
+        {[
+          { icon: Calendar, label: 'Compromissos hoje', value: '14', trend: '3%' },
+          { icon: Users, label: 'Atendimentos', value: '6', trend: '2%' },
+          { icon: ClipboardCheck, label: 'Entregas pendentes', value: '11', trend: '9%', warning: true },
+          { icon: Bell, label: 'Lembretes ativos', value: '8', trend: '1%' },
+          { icon: Clock, label: 'Horas planejadas', value: '7h 30m', trend: '5%' },
+        ].map((kpi) => <KpiCard key={kpi.label} {...kpi} />)}
+      </div>
+      <div className="ec-v2-dashboard-grid">
+        <Card className="ec-v2-table-card">
+          <div className="ec-v2-card-head"><h2>Agenda de hoje</h2><V2Button icon={<Plus size={16} />}>Novo bloco</V2Button></div>
+          {events.map(([time, title, body]) => (
+            <div key={time} className="ec-v2-alert-row">
+              <Badge tone="violet">{time}</Badge>
+              <div><strong>{title}</strong><span>{body}</span></div>
+              <ChevronRight size={16} />
+            </div>
+          ))}
+        </Card>
+        <Card className="ec-v2-chart-card">
+          <div className="ec-v2-card-head"><h2>Carga da semana</h2><button type="button" className="ec-v2-control">Semanal <ChevronDown size={15} /></button></div>
+          <LineAreaChart dotted />
+        </Card>
+        <Card className="ec-v2-ranking-card">
+          <div className="ec-v2-card-head"><h2>Próximos marcos</h2></div>
+          {['Renovação de turma elite', 'Lançamento desafio 21 dias', 'Fechamento de repasses', 'Encontro com afiliados'].map((item, index) => (
+            <div className="ec-v2-ranking-row" key={item}>
+              <span>{index + 1}</span>
+              <strong>{item}</strong>
+              <ProgressBar value={[92, 64, 48, 30][index]} />
+              <b>{['2d', '4d', '6d', '9d'][index]}</b>
+            </div>
+          ))}
+        </Card>
+      </div>
+    </DesktopShell>
+  )
+}
+
+export function MentorReportsScreen() {
+  const rows = [
+    ['Adesão média', '85%', '↑ 9%', 'Excelente'],
+    ['Conclusão de treinos', '72%', '↑ 12%', 'Boa'],
+    ['Check-ins respondidos', '81%', '↑ 7%', 'Boa'],
+    ['Alunos em risco', '14', '↓ 3%', 'Atenção'],
+  ].map(([metric, value, trend, status]) => [
+    metric,
+    value,
+    <TrendChip key="trend" value={trend.replace('↑ ', '').replace('↓ ', '')} danger={trend.includes('↓')} />,
+    <Badge key="status" tone={status === 'Atenção' ? 'warning' : 'success'}>{status}</Badge>,
+  ])
+
+  return (
+    <DesktopShell active="Relatórios" title="Relatórios" subtitle="Veja evolução, retenção e impacto das suas intervenções.">
+      <div className="ec-v2-kpi-grid ec-v2-kpi-grid--six">
+        {[
+          { icon: BarChart3, label: 'Adesão média', value: '85%', trend: '9%' },
+          { icon: LineChart, label: 'Retenção 30d', value: '91%', trend: '4%' },
+          { icon: Trophy, label: 'Desafios concluídos', value: '128', trend: '18%' },
+          { icon: Heart, label: 'Bem-estar médio', value: '8,4', trend: '6%' },
+          { icon: CircleDollarSign, label: 'LTV estimado', value: 'R$ 1.420', trend: '10%' },
+          { icon: Star, label: 'NPS', value: '72', trend: '5%' },
+        ].map((kpi) => <KpiCard key={kpi.label} {...kpi} />)}
+      </div>
+      <div className="ec-v2-dashboard-grid">
+        <Card className="ec-v2-chart-card ec-v2-main-chart"><div className="ec-v2-card-head"><h2>Retenção e evolução</h2><div className="ec-v2-chart-legend"><i /> Retenção <b /> Meta</div></div><LineAreaChart tall dotted /></Card>
+        <Card className="ec-v2-donut-card"><div className="ec-v2-card-head"><h2>Distribuição dos resultados</h2></div><div className="ec-v2-donut-layout"><DonutChart center="156" label="alunos" /><Legend items={['Alta performance 34%', 'Consistentes 29%', 'Oscilando 23%', 'Em risco 14%']} /></div></Card>
+        <Card className="ec-v2-table-card"><div className="ec-v2-card-head"><h2>Indicadores principais</h2></div><DataTable columns={['Métrica', 'Atual', 'Variação', 'Status']} rows={rows} /></Card>
+      </div>
+    </DesktopShell>
+  )
+}
+
+export function MentorSettingsScreen() {
+  return (
+    <DesktopShell active="Configurações" title="Configurações do mentor" subtitle="Ajuste preferências de operação, comunicação e entrega.">
+      <div className="ec-v2-dashboard-grid">
+        <Card className="ec-v2-table-card"><div className="ec-v2-card-head"><h2>Preferências do workspace</h2></div>{['Janela de check-in', 'Meta padrão de hidratação', 'Idioma do app', 'Ritmo de notificações'].map((item, index) => <div className="ec-v2-alert-row" key={item}><strong>{item}</strong><Badge tone="neutral">{['20:00', '2,5 L', 'Português', 'Moderado'][index]}</Badge><V2Button variant="ghost">Editar</V2Button></div>)}</Card>
+        <Card className="ec-v2-table-card"><div className="ec-v2-card-head"><h2>Automação e playbooks</h2></div>{['Mensagem para aluno em risco', 'Boas-vindas de onboarding', 'Resumo semanal automático'].map((item, index) => <div className="ec-v2-alert-row" key={item}><IconBubble icon={[ShieldAlert, Sparkles, CalendarCheck][index]} /><div><strong>{item}</strong><span>{['Ativo com envio em 24h', 'Ativo no cadastro', 'Toda segunda-feira'][index]}</span></div><V2Button variant="ghost">Ajustar</V2Button></div>)}</Card>
+        <Card className="ec-v2-quick-actions"><h2>Ações rápidas</h2><V2Button icon={<Settings size={18} />}>Preferências gerais</V2Button><V2Button icon={<Bell size={18} />}>Notificações</V2Button><V2Button icon={<ShieldCheck size={18} />}>Permissões</V2Button></Card>
+      </div>
+    </DesktopShell>
+  )
+}
+
 export function MentorWorkoutPrescriptorScreen() {
   const exercises = ['Supino reto com barra', 'Supino inclinado halteres', 'Crucifixo na máquina', 'Desenvolvimento com halteres', 'Elevação lateral', 'Tríceps na polia']
   const rows = exercises.map((name, index) => [
@@ -965,6 +1110,199 @@ export function AdminProductOverviewScreen() {
   )
 }
 
+export function AdminWorkspacesScreen() {
+  const rows = ['Alpha Team', 'Performance Hub', 'Elite Coaching', 'Next Level', 'Growth Hub'].map((name, index) => [
+    <span className="ec-v2-person" key="workspace"><Avatar name={name} index={index} /> {name}</span>,
+    ['Expert Pro', 'Expert Plus', 'Trial', 'Expert Pro', 'Essential'][index],
+    ['142', '98', '12', '86', '54'][index],
+    ['R$ 28.900', 'R$ 18.750', 'R$ 0', 'R$ 16.340', 'R$ 9.870'][index],
+    <Badge key="health" tone={index === 2 ? 'warning' : 'success'}>{index === 2 ? 'Onboarding' : 'Saudável'}</Badge>,
+    ['Hoje', 'Hoje', 'Ontem', 'Hoje', '2 dias'][index],
+  ])
+
+  return (
+    <DesktopShell admin active="Workspaces" eyebrow="ADMINISTRAÇÃO" title="Workspaces" subtitle="Acompanhe ativação, saúde e receita por workspace.">
+      <div className="ec-v2-kpi-grid ec-v2-kpi-grid--six">{[
+        { icon: Building2, label: 'Workspaces ativos', value: '128', trend: '8%' },
+        { icon: Users, label: 'Usuários totais', value: '3.469', trend: '11%' },
+        { icon: CircleDollarSign, label: 'MRR por workspace', value: 'R$ 1.920', trend: '6%' },
+        { icon: CalendarCheck, label: 'Onboarding em curso', value: '12', trend: '3%' },
+        { icon: ShieldAlert, label: 'Em risco', value: '7', trend: '2%', warning: true },
+        { icon: Star, label: 'Saúde média', value: '8,8', trend: '4%' },
+      ].map((kpi) => <KpiCard key={kpi.label} {...kpi} />)}</div>
+      <div className="ec-v2-dashboard-grid">
+        <Card className="ec-v2-table-card ec-v2-wide-table"><div className="ec-v2-card-head"><h2>Lista de workspaces</h2><V2Button icon={<Plus size={16} />}>Novo workspace</V2Button></div><DataTable columns={['Workspace', 'Plano', 'Usuários', 'MRR', 'Saúde', 'Última atividade']} rows={rows} action /></Card>
+        <Card className="ec-v2-funnel-card"><h2>Ativação</h2><div className="ec-v2-funnel-layout"><FunnelChart /><div><p>Criados <strong>128</strong></p><p>Convite enviado <strong>94</strong></p><p>Primeira venda <strong>58</strong></p><p>Engajados <strong>46</strong></p></div></div><span>36% chegaram ao estágio engajado</span></Card>
+        <Card className="ec-v2-health-card"><h2>Saúde por faixa</h2>{['Excelente', 'Boa', 'Atenção', 'Crítica'].map((item, index) => <p key={item}><IconBubble icon={[Star, ShieldCheck, ShieldAlert, Heart][index]} /><span>{item}</span><Badge tone={index < 2 ? 'success' : index === 2 ? 'warning' : 'danger'}>{[42, 51, 24, 11][index]}</Badge></p>)}</Card>
+      </div>
+    </DesktopShell>
+  )
+}
+
+export function AdminSubscriptionsV2Screen() {
+  const rows = people.slice(0, 6).map((name, index) => [
+    <span className="ec-v2-person" key="user"><Avatar name={name} index={index} /> {name}</span>,
+    ['Expert Pro', 'Expert Plus', 'Expert Pro', 'Essential', 'Expert Pro', 'Trial'][index],
+    <Badge key="status" tone={index === 3 ? 'warning' : index === 5 ? 'neutral' : 'success'}>{index === 3 ? 'Past due' : index === 5 ? 'Trial' : 'Ativa'}</Badge>,
+    ['12/06/24', '18/06/24', '25/06/24', 'Hoje', '07/07/24', '14/06/24'][index],
+    ['R$ 197', 'R$ 537', 'R$ 197', 'R$ 97', 'R$ 197', 'R$ 0'][index],
+  ])
+
+  return (
+    <DesktopShell admin active="Assinaturas" eyebrow="ADMINISTRAÇÃO" title="Assinaturas" subtitle="Gerencie planos, renovações e inadimplência.">
+      <div className="ec-v2-kpi-grid ec-v2-kpi-grid--six">{[
+        { icon: CalendarCheck, label: 'Ativas', value: '2.845', trend: '13%' },
+        { icon: Clock, label: 'Trials', value: '184', trend: '9%' },
+        { icon: ShieldAlert, label: 'Past due', value: '32', trend: '4%', warning: true },
+        { icon: CircleDollarSign, label: 'MRR', value: 'R$ 245.760', trend: '14%' },
+        { icon: TrendingUp, label: 'Conversão trial', value: '24,8%', trend: '2,3 p.p.' },
+        { icon: TrendingDown, label: 'Churn', value: '2,1%', trend: '0,4 p.p.', danger: true },
+      ].map((kpi) => <KpiCard key={kpi.label} {...kpi} />)}</div>
+      <div className="ec-v2-dashboard-grid">
+        <Card className="ec-v2-donut-card"><div className="ec-v2-card-head"><h2>Mix de planos</h2></div><div className="ec-v2-donut-layout"><DonutChart center="2.845" label="ativas" /><Legend items={['Pro 38%', 'Plus 31%', 'Essential 22%', 'Trial 9%']} /></div></Card>
+        <Card className="ec-v2-table-card ec-v2-wide-table"><div className="ec-v2-card-head"><h2>Renovações e cobranças</h2></div><DataTable columns={['Cliente', 'Plano', 'Status', 'Próxima cobrança', 'Valor']} rows={rows} action /></Card>
+        <Card className="ec-v2-side-metric"><IconBubble icon={Wallet} tone="warning" /><div><span>Recuperação potencial</span><strong>R$ 12.480</strong><p><TrendChip value="32 contas" warning /> podem ser salvas</p></div><Sparkline /></Card>
+      </div>
+    </DesktopShell>
+  )
+}
+
+export function AdminUsersV2Screen() {
+  const rows = people.slice(0, 8).map((name, index) => [
+    <span className="ec-v2-person" key="user"><Avatar name={name} index={index} /> {name}</span>,
+    <Badge key="role" tone={index < 2 ? 'pink' : index < 4 ? 'info' : 'violet'}>{index < 2 ? 'Admin' : index < 4 ? 'Mentor' : 'Aluno'}</Badge>,
+    ['Ativo', 'Ativo', 'Convite pendente', 'Ativo', 'Ativo', 'Bloqueado', 'Ativo', 'Ativo'][index],
+    ['Hoje', 'Hoje', 'Ontem', 'Hoje', '2 dias', '5 dias', 'Hoje', 'Ontem'][index],
+    ['Workspace Alpha', 'Workspace Alpha', 'Workspace Beta', 'Workspace Beta', 'Workspace Next', 'Workspace Next', 'Workspace Growth', 'Workspace Elite'][index],
+  ])
+
+  return (
+    <DesktopShell admin active="Usuários" eyebrow="ADMINISTRAÇÃO" title="Usuários" subtitle="Controle acesso, papéis e atividade recente da base.">
+      <div className="ec-v2-kpi-grid ec-v2-kpi-grid--five">{[
+        { icon: Users, label: 'Usuários ativos', value: '3.469', trend: '11%' },
+        { icon: UserPlus, label: 'Novos convites', value: '42', trend: '7%' },
+        { icon: ShieldCheck, label: 'Admins', value: '18', trend: '2%' },
+        { icon: Bell, label: 'Bloqueios', value: '9', trend: '1%', warning: true },
+        { icon: Clock, label: 'Último acesso médio', value: '1,8 dia', trend: '3%' },
+      ].map((kpi) => <KpiCard key={kpi.label} {...kpi} />)}</div>
+      <div className="ec-v2-dashboard-grid">
+        <Card className="ec-v2-table-card ec-v2-wide-table"><div className="ec-v2-card-head"><h2>Base de usuários</h2><V2Button icon={<UserPlus size={16} />}>Convidar usuário</V2Button></div><DataTable columns={['Usuário', 'Papel', 'Status', 'Último acesso', 'Workspace']} rows={rows} action /></Card>
+        <Card className="ec-v2-bars-card"><h2>Distribuição por papel</h2>{['Alunos', 'Mentores', 'Admins', 'Afiliados'].map((item, index) => <p key={item}><span>{index + 1}</span>{item}<ProgressBar value={[72, 16, 4, 8][index]} /><b>{[2498, 556, 18, 397][index]}</b></p>)}</Card>
+        <Card className="ec-v2-operation-alerts"><div className="ec-v2-card-head"><h2>Eventos recentes</h2></div>{['3 bloqueios automáticos por segurança', '42 convites enviados hoje', '7 perfis aguardando ativação'].map((item) => <p key={item}><IconBubble icon={ShieldAlert} tone="warning" /><span><strong>{item}</strong><small>Monitorar acessos e confirmações</small></span><em>Agora</em></p>)}</Card>
+      </div>
+    </DesktopShell>
+  )
+}
+
+export function AdminInfluencersV2Screen() {
+  return (
+    <DesktopShell admin active="Influencers" eyebrow="ADMINISTRAÇÃO" title="Influencers e afiliados" subtitle="Monitore creators, receita gerada e repasses.">
+      <div className="ec-v2-kpi-grid ec-v2-kpi-grid--six">{[
+        { icon: Trophy, label: 'Creators ativos', value: '156', trend: '18%' },
+        { icon: CircleDollarSign, label: 'Receita gerada', value: 'R$ 128.450', trend: '24%' },
+        { icon: LineChart, label: 'Conversões', value: '1.248', trend: '16%' },
+        { icon: Wallet, label: 'Comissão pendente', value: 'R$ 18.640', trend: '22%', warning: true },
+        { icon: Gift, label: 'Cupons ativos', value: '86', trend: '12%' },
+        { icon: Target, label: 'CAC creator', value: 'R$ 12,34', trend: '6%' },
+      ].map((kpi) => <KpiCard key={kpi.label} {...kpi} />)}</div>
+      <div className="ec-v2-affiliate-grid">
+        <Card className="ec-v2-chart-card"><div className="ec-v2-card-head"><h2>Performance ao longo do tempo</h2></div><LineAreaChart dotted /></Card>
+        <Card className="ec-v2-funnel-card"><h2>Funil de creators</h2><div className="ec-v2-funnel-layout"><FunnelChart /><div><p>Cliques <strong>12.450</strong></p><p>Leads <strong>3.620</strong></p><p>Conversões <strong>1.248</strong></p><p>Vendas <strong>986</strong></p></div></div><span>Taxa de conversão geral: 7,9%</span></Card>
+        <Card className="ec-v2-table-card ec-v2-wide-table"><div className="ec-v2-card-head"><h2>Top creators</h2></div><DataTable columns={['Creator', 'Cupom', 'Cliques', 'Leads', 'Vendas', 'Taxa']} rows={['Ana Paula Coach', 'Lucas Ferreira', 'Carla Ribeiro', 'Rafael Almeida'].map((name, index) => [<span className="ec-v2-person" key="creator"><Avatar name={name} index={index} /> {name}</span>, ['ANA10', 'VEMPROCLUB', 'MINDSET', 'TEAMFIT'][index], ['1245', '876', '532', '982'][index], ['320', '210', '148', '260'][index], ['128', '94', '61', '112'][index], ['10,3%', '10,7%', '11,5%', '11,4%'][index]])} action /></Card>
+      </div>
+    </DesktopShell>
+  )
+}
+
+export function AdminContentV2Screen() {
+  return (
+    <DesktopShell admin active="Conteúdo" eyebrow="ADMINISTRAÇÃO" title="Conteúdo" subtitle="Gerencie biblioteca, calendário editorial e consumo.">
+      <div className="ec-v2-kpi-grid ec-v2-kpi-grid--five">{[
+        { icon: BookOpen, label: 'Peças ativas', value: '248', trend: '8%' },
+        { icon: Play, label: 'Aulas publicadas', value: '84', trend: '10%' },
+        { icon: Users, label: 'Consumo médio', value: '63%', trend: '5%' },
+        { icon: Bookmark, label: 'Salvos', value: '1.284', trend: '12%' },
+        { icon: Calendar, label: 'Publicações da semana', value: '9', trend: '2%' },
+      ].map((kpi) => <KpiCard key={kpi.label} {...kpi} />)}</div>
+      <div className="ec-v2-dashboard-grid">
+        <Card className="ec-v2-table-card ec-v2-wide-table"><div className="ec-v2-card-head"><h2>Calendário editorial</h2><V2Button icon={<Plus size={16} />}>Novo conteúdo</V2Button></div><DataTable columns={['Título', 'Formato', 'Categoria', 'Publicação', 'Status']} rows={['Rotina de treino inteligente', '7 estratégias para adesão', 'Checklist de onboarding', 'Receitas para cutting'].map((item, index) => [item, ['Vídeo', 'Artigo', 'Checklist', 'PDF'][index], ['Treino', 'Retenção', 'Onboarding', 'Nutrição'][index], ['Hoje', 'Amanhã', '15/06', '18/06'][index], <Badge key="status" tone={index < 2 ? 'success' : 'warning'}>{index < 2 ? 'Publicado' : 'Rascunho'}</Badge>])} action /></Card>
+        <Card className="ec-v2-bars-card"><h2>Formato mais consumido</h2>{['Vídeos', 'Artigos', 'PDFs', 'Checklists'].map((item, index) => <p key={item}><span>{index + 1}</span>{item}<ProgressBar value={[82, 61, 44, 28][index]} /><b>{[82, 61, 44, 28][index]}%</b></p>)}</Card>
+        <Card className="ec-v2-side-metric"><IconBubble icon={Sparkles} /><div><span>Próxima oportunidade</span><strong>Nutrição prática</strong><p><TrendChip value="alta demanda" /> entre alunos ativos</p></div><Sparkline /></Card>
+      </div>
+    </DesktopShell>
+  )
+}
+
+export function AdminFinanceV2Screen() {
+  return (
+    <DesktopShell admin active="Financeiro" eyebrow="ADMINISTRAÇÃO" title="Financeiro" subtitle="Consolide receita, comissões e repasses da operação.">
+      <div className="ec-v2-kpi-grid ec-v2-kpi-grid--six">{[
+        { icon: CircleDollarSign, label: 'MRR', value: 'R$ 245.760', trend: '14%' },
+        { icon: DollarSign, label: 'Receita recebida', value: 'R$ 228.190', trend: '11%' },
+        { icon: Wallet, label: 'Comissão pendente', value: 'R$ 18.640', trend: '22%', warning: true },
+        { icon: CreditCard, label: 'Falhas de pagamento', value: '12', trend: '3%', warning: true },
+        { icon: TrendingDown, label: 'Churn de receita', value: '2,1%', trend: '0,4 p.p.', danger: true },
+        { icon: PieChart, label: 'Margem', value: '61%', trend: '2%' },
+      ].map((kpi) => <KpiCard key={kpi.label} {...kpi} />)}</div>
+      <div className="ec-v2-finance-grid">
+        <Card className="ec-v2-chart-card"><div className="ec-v2-card-head"><h2>Evolução da receita</h2></div><LineAreaChart dotted /></Card>
+        <Card className="ec-v2-revenue-origin"><h2>Origem da receita</h2><DonutChart center="R$ 245.760" label="MRR total" /><Legend items={['Assinaturas 78%', 'Add-ons 13%', 'One-offs 6%', 'Outros 3%']} /></Card>
+        <Card className="ec-v2-table-card ec-v2-wide-table"><div className="ec-v2-card-head"><h2>Pagamentos e repasses</h2></div><DataTable columns={['Conta', 'Categoria', 'Valor', 'Status', 'Data']} rows={['Stripe Brasil', 'Assinaturas', 'R$ 128.450', 'Liquidado', 'Hoje', 'Afiliados', 'Comissões', 'R$ 18.640', 'Pendente', '12/06', 'Mentores elite', 'Repasse', 'R$ 42.900', 'Agendado', '14/06'].reduce((acc: ReactNode[][], _, i, arr) => { if (i % 5 === 0) acc.push(arr.slice(i, i + 5)); return acc }, [])} action /></Card>
+      </div>
+    </DesktopShell>
+  )
+}
+
+export function AdminSupportV2Screen() {
+  return (
+    <DesktopShell admin active="Suporte" eyebrow="ADMINISTRAÇÃO" title="Suporte" subtitle="Acompanhe tickets, SLAs e temas críticos da operação.">
+      <div className="ec-v2-kpi-grid ec-v2-kpi-grid--five">{[
+        { icon: HelpCircle, label: 'Tickets abertos', value: '18', trend: '12%' },
+        { icon: Clock, label: 'SLA médio', value: '3h 24m', trend: '5%' },
+        { icon: ShieldAlert, label: 'Críticos', value: '3', trend: '1%', danger: true },
+        { icon: CheckCircle2, label: 'Resolvidos hoje', value: '24', trend: '16%' },
+        { icon: Star, label: 'CSAT', value: '94%', trend: '2%' },
+      ].map((kpi) => <KpiCard key={kpi.label} {...kpi} />)}</div>
+      <div className="ec-v2-dashboard-grid">
+        <Card className="ec-v2-table-card ec-v2-wide-table"><div className="ec-v2-card-head"><h2>Fila de suporte</h2></div><DataTable columns={['Ticket', 'Conta', 'Tema', 'Prioridade', 'SLA']} rows={['#2048', 'Alpha Team', 'Cobrança duplicada', 'Crítica', '34 min', '#2047', 'Next Level', 'Erro no onboarding', 'Alta', '1h 12m', '#2046', 'Growth Hub', 'Permissões de mentor', 'Média', '2h 04m'].reduce((acc: ReactNode[][], _, i, arr) => { if (i % 5 === 0) acc.push([arr[i], arr[i+1], arr[i+2], <Badge key={`p-${i}`} tone={arr[i+3] === 'Crítica' ? 'danger' : arr[i+3] === 'Alta' ? 'warning' : 'info'}>{arr[i+3]}</Badge>, arr[i+4]]); return acc }, [])} action /></Card>
+        <Card className="ec-v2-operation-alerts"><div className="ec-v2-card-head"><h2>Temas quentes</h2></div>{['Cobrança e falha no cartão', 'Acesso de mentores', 'Configuração de workspace'].map((item, index) => <p key={item}><IconBubble icon={ShieldAlert} tone={index === 0 ? 'danger' : 'warning'} /><span><strong>{item}</strong><small>{[6, 4, 3][index]} tickets nas últimas 24h</small></span><em>Agora</em></p>)}</Card>
+      </div>
+    </DesktopShell>
+  )
+}
+
+export function AdminMetricsV2Screen() {
+  return (
+    <DesktopShell admin active="Métricas SaaS" eyebrow="ADMINISTRAÇÃO" title="Métricas SaaS" subtitle="Monitore crescimento, retenção, ativação e adoção do produto.">
+      <div className="ec-v2-kpi-grid ec-v2-kpi-grid--six">{[
+        { icon: BarChart3, label: 'Ativação 7d', value: '61%', trend: '5%' },
+        { icon: LineChart, label: 'Retenção 30d', value: '74%', trend: '4%' },
+        { icon: Users, label: 'DAU / WAU', value: '42%', trend: '3%' },
+        { icon: CalendarCheck, label: 'Adoção check-ins', value: '92%', trend: '2%' },
+        { icon: Dumbbell, label: 'Adoção treinos', value: '78%', trend: '4%' },
+        { icon: BookOpen, label: 'Adoção conteúdo', value: '58%', trend: '6%' },
+      ].map((kpi) => <KpiCard key={kpi.label} {...kpi} />)}</div>
+      <div className="ec-v2-dashboard-grid">
+        <Card className="ec-v2-chart-card ec-v2-main-chart"><div className="ec-v2-card-head"><h2>Retenção e ativação</h2><div className="ec-v2-chart-legend"><i /> Retenção <b /> Meta</div></div><LineAreaChart tall dotted /></Card>
+        <Card className="ec-v2-bars-card"><h2>Feature adoption</h2>{['Check-ins', 'Planos', 'Treinos', 'Conteúdo', 'Relatórios'].map((item, index) => <p key={item}><IconBubble icon={[CalendarCheck, ClipboardCheck, Dumbbell, BookOpen, BarChart3][index]} />{item}<ProgressBar value={[92, 78, 64, 58, 46][index]} /><b>{[92, 78, 64, 58, 46][index]}%</b></p>)}</Card>
+        <Card className="ec-v2-donut-card"><div className="ec-v2-card-head"><h2>Cohorts</h2></div><div className="ec-v2-donut-layout"><DonutChart center="74%" label="retenção 30d" /><Legend items={['Semana 1 92%', 'Semana 2 84%', 'Semana 3 79%', 'Semana 4 74%']} /></div></Card>
+      </div>
+    </DesktopShell>
+  )
+}
+
+export function AdminSettingsV2Screen() {
+  return (
+    <DesktopShell admin active="Configurações" eyebrow="ADMINISTRAÇÃO" title="Configurações" subtitle="Controle regras do produto, acessos e parâmetros globais.">
+      <div className="ec-v2-dashboard-grid">
+        <Card className="ec-v2-table-card"><div className="ec-v2-card-head"><h2>Parâmetros do produto</h2></div>{['Região de funções', 'Padrão de trial', 'Notificações de cobrança', 'Idioma base'].map((item, index) => <div className="ec-v2-alert-row" key={item}><strong>{item}</strong><Badge tone="neutral">{['southamerica-east1', '7 dias', 'Ativas', 'Português'][index]}</Badge><V2Button variant="ghost">Editar</V2Button></div>)}</Card>
+        <Card className="ec-v2-table-card"><div className="ec-v2-card-head"><h2>Segurança e permissões</h2></div>{['2FA para admins', 'Domínios confiáveis', 'Política de convites', 'Auditoria expandida'].map((item, index) => <div className="ec-v2-alert-row" key={item}><IconBubble icon={[ShieldCheck, Globe, UserPlus, Archive][index]} /><div><strong>{item}</strong><span>{['Obrigatória', '3 domínios', 'Expira em 7 dias', 'Ativa'][index]}</span></div><V2Button variant="ghost">Configurar</V2Button></div>)}</Card>
+        <Card className="ec-v2-quick-actions"><h2>Ações rápidas</h2><V2Button icon={<Settings size={18} />}>Gerais</V2Button><V2Button icon={<ShieldCheck size={18} />}>Segurança</V2Button><V2Button icon={<Bell size={18} />}>Alertas</V2Button></Card>
+      </div>
+    </DesktopShell>
+  )
+}
+
 function MobileShell({ children, active }: { children: ReactNode; active: 'Início' | 'Treinos' | 'Dieta' | 'Ranking' | 'Perfil' }) {
   return (
     <main className="ec-v2-mobile">
@@ -997,7 +1335,7 @@ function MobileBottomNav({ active }: { active: 'Início' | 'Treinos' | 'Dieta' |
     ['Treinos', Dumbbell, '/student/workout'],
     ['Dieta', Utensils, '/student/diet'],
     ['Ranking', Trophy, '/student/ranking'],
-    ['Perfil', UserRound, '/student/dashboard#perfil'],
+    ['Perfil', UserRound, '/student/profile'],
   ] as const
 
   return (
@@ -1140,6 +1478,22 @@ export function StudentDietMobileScreen() {
 
 function Segmented({ items }: { items: string[] }) {
   return <div className="ec-v2-segmented">{items.map((item, index) => <button type="button" key={item} className={index === 0 ? 'is-active' : ''}>{item}</button>)}</div>
+}
+
+export function StudentProfileMobileScreen() {
+  return (
+    <MobileShell active="Perfil">
+      <MobileTop />
+      <section className="ec-v2-mobile-title-block"><h1>Meu perfil</h1><p>Acompanhe seus dados, metas e preferências do plano.</p></section>
+      <div className="ec-v2-mobile-dashboard-grid">
+        <Card className="ec-v2-mobile-ranking-mini"><div><Avatar name="Mariana Alves" index={0} size="lg" /></div><strong>Mariana Alves</strong><p>Plano Expert Club Pro</p><Badge tone="success">Meta ativa: definição muscular</Badge></Card>
+        <Card className="ec-v2-mobile-stat"><h2><Target /> Meta principal</h2><strong>Definição muscular</strong><span>Prazo atual: 12 semanas</span></Card>
+        <Card className="ec-v2-mobile-stat"><h2><Droplets /> Hidratação</h2><strong>2,0 L</strong><span>Meta diária 2,5 L</span></Card>
+        <Card className="ec-v2-mobile-stat"><h2><Moon /> Sono</h2><strong>7h 30m</strong><span>Média dos últimos 7 dias</span></Card>
+        <Card className="ec-v2-mobile-challenges"><div className="ec-v2-card-head"><h2><Settings /> Preferências</h2></div>{['Notificações do treino', 'Lembrete de água', 'Resumo semanal'].map((item, index) => <div key={item}><strong>{item}</strong><span>{['Ativo', 'Ativo', 'Segundas 08:00'][index]}</span></div>)}</Card>
+      </div>
+    </MobileShell>
+  )
 }
 
 export function StudentRankingMobileScreen() {
