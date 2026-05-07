@@ -9,13 +9,22 @@ import {
   updateProfile,
   User as FirebaseUser
 } from 'firebase/auth'
-import { auth, db } from './firebase'
+import { auth, db, firebaseEnvReady } from './firebase'
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore'
 import { COLLECTIONS } from './paths'
 
 const googleProvider = new GoogleAuthProvider()
 
+function getFirebaseServices() {
+  if (!firebaseEnvReady || !auth || !db) {
+    throw new Error('O ambiente de producao esta sem configuracao do Firebase. Configure as variaveis VITE_FIREBASE_* antes de usar login.')
+  }
+
+  return { auth, db }
+}
+
 export const signInWithGoogle = async () => {
+  const { auth } = getFirebaseServices()
   try {
     const result = await signInWithPopup(auth, googleProvider)
     const user = result.user
@@ -34,6 +43,7 @@ export const createAccountWithEmail = async (
   password: string,
   displayName: string
 ) => {
+  const { auth } = getFirebaseServices()
   try {
     const result = await createUserWithEmailAndPassword(auth, email, password)
 
@@ -49,6 +59,7 @@ export const createAccountWithEmail = async (
 }
 
 export const signInWithEmail = async (email: string, password: string) => {
+  const { auth } = getFirebaseServices()
   try {
     const result = await signInWithEmailAndPassword(auth, email, password)
     await ensureUserExists(result.user)
@@ -59,6 +70,7 @@ export const signInWithEmail = async (email: string, password: string) => {
 }
 
 export const sendResetPasswordEmail = async (email: string) => {
+  const { auth } = getFirebaseServices()
   try {
     await sendPasswordResetEmail(auth, email)
   } catch (error) {
@@ -66,13 +78,18 @@ export const sendResetPasswordEmail = async (email: string) => {
   }
 }
 
-export const logout = () => signOut(auth)
+export const logout = () => {
+  const { auth } = getFirebaseServices()
+  return signOut(auth)
+}
 
 export const subscribeToAuthChanges = (callback: (user: FirebaseUser | null) => void) => {
+  const { auth } = getFirebaseServices()
   return onAuthStateChanged(auth, callback)
 }
 
 export async function ensureUserExists(user: FirebaseUser, fallbackDisplayName = '') {
+  const { db } = getFirebaseServices()
   const userRef = doc(db, COLLECTIONS.USERS, user.uid)
   const userSnap = await getDoc(userRef)
   const displayName = user.displayName || fallbackDisplayName || ''

@@ -13,7 +13,7 @@ import { getFriendlyAuthError } from '../../lib/firebase/authErrors'
 export function LoginScreen() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { loginWithGoogle, loginWithEmail, isLoading } = useAuth()
+  const { loginWithGoogle, loginWithEmail, isLoading, isFirebaseConfigured } = useAuth()
   const from = (location.state as { from?: { pathname: string; search?: string; hash?: string } } | null)?.from
   const redirectTo = from ? `${from.pathname}${from.search || ''}${from.hash || ''}` : '/app'
   const [email, setEmail] = useState('')
@@ -94,6 +94,13 @@ export function LoginScreen() {
             </div>
           )}
 
+          {!isFirebaseConfigured && (
+            <div className="mb-5 flex w-full items-start gap-3 rounded-2xl bg-amber-500/10 px-4 py-3 text-left text-sm text-amber-200">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+              <span>Login temporariamente indisponivel. O deploy esta sem as variaveis do Firebase configuradas.</span>
+            </div>
+          )}
+
           <form onSubmit={handleEmailLogin} className="w-full space-y-4">
             <FormInput
               label="E-mail"
@@ -125,7 +132,7 @@ export function LoginScreen() {
               type="submit"
               variant="primary"
               isLoading={isSubmittingEmail || (isLoading && !isSubmittingGoogle)}
-              disabled={!email || password.length < 6 || isSubmittingEmail}
+              disabled={!isFirebaseConfigured || !email || password.length < 6 || isSubmittingEmail}
               className="w-full py-5 rounded-2xl"
             >
               Entrar com e-mail
@@ -143,6 +150,7 @@ export function LoginScreen() {
             variant="google"
             onClick={handleGoogleLogin}
             isLoading={isSubmittingGoogle}
+            disabled={!isFirebaseConfigured}
             icon={<GoogleIcon />}
             className="w-full py-5 rounded-2xl shadow-[0_10px_30px_rgba(255,255,255,0.05)]"
           >

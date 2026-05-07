@@ -7,7 +7,7 @@ import {
 } from 'react'
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth'
 import { doc, onSnapshot } from 'firebase/firestore'
-import { auth, db } from '../lib/firebase/firebase'
+import { auth, db, firebaseEnvReady } from '../lib/firebase/firebase'
 import {
   createAccountWithEmail,
   ensureUserExists,
@@ -24,6 +24,7 @@ interface AuthContextType {
   firebaseUser: FirebaseUser | null
   isAuthenticated: boolean
   isLoading: boolean
+  isFirebaseConfigured: boolean
   loginWithGoogle: () => Promise<void>
   loginWithEmail: (email: string, password: string) => Promise<void>
   signupWithEmail: (email: string, password: string, displayName: string) => Promise<void>
@@ -39,6 +40,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
+    if (!firebaseEnvReady || !auth || !db) {
+      setUser(null)
+      setFirebaseUser(null)
+      setIsLoading(false)
+      return
+    }
+
     let unsubscribeDoc: (() => void) | undefined
     let isActive = true
 
@@ -140,6 +148,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         firebaseUser,
         isAuthenticated: !!firebaseUser,
         isLoading,
+        isFirebaseConfigured: firebaseEnvReady,
         loginWithGoogle,
         loginWithEmail,
         signupWithEmail,
