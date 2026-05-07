@@ -11,7 +11,7 @@ export function useSubscription() {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    if (!firebaseUser) {
+    if (!firebaseUser || !db) {
       setSubscription(null)
       setIsLoading(false)
       return

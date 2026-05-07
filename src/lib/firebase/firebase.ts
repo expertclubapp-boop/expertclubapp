@@ -14,20 +14,31 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 }
 
-// Initialize Firebase
 const missingVars = Object.entries(firebaseConfig)
   .filter(([_, value]) => !value)
   .map(([key]) => key)
 
-if (missingVars.length > 0 && import.meta.env.PROD) {
-  console.warn('⚠️ Missing Firebase environment variables:', missingVars.join(', '))
+export const firebaseEnvIssues = missingVars
+export const firebaseEnvReady = missingVars.length === 0
+
+if (!firebaseEnvReady) {
+  console.warn('Missing Firebase environment variables:', missingVars.join(', '))
 }
 
-const app = initializeApp(firebaseConfig)
+const fallbackFirebaseConfig = {
+  apiKey: firebaseConfig.apiKey || 'missing-api-key',
+  authDomain: firebaseConfig.authDomain || 'missing-auth-domain.firebaseapp.com',
+  projectId: firebaseConfig.projectId || 'missing-project-id',
+  storageBucket: firebaseConfig.storageBucket || 'missing-storage-bucket.appspot.com',
+  messagingSenderId: firebaseConfig.messagingSenderId || '000000000000',
+  appId: firebaseConfig.appId || '1:000000000000:web:missingappid',
+}
+
+const app = initializeApp(firebaseEnvReady ? firebaseConfig : fallbackFirebaseConfig)
 
 export const auth = getAuth(app)
 export const db = getFirestore(app)
 export const storage = getStorage(app)
-export const functions = getFunctions(app, 'southamerica-east1') // Using SA-East for Brazil focus
+export const functions = getFunctions(app, 'southamerica-east1')
 
 export default app
