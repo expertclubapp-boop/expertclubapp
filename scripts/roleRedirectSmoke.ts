@@ -43,7 +43,7 @@ const cases = [
     label: 'admin',
     user: user({ role: 'admin', email: 'admin@expertclub.com' }),
     subscription: null,
-    expectedRoute: '/admin',
+    expectedRoute: '/admin/dashboard',
   },
   {
     label: 'affiliate',

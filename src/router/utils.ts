@@ -53,6 +53,6 @@ export function getDefaultRouteForUser(
   if (!hasActiveSubscriptionStatus(getSubscriptionStatus(user, subscription))) {
     return '/app/billing/lock'
   }
-  
-  return '/student/dashboard'
+
+  return '/app/today'
 }

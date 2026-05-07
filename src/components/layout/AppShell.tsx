@@ -52,12 +52,29 @@ const adminNavItems = [
   { to: '/admin/settings', icon: Settings, label: 'Configurações' },
 ]
 
+const mentorNavItems = [
+  { to: '/mentor/overview', icon: BarChart3, label: 'Visão geral' },
+  { to: '/mentor/alunos', icon: Users, label: 'Alunos' },
+  { to: '/mentor/checkins', icon: CalendarDays, label: 'Check-ins' },
+  { to: '/mentor/treinos/prescritor', icon: Dumbbell, label: 'Treinos' },
+  { to: '/mentor/dietas/prescritor', icon: UtensilsCrossed, label: 'Dietas' },
+  { to: '/mentor/agenda', icon: CalendarDays, label: 'Agenda' },
+  { to: '/mentor/financeiro', icon: CreditCard, label: 'Financeiro' },
+  { to: '/mentor/influencers', icon: Users, label: 'Influencers' },
+  { to: '/mentor/relatorios', icon: FileText, label: 'Relatórios' },
+  { to: '/mentor/configuracoes', icon: Settings, label: 'Configurações' },
+]
+
 export function AppShell() {
   const location = useLocation()
   const navigate = useNavigate()
   const { user } = useAuth()
   const isAdmin = location.pathname.startsWith('/admin')
-  const navItems = isAdmin ? adminNavItems : appNavItems
+  const isMentor = location.pathname.startsWith('/mentor')
+  const navItems = isAdmin ? adminNavItems : isMentor ? mentorNavItems : appNavItems
+  const areaLabel = isAdmin ? 'Admin' : isMentor ? 'Mentor' : 'Aluno'
+  const switchLabel = isAdmin ? 'Ver App' : isMentor ? 'Ver Admin' : 'Ver Admin'
+  const switchTarget = isAdmin ? '/app/today' : '/admin/dashboard'
 
   return (
     <div className="ec-app-bg min-h-screen bg-bg-primary text-text-primary">
@@ -67,14 +84,14 @@ export function AppShell() {
           <nav className="ec-glass-strong rounded-shell p-3">
             <div className="px-3 pb-4 pt-2 flex items-center justify-between">
               <p className="text-[10px] font-black uppercase tracking-[0.18em] text-text-muted">
-                {isAdmin ? 'Admin' : 'Aluno'}
+                {areaLabel}
               </p>
               {user?.role === 'admin' && (
                 <button
-                  onClick={() => navigate(isAdmin ? '/student/dashboard' : '/admin/dashboard')}
+                  onClick={() => navigate(switchTarget)}
                   className="text-[10px] font-bold text-accent-sky hover:underline"
                 >
-                  {isAdmin ? 'Ver App' : 'Ver Admin'}
+                  {switchLabel}
                 </button>
               )}
             </div>
@@ -111,7 +128,7 @@ export function AppShell() {
           <Outlet />
         </main>
       </div>
-      <MobileBottomNav />
+      {!isAdmin && !isMentor && <MobileBottomNav />}
     </div>
   )
 }

@@ -1,6 +1,7 @@
+import { useMemo } from 'react'
 import { Flame } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
-import { mockStats } from '../../mocks/data'
+import { useProgress } from '../../hooks/useProgress'
 import { ExpertLogo } from '../ui/ExpertLogo'
 import { NotificationsDrawer } from '../ui/NotificationsDrawer'
 
@@ -10,7 +11,8 @@ interface PageHeaderProps {
 }
 
 export function PageHeader({ showGreeting = true, className = '' }: PageHeaderProps) {
-  const { user, logout } = useAuth()
+  const { user, firebaseUser, logout } = useAuth()
+  const { dailyHistory, isLoading: isProgressLoading } = useProgress(firebaseUser?.uid)
 
   if (!user) return null
 
@@ -23,6 +25,25 @@ export function PageHeader({ showGreeting = true, className = '' }: PageHeaderPr
     day: 'numeric',
     month: 'short',
   })
+  const currentStreak = useMemo(() => {
+    let streak = 0
+    const today = new Date()
+
+    for (let i = 0; i < 30; i += 1) {
+      const date = new Date(today)
+      date.setDate(today.getDate() - i)
+      const dateKey = date.toISOString().split('T')[0]
+
+      if (dailyHistory.some((entry) => entry.dateKey === dateKey)) {
+        streak += 1
+        continue
+      }
+
+      if (i > 0) break
+    }
+
+    return streak
+  }, [dailyHistory])
 
   return (
     <header
@@ -53,7 +74,7 @@ export function PageHeader({ showGreeting = true, className = '' }: PageHeaderPr
               <div className="mt-1 flex items-center gap-1.5">
                 <Flame className="h-4 w-4 text-accent-lime fill-accent-lime" />
                 <span className="truncate font-display text-sm font-bold text-white">
-                  {mockStats.currentStreak} dias de streak
+                  {isProgressLoading ? '...' : currentStreak} dias de streak
                 </span>
               </div>
             </div>
