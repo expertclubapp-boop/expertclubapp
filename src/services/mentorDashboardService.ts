@@ -1,6 +1,6 @@
-import { collection, collectionGroup, getDocs } from 'firebase/firestore'
+import { collection, doc, getDoc, getDocs, query, where } from 'firebase/firestore'
 import { db } from '../lib/firebase/firebase'
-import { COLLECTIONS } from '../lib/firebase/paths'
+import { COLLECTIONS, SUB_COLLECTIONS } from '../lib/firebase/paths'
 import type {
   AffiliateAccount,
   BodyCheckin,
@@ -12,7 +12,6 @@ import type {
   WeeklyCheckin,
   WorkoutSession,
 } from '../types/domain'
-import { adminMetricsService } from './adminMetricsService'
 
 export interface MentorStudentRow {
   uid: string
@@ -80,7 +79,18 @@ export interface MentorReportsData {
   rows: Array<MentorStudentRow & { lastSeenAt: string | null }>
 }
 
+export interface MentorInfluencerRow {
+  id: string
+  name: string
+  email: string
+  status: string
+  pendingCommission: number
+  totalCommissionPaid: number
+  referredStudents: number
+}
+
 interface MentorDataset {
+  scopeNote: string
   users: User[]
   subscriptions: Subscription[]
   affiliates: AffiliateAccount[]
@@ -92,8 +102,21 @@ interface MentorDataset {
   dietDays: DietDay[]
 }
 
-const SCOPE_NOTE =
-  'Os dados do mentor estao agregados globalmente. O schema atual ainda nao diferencia workspace ou mentorId de forma confiavel.'
+export interface MentorViewer {
+  uid: string
+  role: 'admin' | 'mentor'
+}
+
+const EMPTY_SCOPE_NOTE =
+  'Nenhum aluno esta vinculado a este mentor ainda. Defina users/{studentId}.mentorId para formar a carteira operacional.'
+
+function adminScopeNote(viewer: MentorViewer) {
+  if (viewer.role === 'admin') {
+    return 'Voce esta vendo o consolidado global como admin. Esta visao nao representa uma carteira isolada de mentor.'
+  }
+
+  return 'Carteira filtrada por users/{studentId}.mentorId. Somente alunos vinculados entram nos indicadores.'
+}
 
 function toDateValue(value: unknown): number {
   if (!value) return 0
@@ -141,44 +164,100 @@ function daysSince(value: string | null): number | null {
   return Math.floor(diff / (1000 * 60 * 60 * 24))
 }
 
-async function loadMentorDataset(): Promise<MentorDataset> {
+async function listScopedUsers(viewer: MentorViewer): Promise<User[]> {
+  if (viewer.role === 'admin') {
+    const usersSnap = await getDocs(collection(db, COLLECTIONS.USERS))
+    return usersSnap.docs
+      .map((userDoc) => ({ uid: userDoc.id, ...userDoc.data() }) as User)
+      .filter((user) => user.role === 'member')
+  }
+
+  const usersSnap = await getDocs(
+    query(
+      collection(db, COLLECTIONS.USERS),
+      where('role', '==', 'member'),
+      where('mentorId', '==', viewer.uid),
+    ),
+  )
+
+  return usersSnap.docs.map((userDoc) => ({ uid: userDoc.id, ...userDoc.data() }) as User)
+}
+
+async function getExistingDoc<T>(collectionName: string, id: string): Promise<T | null> {
+  const snapshot = await getDoc(doc(db, collectionName, id))
+  if (!snapshot.exists()) return null
+  return { id: snapshot.id, ...snapshot.data() } as T
+}
+
+async function listUserSubcollection<T>(uid: string, subcollectionName: string): Promise<T[]> {
+  const snapshot = await getDocs(collection(db, COLLECTIONS.USERS, uid, subcollectionName))
+  return snapshot.docs.map((subDoc) => ({ id: subDoc.id, ...subDoc.data() }) as T)
+}
+
+async function loadMentorDataset(viewer: MentorViewer): Promise<MentorDataset> {
+  const users = await listScopedUsers(viewer)
+  const studentIds = users.map((user) => user.uid)
+
+  if (studentIds.length === 0) {
+    return {
+      scopeNote: EMPTY_SCOPE_NOTE,
+      users: [],
+      subscriptions: [],
+      affiliates: [],
+      commissions: [],
+      dailyCheckins: [],
+      weeklyCheckins: [],
+      bodyCheckins: [],
+      workoutSessions: [],
+      dietDays: [],
+    }
+  }
+
   const [
-    usersSnap,
-    subscriptionsSnap,
-    affiliatesSnap,
-    commissionsSnap,
-    dailySnap,
-    weeklySnap,
-    bodySnap,
-    workoutSnap,
-    dietSnap,
+    subscriptions,
+    dailyCheckins,
+    weeklyCheckins,
+    bodyCheckins,
+    workoutSessions,
+    dietDays,
+    commissionsByStudent,
   ] = await Promise.all([
-    getDocs(collection(db, COLLECTIONS.USERS)),
-    getDocs(collection(db, COLLECTIONS.SUBSCRIPTIONS)),
-    getDocs(collection(db, COLLECTIONS.AFFILIATE_ACCOUNTS)),
-    getDocs(collection(db, COLLECTIONS.COMMISSION_LEDGER)),
-    getDocs(collectionGroup(db, 'dailyCheckins')),
-    getDocs(collectionGroup(db, 'weeklyCheckins')),
-    getDocs(collectionGroup(db, 'bodyCheckins')),
-    getDocs(collectionGroup(db, 'workoutSessions')),
-    getDocs(collectionGroup(db, 'dietDays')),
+    Promise.all(studentIds.map((uid) => getExistingDoc<Subscription>(COLLECTIONS.SUBSCRIPTIONS, uid))),
+    Promise.all(studentIds.map((uid) => listUserSubcollection<DailyCheckin>(uid, SUB_COLLECTIONS.DAILY_CHECKINS))),
+    Promise.all(studentIds.map((uid) => listUserSubcollection<WeeklyCheckin>(uid, SUB_COLLECTIONS.WEEKLY_CHECKINS))),
+    Promise.all(studentIds.map((uid) => listUserSubcollection<BodyCheckin>(uid, SUB_COLLECTIONS.BODY_CHECKINS))),
+    Promise.all(studentIds.map((uid) => listUserSubcollection<WorkoutSession>(uid, SUB_COLLECTIONS.WORKOUT_SESSIONS))),
+    Promise.all(studentIds.map((uid) => listUserSubcollection<DietDay>(uid, SUB_COLLECTIONS.DIET_DAYS))),
+    Promise.all(
+      studentIds.map((uid) =>
+        getDocs(query(collection(db, COLLECTIONS.COMMISSION_LEDGER), where('uid', '==', uid))).then((snapshot) =>
+          snapshot.docs.map((commissionDoc) => ({ id: commissionDoc.id, ...commissionDoc.data() }) as CommissionEntry),
+        ),
+      ),
+    ),
   ])
 
+  const commissions = commissionsByStudent.flat()
+  const affiliateIds = [...new Set(commissions.map((entry) => entry.affiliateId).filter(Boolean))]
+  const affiliates = (
+    await Promise.all(affiliateIds.map((id) => getExistingDoc<AffiliateAccount>(COLLECTIONS.AFFILIATE_ACCOUNTS, id)))
+  ).filter(Boolean) as AffiliateAccount[]
+
   return {
-    users: usersSnap.docs.map((doc) => ({ uid: doc.id, ...doc.data() }) as User),
-    subscriptions: subscriptionsSnap.docs.map((doc) => ({ uid: doc.id, ...doc.data() }) as Subscription),
-    affiliates: affiliatesSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as AffiliateAccount),
-    commissions: commissionsSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as CommissionEntry),
-    dailyCheckins: dailySnap.docs.map((doc) => doc.data() as DailyCheckin),
-    weeklyCheckins: weeklySnap.docs.map((doc) => doc.data() as WeeklyCheckin),
-    bodyCheckins: bodySnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as BodyCheckin),
-    workoutSessions: workoutSnap.docs.map((doc) => doc.data() as WorkoutSession),
-    dietDays: dietSnap.docs.map((doc) => doc.data() as DietDay),
+    scopeNote: adminScopeNote(viewer),
+    users,
+    subscriptions: subscriptions.filter(Boolean) as Subscription[],
+    affiliates,
+    commissions,
+    dailyCheckins: dailyCheckins.flat(),
+    weeklyCheckins: weeklyCheckins.flat(),
+    bodyCheckins: bodyCheckins.flat(),
+    workoutSessions: workoutSessions.flat(),
+    dietDays: dietDays.flat(),
   }
 }
 
 function buildStudentRows(dataset: MentorDataset): MentorStudentRow[] {
-  const memberUsers = dataset.users.filter((user) => user.role === 'member')
   const subscriptionsByUid = Object.fromEntries(
     dataset.subscriptions.map((subscription) => [subscription.uid, subscription]),
   )
@@ -189,7 +268,7 @@ function buildStudentRows(dataset: MentorDataset): MentorStudentRow[] {
   )
   const latestDietDay = getLatestByUid(dataset.dietDays, (entry) => entry.dateKey)
 
-  return memberUsers
+  return dataset.users
     .map((user) => {
       const subscription = subscriptionsByUid[user.uid]
       const lastDaily = latestDaily[user.uid]
@@ -218,32 +297,47 @@ function buildStudentRows(dataset: MentorDataset): MentorStudentRow[] {
     })
 }
 
+function completedWorkoutsThisWeek(dataset: MentorDataset) {
+  const weekAgo = Date.now() - 1000 * 60 * 60 * 24 * 7
+  return dataset.workoutSessions.filter((entry) => {
+    if (entry.status !== 'completed') return false
+    return toDateValue(entry.completedAt ?? entry.finishedAt ?? entry.startedAt) >= weekAgo
+  }).length
+}
+
+function averageDietAdherence(dataset: MentorDataset) {
+  const latestDietByUser = Object.values(getLatestByUid(dataset.dietDays, (entry) => entry.dateKey))
+  if (latestDietByUser.length === 0) return null
+  const total = latestDietByUser.reduce((sum, entry) => sum + (entry.adherencePercent || 0), 0)
+  return Math.round(total / latestDietByUser.length)
+}
+
 export const mentorDashboardService = {
-  async getOverview(): Promise<MentorOverviewData> {
-    const [metrics, dataset] = await Promise.all([
-      adminMetricsService.getDashboard(),
-      loadMentorDataset(),
-    ])
+  async getOverview(viewer: MentorViewer): Promise<MentorOverviewData> {
+    const dataset = await loadMentorDataset(viewer)
     const students = buildStudentRows(dataset)
+    const activeSubscriptions = dataset.subscriptions.filter((subscription) =>
+      ['active', 'trialing'].includes(subscription.status),
+    )
 
     return {
-      scopeNote: SCOPE_NOTE,
-      activeStudents: metrics.activeStudents,
+      scopeNote: dataset.scopeNote,
+      activeStudents: activeSubscriptions.length,
       pendingCheckins: students.filter((student) => (student.pendingCheckinDays ?? 999) >= 3).length,
-      completedWorkoutsWeek: metrics.completedWorkoutsWeek,
-      averageDietAdherence: metrics.averageDietAdherence,
-      estimatedMrr: metrics.estimatedMrr,
+      completedWorkoutsWeek: completedWorkoutsThisWeek(dataset),
+      averageDietAdherence: averageDietAdherence(dataset),
+      estimatedMrr: activeSubscriptions.reduce((sum, subscription) => sum + (subscription.price || 0), 0),
       activeAffiliates: dataset.affiliates.filter((affiliate) => affiliate.status === 'active').length,
       attentionStudents: students.filter((student) => (student.pendingCheckinDays ?? 999) >= 3).slice(0, 6),
     }
   },
 
-  async listStudents(): Promise<MentorStudentRow[]> {
-    return buildStudentRows(await loadMentorDataset())
+  async listStudents(viewer: MentorViewer): Promise<MentorStudentRow[]> {
+    return buildStudentRows(await loadMentorDataset(viewer))
   },
 
-  async listCheckins(): Promise<MentorCheckinRow[]> {
-    const dataset = await loadMentorDataset()
+  async listCheckins(viewer: MentorViewer): Promise<MentorCheckinRow[]> {
+    const dataset = await loadMentorDataset(viewer)
     const students = buildStudentRows(dataset)
     const latestWeekly = getLatestByUid(dataset.weeklyCheckins, (entry) => entry.weekKey)
     const latestBody = getLatestByUid(dataset.bodyCheckins, (entry) => entry.date)
@@ -270,8 +364,8 @@ export const mentorDashboardService = {
     })
   },
 
-  async getAgenda(): Promise<MentorAgendaItem[]> {
-    const dataset = await loadMentorDataset()
+  async getAgenda(viewer: MentorViewer): Promise<MentorAgendaItem[]> {
+    const dataset = await loadMentorDataset(viewer)
     const students = buildStudentRows(dataset)
     const usersByUid = Object.fromEntries(dataset.users.map((user) => [user.uid, user]))
 
@@ -316,8 +410,8 @@ export const mentorDashboardService = {
     )
   },
 
-  async getFinance(): Promise<MentorFinanceData> {
-    const dataset = await loadMentorDataset()
+  async getFinance(viewer: MentorViewer): Promise<MentorFinanceData> {
+    const dataset = await loadMentorDataset(viewer)
     const activeSubscriptions = dataset.subscriptions.filter((subscription) =>
       ['active', 'trialing'].includes(subscription.status),
     )
@@ -336,7 +430,7 @@ export const mentorDashboardService = {
     )
 
     return {
-      scopeNote: SCOPE_NOTE,
+      scopeNote: dataset.scopeNote,
       estimatedMrr: activeSubscriptions.reduce((sum, subscription) => sum + (subscription.price || 0), 0),
       revenueAtRisk: overdueSubscriptions.reduce((sum, subscription) => sum + (subscription.price || 0), 0),
       activeStudents: activeSubscriptions.length,
@@ -351,9 +445,9 @@ export const mentorDashboardService = {
     }
   },
 
-  async getReports(): Promise<MentorReportsData> {
-    const students = await this.listStudents()
-    const rows = students.map((student) => {
+  async getReports(viewer: MentorViewer): Promise<MentorReportsData> {
+    const dataset = await loadMentorDataset(viewer)
+    const rows = buildStudentRows(dataset).map((student) => {
       const lastSeenAt = [student.lastDailyCheckinAt, student.lastWorkoutAt, student.lastDietDayAt]
         .filter(Boolean)
         .sort((left, right) => toDateValue(right) - toDateValue(left))[0] ?? null
@@ -365,7 +459,7 @@ export const mentorDashboardService = {
     })
 
     return {
-      scopeNote: SCOPE_NOTE,
+      scopeNote: dataset.scopeNote,
       activeIn7Days: rows.filter((row) => {
         if (!row.lastSeenAt) return false
         return Date.now() - toDateValue(row.lastSeenAt) <= 1000 * 60 * 60 * 24 * 7
@@ -377,5 +471,25 @@ export const mentorDashboardService = {
       highAdherenceStudents: rows.filter((row) => (row.adherencePercent ?? 0) >= 80).length,
       rows: rows.sort((left, right) => toDateValue(right.lastSeenAt) - toDateValue(left.lastSeenAt)),
     }
+  },
+
+  async listInfluencers(viewer: MentorViewer): Promise<MentorInfluencerRow[]> {
+    const dataset = await loadMentorDataset(viewer)
+    const referredByAffiliate = dataset.commissions.reduce<Record<string, number>>((acc, entry) => {
+      acc[entry.affiliateId] = (acc[entry.affiliateId] || 0) + 1
+      return acc
+    }, {})
+
+    return dataset.affiliates
+      .map((affiliate) => ({
+        id: affiliate.id,
+        name: affiliate.name,
+        email: affiliate.email,
+        status: affiliate.status,
+        pendingCommission: affiliate.pendingCommission || 0,
+        totalCommissionPaid: affiliate.totalCommissionPaid || 0,
+        referredStudents: referredByAffiliate[affiliate.id] || 0,
+      }))
+      .sort((left, right) => right.referredStudents - left.referredStudents || left.name.localeCompare(right.name))
   },
 }

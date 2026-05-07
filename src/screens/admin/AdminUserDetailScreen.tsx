@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { PageShell } from '../../components/ui/Premium'
@@ -6,6 +6,7 @@ import { Button } from '../../components/ui/Button'
 import { useAdminUser } from '../../hooks/admin/useAdminUsers'
 import { adminUserService } from '../../services/adminUserService'
 import { AdminState, AdminToolbar, ConfirmButton, Field } from './AdminShared'
+import type { User } from '../../types/domain'
 
 export function AdminUserDetailScreen() {
   const { uid } = useParams()
@@ -13,10 +14,23 @@ export function AdminUserDetailScreen() {
   const { detail, isLoading, error, reload } = useAdminUser(uid)
   const [role, setRole] = useState('')
   const [status, setStatus] = useState('')
+  const [mentorId, setMentorId] = useState('')
+  const [mentors, setMentors] = useState<User[]>([])
 
   const actor = { uid: firebaseUser?.uid, email: firebaseUser?.email }
   const user = detail?.user
   const subscription = detail?.subscription
+
+  useEffect(() => {
+    adminUserService.listMentors().then(setMentors).catch((loadError) => {
+      console.error('Erro ao carregar mentores:', loadError)
+      setMentors([])
+    })
+  }, [])
+
+  useEffect(() => {
+    setMentorId(user?.mentorId || '')
+  }, [user?.mentorId])
 
   async function saveRole() {
     if (!uid || !role) return
@@ -31,6 +45,12 @@ export function AdminUserDetailScreen() {
     await reload()
   }
 
+  async function saveMentor() {
+    if (!uid) return
+    await adminUserService.assignMentor(actor, uid, mentorId || null)
+    await reload()
+  }
+
   return (
     <PageShell wide>
       <AdminToolbar title={user?.displayName || 'Usuário'} eyebrow="Detalhe do usuário" description={user?.email} />
@@ -42,17 +62,32 @@ export function AdminUserDetailScreen() {
               <Info label="Nome" value={user?.displayName} />
               <Info label="Email" value={user?.email} />
               <Info label="UID" value={user?.uid} mono />
+              <Info label="Mentor atual" value={detail.mentor?.displayName || detail.mentor?.email || '-'} />
               <Info label="Treino selecionado" value={detail.profile?.selectedWorkoutId || '-'} />
               <Info label="Dieta selecionada" value={detail.profile?.selectedDietId || '-'} />
               <div className="mt-5 space-y-4">
                 <Field label="Alterar role">
                   <select value={role || user?.role} onChange={e => setRole(e.target.value)} className="ec-input w-full rounded-xl px-4 py-3 text-sm text-white">
                     <option value="member">Aluno</option>
+                    <option value="mentor">Mentor</option>
                     <option value="affiliate">Afiliada</option>
                     <option value="admin">Admin</option>
                   </select>
                 </Field>
                 <Button variant="primary" onClick={saveRole}>Salvar role</Button>
+                <Field label="Vincular mentor">
+                  <select value={mentorId} onChange={e => setMentorId(e.target.value)} className="ec-input w-full rounded-xl px-4 py-3 text-sm text-white">
+                    <option value="">Sem mentor</option>
+                    {mentors
+                      .filter((mentor) => mentor.uid !== user?.uid)
+                      .map((mentor) => (
+                        <option key={mentor.uid} value={mentor.uid}>
+                          {mentor.displayName || mentor.email}
+                        </option>
+                      ))}
+                  </select>
+                </Field>
+                <Button variant="ghost" onClick={saveMentor}>Salvar mentor</Button>
               </div>
             </section>
 

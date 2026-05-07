@@ -46,6 +46,7 @@ export function getDefaultRouteForUser(
   const role = getUserRole(user)
 
   if (role === 'admin') return '/admin/dashboard'
+  if (role === 'mentor') return '/mentor/overview'
   if (role === 'affiliate') return '/affiliate/dashboard'
   
   if (!isOnboardingCompleted(user, profile)) return '/onboarding/goal'

@@ -19,12 +19,12 @@ import {
   useMentorAgenda,
   useMentorCheckins,
   useMentorFinance,
+  useMentorInfluencers,
   useMentorOverview,
   useMentorReports,
   useMentorStudents,
 } from '../../hooks/mentor/useMentorWorkspace'
 import { AdminSearchFilter, AdminState, AdminToolbar } from '../admin/AdminShared'
-import { AdminAffiliatesScreen } from '../admin/AdminAffiliatesScreen'
 import { AdminDietsScreen, AdminWorkoutsScreen } from '../admin/AdminCatalogScreens'
 
 function formatCurrency(value: number) {
@@ -490,5 +490,46 @@ export function MentorDietPrescriptorScreen() {
 }
 
 export function MentorInfluencersScreen() {
-  return <AdminAffiliatesScreen />
+  const { data, isLoading, error } = useMentorInfluencers()
+
+  return (
+    <PageShell wide>
+      <AdminToolbar
+        title="Influencers"
+        eyebrow="Mentor"
+        description="Afiliados que ja trouxeram alunos para esta carteira. A leitura vem de commissionLedger e affiliateAccounts."
+      />
+      <AdminState isLoading={isLoading} error={error} empty={!data || data.length === 0}>
+        <div className="ec-card overflow-hidden rounded-2xl">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[860px] text-left">
+              <thead className="border-b border-white/10 bg-white/5">
+                <tr>
+                  {['Afiliado', 'Status', 'Alunos vinculados', 'Comissao pendente', 'Comissao paga'].map((heading) => (
+                    <th key={heading} className="p-4 text-[10px] font-black uppercase tracking-widest text-text-muted">
+                      {heading}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                {data?.map((affiliate) => (
+                  <tr key={affiliate.id}>
+                    <td className="p-4">
+                      <p className="text-sm font-bold text-white">{affiliate.name}</p>
+                      <p className="text-[10px] text-text-muted">{affiliate.email}</p>
+                    </td>
+                    <td className="p-4 text-xs text-text-secondary">{affiliate.status}</td>
+                    <td className="p-4 text-xs font-bold text-white">{affiliate.referredStudents}</td>
+                    <td className="p-4 text-xs text-text-secondary">{formatCurrency(affiliate.pendingCommission)}</td>
+                    <td className="p-4 text-xs text-text-secondary">{formatCurrency(affiliate.totalCommissionPaid)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </AdminState>
+    </PageShell>
+  )
 }

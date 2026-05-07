@@ -5,7 +5,7 @@ import { PageShell } from '../../components/ui/Premium'
 import { useAdminUsers } from '../../hooks/admin/useAdminUsers'
 import { AdminSearchFilter, AdminState, AdminToolbar } from './AdminShared'
 
-const roleLabel = { admin: 'Admin', member: 'Aluno', affiliate: 'Afiliada' } as const
+const roleLabel = { admin: 'Admin', mentor: 'Mentor', member: 'Aluno', affiliate: 'Afiliada' } as const
 const statusLabel: Record<string, string> = {
   active: 'Ativa',
   trialing: 'Teste',
@@ -29,7 +29,7 @@ export function AdminUsersScreen() {
   return (
     <PageShell wide>
       <AdminToolbar title="Usuários" eyebrow="Operação" description="Gerencie alunos, afiliadas, admins, assinatura e histórico de uso." />
-      <AdminSearchFilter search={search} onSearch={setSearch} status={role} onStatus={setRole} statuses={[['all', 'Todos'], ['member', 'Alunos'], ['affiliate', 'Afiliadas'], ['admin', 'Admins']]} />
+      <AdminSearchFilter search={search} onSearch={setSearch} status={role} onStatus={setRole} statuses={[['all', 'Todos'], ['member', 'Alunos'], ['mentor', 'Mentores'], ['affiliate', 'Afiliadas'], ['admin', 'Admins']]} />
       <AdminState isLoading={isLoading} error={error} empty={filtered.length === 0}>
         <div className="ec-card overflow-hidden rounded-2xl">
           <div className="overflow-x-auto">

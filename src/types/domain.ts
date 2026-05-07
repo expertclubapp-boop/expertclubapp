@@ -123,7 +123,7 @@ export type TrainingLocation = 'gym' | 'home' | 'outdoor'
 
 export type DietPreference = 'everything' | 'vegetarian' | 'vegan' | 'paleo' | 'low_carb'
 
-export type UserRole = 'admin' | 'member' | 'affiliate'
+export type UserRole = 'admin' | 'mentor' | 'member' | 'affiliate'
 
 export interface User {
   uid: string
@@ -131,6 +131,7 @@ export interface User {
   email: string
   photoURL?: string
   role: UserRole
+  mentorId?: string
   createdAt: string
   onboardingCompleted?: boolean
   onboardingComplete?: boolean
@@ -139,6 +140,13 @@ export interface User {
   subscriptionRenewAt?: string
   affiliateId?: string
   referralCode?: string
+}
+
+export interface MentorAssignment {
+  mentorId: string
+  studentId: string
+  assignedAt: string
+  assignedBy?: string
 }
 
 export interface UserProfile {

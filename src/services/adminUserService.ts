@@ -1,8 +1,9 @@
-import { collection, doc, getDoc, getDocs, orderBy, query, setDoc, updateDoc } from 'firebase/firestore'
+import { collection, deleteField, doc, getDoc, getDocs, orderBy, query, setDoc, updateDoc } from 'firebase/firestore'
 import { db } from '../lib/firebase/firebase'
 import { COLLECTIONS } from '../lib/firebase/paths'
 import type { AuditLog, BodyCheckin, DietDay, Subscription, User, UserProfile, WorkoutSession } from '../types/domain'
 import { adminAuditLogService, type AdminActor } from './adminAuditLogService'
+import { mentorAssignmentService } from './mentorAssignmentService'
 
 export interface AdminUserRow {
   user: User
@@ -11,6 +12,7 @@ export interface AdminUserRow {
 
 export interface AdminUserDetail extends AdminUserRow {
   profile?: UserProfile | null
+  mentor?: User | null
   dietDays: DietDay[]
   workoutSessions: WorkoutSession[]
   bodyCheckins: BodyCheckin[]
@@ -47,10 +49,12 @@ export const adminUserService = {
       adminAuditLogService.list(),
     ])
     const user = { uid: userSnap.id, ...userSnap.data() } as User
+    const mentor = user.mentorId ? await getDoc(doc(db, COLLECTIONS.USERS, user.mentorId)) : null
     return {
       user,
       subscription: subSnap.exists() ? (subSnap.data() as Subscription) : null,
       profile: profileSnap.exists() ? (profileSnap.data() as UserProfile) : null,
+      mentor: mentor?.exists() ? ({ uid: mentor.id, ...mentor.data() } as User) : null,
       dietDays,
       workoutSessions,
       bodyCheckins,
@@ -62,6 +66,20 @@ export const adminUserService = {
     const before = await getDoc(doc(db, COLLECTIONS.USERS, uid))
     await updateDoc(doc(db, COLLECTIONS.USERS, uid), { role, updatedAt: new Date().toISOString() })
     await adminAuditLogService.create(actor, 'alterar_role', 'user', uid, before.exists() ? before.data() : null, { role })
+  },
+
+  async listMentors() {
+    return mentorAssignmentService.listMentors()
+  },
+
+  async assignMentor(actor: AdminActor, uid: string, mentorId: string | null) {
+    const ref = doc(db, COLLECTIONS.USERS, uid)
+    const before = await getDoc(ref)
+    await updateDoc(ref, {
+      mentorId: mentorId || deleteField(),
+      updatedAt: new Date().toISOString(),
+    })
+    await adminAuditLogService.create(actor, 'atribuir_mentor', 'user', uid, before.exists() ? before.data() : null, { mentorId })
   },
 
   async updateSubscription(actor: AdminActor, uid: string, data: Partial<Subscription>) {

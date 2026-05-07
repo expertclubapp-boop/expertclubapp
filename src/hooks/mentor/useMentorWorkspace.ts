@@ -1,21 +1,31 @@
 import { useEffect, useState } from 'react'
+import { useAuth } from '../../contexts/AuthContext'
 import {
   mentorDashboardService,
   type MentorAgendaItem,
   type MentorCheckinRow,
   type MentorFinanceData,
+  type MentorInfluencerRow,
   type MentorOverviewData,
   type MentorReportsData,
   type MentorStudentRow,
 } from '../../services/mentorDashboardService'
 
-function useAsyncResource<T>(loader: () => Promise<T>, deps: unknown[] = []) {
+function useAsyncResource<T>(loader: (() => Promise<T>) | null, deps: unknown[] = []) {
   const [data, setData] = useState<T | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     let isMounted = true
+    if (!loader) {
+      setData(null)
+      setError('Nao foi possivel identificar a sessao do mentor.')
+      setIsLoading(false)
+      return () => {
+        isMounted = false
+      }
+    }
 
     setIsLoading(true)
     setError(null)
@@ -47,25 +57,43 @@ function useAsyncResource<T>(loader: () => Promise<T>, deps: unknown[] = []) {
 }
 
 export function useMentorOverview() {
-  return useAsyncResource<MentorOverviewData>(() => mentorDashboardService.getOverview(), [])
+  const { user } = useAuth()
+  const loader = user ? () => mentorDashboardService.getOverview({ uid: user.uid, role: user.role === 'mentor' ? 'mentor' : 'admin' }) : null
+  return useAsyncResource<MentorOverviewData>(loader, [user?.uid, user?.role])
 }
 
 export function useMentorStudents() {
-  return useAsyncResource<MentorStudentRow[]>(() => mentorDashboardService.listStudents(), [])
+  const { user } = useAuth()
+  const loader = user ? () => mentorDashboardService.listStudents({ uid: user.uid, role: user.role === 'mentor' ? 'mentor' : 'admin' }) : null
+  return useAsyncResource<MentorStudentRow[]>(loader, [user?.uid, user?.role])
 }
 
 export function useMentorCheckins() {
-  return useAsyncResource<MentorCheckinRow[]>(() => mentorDashboardService.listCheckins(), [])
+  const { user } = useAuth()
+  const loader = user ? () => mentorDashboardService.listCheckins({ uid: user.uid, role: user.role === 'mentor' ? 'mentor' : 'admin' }) : null
+  return useAsyncResource<MentorCheckinRow[]>(loader, [user?.uid, user?.role])
 }
 
 export function useMentorAgenda() {
-  return useAsyncResource<MentorAgendaItem[]>(() => mentorDashboardService.getAgenda(), [])
+  const { user } = useAuth()
+  const loader = user ? () => mentorDashboardService.getAgenda({ uid: user.uid, role: user.role === 'mentor' ? 'mentor' : 'admin' }) : null
+  return useAsyncResource<MentorAgendaItem[]>(loader, [user?.uid, user?.role])
 }
 
 export function useMentorFinance() {
-  return useAsyncResource<MentorFinanceData>(() => mentorDashboardService.getFinance(), [])
+  const { user } = useAuth()
+  const loader = user ? () => mentorDashboardService.getFinance({ uid: user.uid, role: user.role === 'mentor' ? 'mentor' : 'admin' }) : null
+  return useAsyncResource<MentorFinanceData>(loader, [user?.uid, user?.role])
 }
 
 export function useMentorReports() {
-  return useAsyncResource<MentorReportsData>(() => mentorDashboardService.getReports(), [])
+  const { user } = useAuth()
+  const loader = user ? () => mentorDashboardService.getReports({ uid: user.uid, role: user.role === 'mentor' ? 'mentor' : 'admin' }) : null
+  return useAsyncResource<MentorReportsData>(loader, [user?.uid, user?.role])
+}
+
+export function useMentorInfluencers() {
+  const { user } = useAuth()
+  const loader = user ? () => mentorDashboardService.listInfluencers({ uid: user.uid, role: user.role === 'mentor' ? 'mentor' : 'admin' }) : null
+  return useAsyncResource<MentorInfluencerRow[]>(loader, [user?.uid, user?.role])
 }

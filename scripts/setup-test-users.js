@@ -36,12 +36,36 @@ async function setupUsers() {
       }
     },
     {
+      uid: '9Df8S4u4mXvY3qR2nKj7Lh6P0Tg1',
+      data: {
+        uid: '9Df8S4u4mXvY3qR2nKj7Lh6P0Tg1',
+        displayName: 'Mentor Expert',
+        email: 'mentor@expertclub.com.br',
+        role: 'mentor',
+        onboardingComplete: true,
+        createdAt: new Date().toISOString()
+      },
+      profile: {
+        uid: '9Df8S4u4mXvY3qR2nKj7Lh6P0Tg1',
+        experienceLevel: 'advanced',
+        goal: 'hypertrophy',
+        waterGoalMl: 2000
+      },
+      stats: {
+        uid: '9Df8S4u4mXvY3qR2nKj7Lh6P0Tg1',
+        currentStreak: 0,
+        totalXP: 0,
+        level: 1
+      }
+    },
+    {
       uid: '1qvkudqmK6Wg42ebVIYEc5nKDL43',
       data: {
         uid: '1qvkudqmK6Wg42ebVIYEc5nKDL43',
         displayName: 'Aluno Ativo',
         email: 'aluno@expertclub.com.br',
         role: 'member',
+        mentorId: '9Df8S4u4mXvY3qR2nKj7Lh6P0Tg1',
         subscriptionStatus: 'active',
         subscriptionPlan: 'pro',
         onboardingComplete: true,

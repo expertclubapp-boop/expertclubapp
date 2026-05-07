@@ -19,6 +19,7 @@ export const COLLECTIONS = {
   AFFILIATE_PAYOUTS: 'affiliatePayouts',
   FOODS: 'foods',
   BADGES: 'badges',
+  MENTOR_STUDENTS: 'mentorStudents',
 } as const
 
 export const SUB_COLLECTIONS = {

@@ -94,7 +94,6 @@ export async function ensureUserExists(user: FirebaseUser, fallbackDisplayName =
   const userSnap = await getDoc(userRef)
   const displayName = user.displayName || fallbackDisplayName || ''
   const nowIso = new Date().toISOString()
-  const isAdminEmail = user.email?.endsWith('@expertclub.com.br');
 
   if (!userSnap.exists()) {
     await setDoc(userRef, {
@@ -102,7 +101,7 @@ export async function ensureUserExists(user: FirebaseUser, fallbackDisplayName =
       displayName,
       email: user.email || '',
       photoURL: user.photoURL || '',
-      role: isAdminEmail ? 'admin' : 'member',
+      role: 'member',
       onboardingCompleted: false,
       onboardingComplete: false,
       createdAt: serverTimestamp(),
@@ -114,10 +113,6 @@ export async function ensureUserExists(user: FirebaseUser, fallbackDisplayName =
     const safeUpdates: Record<string, unknown> = {
       lastLoginAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
-    }
-
-    if (isAdminEmail && existingUser.role !== 'admin') {
-      safeUpdates.role = 'admin'
     }
 
     if (displayName && displayName !== existingUser.displayName) {

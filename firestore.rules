@@ -28,6 +28,10 @@ service cloud.firestore {
       return hasRole('admin');
     }
 
+    function isMentor() {
+      return hasRole('mentor');
+    }
+
     function isAffiliate() {
       return hasRole('affiliate');
     }
@@ -53,6 +57,12 @@ service cloud.firestore {
       return request.resource.data.uid == uid;
     }
 
+    function isMentorOf(uid) {
+      return isMentor()
+        && exists(userPath(uid))
+        && get(userPath(uid)).data.mentorId == request.auth.uid;
+    }
+
     function isSafeUserSelfUpdate(uid) {
       return isOwner(uid)
         && request.resource.data.uid == resource.data.uid
@@ -65,6 +75,7 @@ service cloud.firestore {
           'subscription.status',
           'subscriptionStatus',
           'subscriptionPlan',
+          'mentorId',
           'referralCode',
           'affiliateId',
           'admin',
@@ -76,20 +87,18 @@ service cloud.firestore {
     }
 
     match /users/{uid} {
-      allow read: if isOwner(uid) || isAdmin();
+      allow read: if isOwner(uid) || isAdmin() || isMentorOf(uid);
       allow create: if isAdmin()
         || (
           isOwner(uid)
           && request.resource.data.uid == uid
           && request.resource.data.email == request.auth.token.email
-          && (
-            request.resource.data.role == 'member'
-            || (request.resource.data.role == 'admin' && request.auth.token.email.matches('.*@expertclub\\.com\\.br$'))
-          )
+          && request.resource.data.role == 'member'
           && !request.resource.data.keys().hasAny([
             'subscription',
             'subscriptionStatus',
             'subscriptionPlan',
+            'mentorId',
             'referralCode',
             'affiliateId',
             'admin',
@@ -104,12 +113,12 @@ service cloud.firestore {
     }
 
     match /profiles/{uid} {
-      allow read: if isOwner(uid) || isAdmin();
+      allow read: if isOwner(uid) || isAdmin() || isMentorOf(uid);
       allow write: if isOwner(uid) || isAdmin();
     }
 
     match /subscriptions/{uid} {
-      allow read: if isOwner(uid) || isAdmin();
+      allow read: if isOwner(uid) || isAdmin() || isMentorOf(uid);
       allow create: if isOwner(uid)
         && request.resource.data.uid == uid
         && request.resource.data.status == 'pending'
@@ -160,14 +169,14 @@ service cloud.firestore {
     }
 
     match /affiliateAccounts/{affiliateId} {
-      allow get: if isAdmin() || (isAffiliate() && resource.data.uid == request.auth.uid);
-      allow list: if isAdmin();
+      allow get: if isAdmin() || isMentor() || (isAffiliate() && resource.data.uid == request.auth.uid);
+      allow list: if isAdmin() || isMentor();
       allow write: if isAdmin();
     }
 
     match /referralCodes/{code} {
       allow get: if true;
-      allow list: if isAdmin();
+      allow list: if isAdmin() || isMentor();
       allow write: if isAdmin();
     }
 
@@ -177,7 +186,7 @@ service cloud.firestore {
     }
 
     match /commissionLedger/{entryId} {
-      allow read: if isAdmin();
+      allow read: if isAdmin() || (isMentor() && isMentorOf(resource.data.uid));
       allow write: if isAdmin();
     }
 
@@ -197,71 +206,71 @@ service cloud.firestore {
     }
 
     match /foods/{foodId} {
-      allow read: if isAdmin() || (canUseStudentApp() && resource.data.status == 'active');
-      allow write: if isAdmin();
+      allow read: if isAdmin() || isMentor() || (canUseStudentApp() && resource.data.status == 'active');
+      allow write: if isAdmin() || isMentor();
     }
 
     match /diets/{dietId} {
-      allow read: if isAdmin() || (canUseStudentApp() && resource.data.status == 'published');
-      allow write: if isAdmin();
+      allow read: if isAdmin() || isMentor() || (canUseStudentApp() && resource.data.status == 'published');
+      allow write: if isAdmin() || isMentor();
 
       match /versions/{versionId} {
-        allow read, write: if isAdmin();
+        allow read, write: if isAdmin() || isMentor();
       }
     }
 
     match /workouts/{workoutId} {
-      allow read: if isAdmin() || (canUseStudentApp() && resource.data.status == 'published');
-      allow write: if isAdmin();
+      allow read: if isAdmin() || isMentor() || (canUseStudentApp() && resource.data.status == 'published');
+      allow write: if isAdmin() || isMentor();
 
       match /versions/{versionId} {
-        allow read, write: if isAdmin();
+        allow read, write: if isAdmin() || isMentor();
       }
     }
 
     match /exercises/{exerciseId} {
-      allow read: if isAdmin() || (canUseStudentApp() && resource.data.status == 'active');
-      allow write: if isAdmin();
+      allow read: if isAdmin() || isMentor() || (canUseStudentApp() && resource.data.status == 'active');
+      allow write: if isAdmin() || isMentor();
     }
 
     match /users/{uid}/hydrationDays/{date} {
-      allow read: if (isOwner(uid) && canUseStudentApp()) || isAdmin();
+      allow read: if (isOwner(uid) && canUseStudentApp()) || isAdmin() || isMentorOf(uid);
       allow create, update: if ((isOwner(uid) && canUseStudentApp() && ownsWrittenDoc(uid)) || isAdmin());
       allow delete: if isAdmin();
     }
 
     match /users/{uid}/workoutSessions/{sessionId} {
-      allow read: if (isOwner(uid) && canUseStudentApp()) || isAdmin();
+      allow read: if (isOwner(uid) && canUseStudentApp()) || isAdmin() || isMentorOf(uid);
       allow create, update: if ((isOwner(uid) && canUseStudentApp() && ownsWrittenDoc(uid)) || isAdmin());
       allow delete: if isAdmin();
     }
 
     match /users/{uid}/dietDays/{dateKey} {
-      allow read: if (isOwner(uid) && canUseStudentApp()) || isAdmin();
+      allow read: if (isOwner(uid) && canUseStudentApp()) || isAdmin() || isMentorOf(uid);
       allow create, update: if ((isOwner(uid) && canUseStudentApp() && ownsWrittenDoc(uid)) || isAdmin());
       allow delete: if isAdmin();
     }
 
     match /users/{uid}/bodyCheckins/{checkinId} {
-      allow read: if (isOwner(uid) && canUseStudentApp()) || isAdmin();
+      allow read: if (isOwner(uid) && canUseStudentApp()) || isAdmin() || isMentorOf(uid);
       allow create, update: if ((isOwner(uid) && canUseStudentApp() && ownsWrittenDoc(uid)) || isAdmin());
       allow delete: if isAdmin();
     }
 
     match /users/{uid}/dailyCheckins/{date} {
-      allow read: if (isOwner(uid) && canUseStudentApp()) || isAdmin();
+      allow read: if (isOwner(uid) && canUseStudentApp()) || isAdmin() || isMentorOf(uid);
       allow create, update: if ((isOwner(uid) && canUseStudentApp() && ownsWrittenDoc(uid)) || isAdmin());
       allow delete: if isAdmin();
     }
 
     match /users/{uid}/weeklyCheckins/{week} {
-      allow read: if (isOwner(uid) && canUseStudentApp()) || isAdmin();
+      allow read: if (isOwner(uid) && canUseStudentApp()) || isAdmin() || isMentorOf(uid);
       allow create, update: if ((isOwner(uid) && canUseStudentApp() && ownsWrittenDoc(uid)) || isAdmin());
       allow delete: if isAdmin();
     }
 
     match /challenges/{challengeId} {
-      allow read: if isAdmin() || canUseStudentApp();
+      allow read: if isAdmin() || isMentor() || canUseStudentApp();
       allow write: if isAdmin();
 
       match /participants/{uid} {
@@ -271,7 +280,7 @@ service cloud.firestore {
     }
 
     match /content/{id} {
-      allow read: if isAdmin() || canUseStudentApp();
+      allow read: if isAdmin() || isMentor() || canUseStudentApp();
       allow write: if isAdmin();
     }
 
@@ -281,22 +290,22 @@ service cloud.firestore {
     }
 
     match /settings/{id} {
-      allow read: if isAdmin() || canUseStudentApp();
+      allow read: if isAdmin() || isMentor() || canUseStudentApp();
       allow write: if isAdmin();
     }
 
     match /badges/{id} {
-      allow read: if isAdmin() || canUseStudentApp();
+      allow read: if isAdmin() || isMentor() || canUseStudentApp();
       allow write: if isAdmin();
     }
 
     match /users/{uid}/contentProgress/{contentId} {
-      allow read: if isOwner(uid) || isAdmin();
+      allow read: if isOwner(uid) || isAdmin() || isMentorOf(uid);
       allow write: if isOwner(uid) || isAdmin();
     }
 
     match /users/{uid}/earnedBadges/{badgeId} {
-      allow read: if isOwner(uid) || isAdmin();
+      allow read: if isOwner(uid) || isAdmin() || isMentorOf(uid);
       allow write: if isAdmin(); // Only Admin (or scoring service) can award badges
     }
 

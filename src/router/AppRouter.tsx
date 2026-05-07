@@ -6,6 +6,7 @@ import { useSubscription } from '../hooks/useSubscription'
 import { AdminRoute } from './AdminRoute'
 import { AffiliateRoute } from './AffiliateRoute'
 import { AppRoute } from './AppRoute'
+import { MentorRoute } from './MentorRoute'
 import { OnboardingRoute } from './OnboardingRoute'
 import { PublicRoute } from './PublicRoute'
 import { getDefaultRouteForUser, getUserRole } from './utils'
@@ -96,6 +97,7 @@ function AppIndexRedirect() {
 
   if (!user) return <Navigate to="/login" replace />
   if (getUserRole(user) === 'admin') return <Navigate to="/admin/dashboard" replace />
+  if (getUserRole(user) === 'mentor') return <Navigate to="/mentor/overview" replace />
 
   return <Navigate to={getDefaultRouteForUser(user, null, subscription)} replace />
 }
@@ -264,9 +266,9 @@ export const router = createBrowserRouter([
   {
     path: '/mentor',
     element: (
-      <AdminRoute>
+      <MentorRoute>
         <AppShell />
-      </AdminRoute>
+      </MentorRoute>
     ),
     children: [
       {
