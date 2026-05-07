@@ -1,4 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react'
+import { useLocation } from 'react-router-dom'
 import type { LucideIcon } from 'lucide-react'
 import {
   Activity,
@@ -87,27 +88,27 @@ type ActiveNav =
 const mentorNav = [
   { label: 'Visão geral', icon: Home, href: '/mentor/overview' },
   { label: 'Alunos', icon: Users, href: '/mentor/alunos' },
-  { label: 'Check-ins', icon: CalendarCheck, href: '/mentor/checkins' },
+  { label: 'Check-ins', icon: CalendarCheck, href: '/mentor/overview#checkins' },
   { label: 'Treinos', icon: Dumbbell, href: '/mentor/treinos/prescritor' },
   { label: 'Dietas', icon: Utensils, href: '/mentor/dietas/prescritor' },
-  { label: 'Agenda', icon: Calendar, href: '/mentor/agenda' },
+  { label: 'Agenda', icon: Calendar, href: '/mentor/overview#agenda' },
   { label: 'Financeiro', icon: CircleDollarSign, href: '/mentor/financeiro' },
   { label: 'Influencers', icon: Trophy, href: '/mentor/influencers' },
-  { label: 'Relatórios', icon: BarChart3, href: '/mentor/relatorios' },
-  { label: 'Configurações', icon: Settings, href: '/mentor/configuracoes' },
+  { label: 'Relatórios', icon: BarChart3, href: '/mentor/overview#relatorios' },
+  { label: 'Configurações', icon: Settings, href: '/mentor/overview#configuracoes' },
 ] as const
 
 const adminNav = [
-  { label: 'Visão geral', icon: Home, href: '/admin/overview' },
-  { label: 'Workspaces', icon: Building2, href: '/admin/workspaces' },
-  { label: 'Assinaturas', icon: CalendarCheck, href: '/admin/subscriptions' },
-  { label: 'Usuários', icon: Users, href: '/admin/users' },
-  { label: 'Influencers', icon: Trophy, href: '/admin/affiliates' },
-  { label: 'Conteúdo', icon: BookOpen, href: '/admin/content' },
-  { label: 'Financeiro', icon: CircleDollarSign, href: '/admin/commissions' },
-  { label: 'Suporte', icon: HelpCircle, href: '/admin/support' },
-  { label: 'Métricas SaaS', icon: BarChart3, href: '/admin/metrics' },
-  { label: 'Configurações', icon: Settings, href: '/admin/settings' },
+  { label: 'Visão geral', icon: Home, href: '/admin/dashboard' },
+  { label: 'Workspaces', icon: Building2, href: '/admin/dashboard#workspaces' },
+  { label: 'Assinaturas', icon: CalendarCheck, href: '/admin/dashboard#assinaturas' },
+  { label: 'Usuários', icon: Users, href: '/admin/dashboard#usuarios' },
+  { label: 'Influencers', icon: Trophy, href: '/admin/dashboard#influencers' },
+  { label: 'Conteúdo', icon: BookOpen, href: '/admin/dashboard#conteudo' },
+  { label: 'Financeiro', icon: CircleDollarSign, href: '/admin/dashboard#financeiro' },
+  { label: 'Suporte', icon: HelpCircle, href: '/admin/dashboard#suporte' },
+  { label: 'Métricas SaaS', icon: BarChart3, href: '/admin/dashboard#metricas' },
+  { label: 'Configurações', icon: Settings, href: '/admin/dashboard#configuracoes' },
 ] as const
 
 const people = [
@@ -148,8 +149,8 @@ function V2Button({
   )
 }
 
-function Card({ children, className }: { children: ReactNode; className?: string }) {
-  return <section className={cx('ec-v2-card', className)}>{children}</section>
+function Card({ children, className, id }: { children: ReactNode; className?: string; id?: string }) {
+  return <section id={id} className={cx('ec-v2-card', className)}>{children}</section>
 }
 
 function IconBubble({ icon: Icon, tone = 'violet' }: { icon: LucideIcon; tone?: Tone }) {
@@ -315,16 +316,22 @@ function FoodIcon({ label }: { label: string }) {
 }
 
 function Sidebar({ active, admin = false }: { active: ActiveNav; admin?: boolean }) {
+  const location = useLocation()
   const items = admin ? adminNav : mentorNav
+  const currentRoute = `${location.pathname}${location.hash}`
 
   return (
     <aside className="ec-v2-sidebar">
-      <a className="ec-v2-logo-link" href="/" aria-label="Ir para a landing Expert Club">
+        <a className="ec-v2-logo-link" href="/" aria-label="Ir para a landing Expert Club">
         <ExpertLogo color="dark" variant="full" animate={false} className="ec-v2-logo" />
       </a>
       <nav aria-label={admin ? 'Navegação admin' : 'Navegação mentor'}>
         {items.map(({ label, icon: Icon, href }) => (
-          <a key={label} href={href} className={cx('ec-v2-side-link', active === label && 'is-active')}>
+          <a
+            key={label}
+            href={href}
+            className={cx('ec-v2-side-link', (active === label || currentRoute === href) && 'is-active')}
+          >
             <Icon aria-hidden="true" />
             <span>{label}</span>
           </a>
@@ -574,21 +581,23 @@ export function MentorOverviewScreen() {
       </div>
       <div className="ec-v2-dashboard-grid">
         <Card className="ec-v2-chart-card ec-v2-main-chart">
-          <div className="ec-v2-card-head">
+          <div className="ec-v2-card-head" id="relatorios">
             <h2>Adesão dos alunos ao longo do tempo <HelpCircle size={16} /></h2>
             <div className="ec-v2-chart-legend"><i /> Adesão média (%) <b /> Meta</div>
           </div>
           <LineAreaChart tall dotted />
           <div className="ec-v2-chart-tooltip">31 de maio<br /><strong>Adesão: 82%</strong></div>
         </Card>
-        <AlertList />
+        <div id="checkins">
+          <AlertList />
+        </div>
         <RightMetrics />
         <Card className="ec-v2-table-card">
           <div className="ec-v2-card-head"><h2>Atividade recente dos alunos</h2></div>
           <DataTable columns={['Aluno', 'Atividade', 'Detalhes', 'Data/hora', 'Status']} rows={tableRows} />
           <a className="ec-v2-table-link" href="/mentor/alunos">Ver todas as atividades</a>
         </Card>
-        <Card className="ec-v2-ranking-card">
+        <Card className="ec-v2-ranking-card" id="agenda">
           <div className="ec-v2-card-head">
             <h2>Ranking de alunos <HelpCircle size={16} /></h2>
             <a href="/student/ranking">Ver ranking completo</a>
@@ -604,7 +613,9 @@ export function MentorOverviewScreen() {
           ))}
         </Card>
       </div>
-      <InsightBanner title="Insight do sistema" body="Seus alunos estão 18% mais engajados neste período! Continue incentivando a consistência nos treinos e check-ins." />
+      <div id="configuracoes">
+        <InsightBanner title="Insight do sistema" body="Seus alunos estão 18% mais engajados neste período! Continue incentivando a consistência nos treinos e check-ins." />
+      </div>
     </DesktopShell>
   )
 }
@@ -937,17 +948,18 @@ export function AdminProductOverviewScreen() {
     <DesktopShell admin active="Visão geral" eyebrow="ADMINISTRAÇÃO" title="Administração do produto" subtitle="Visão estratégica da operação do Expert Club.">
       <div className="ec-v2-kpi-grid ec-v2-kpi-grid--eight">{kpis.map((kpi) => <KpiCard key={kpi.label} {...kpi} />)}</div>
       <div className="ec-v2-admin-grid">
-        <Card className="ec-v2-chart-card"><div className="ec-v2-card-head"><h2>MRR / crescimento <HelpCircle size={16} /></h2><button type="button" className="ec-v2-control">Diário <ChevronDown size={15} /></button></div><LineAreaChart dotted /><div className="ec-v2-chart-tooltip is-admin">1 de jun. de 2024<br /><strong>MRR atual R$ 245.760</strong></div></Card>
-        <Card className="ec-v2-donut-card"><div className="ec-v2-card-head"><h2>Distribuição de planos</h2></div><div className="ec-v2-donut-layout"><DonutChart center="128" label="workspaces" /><Legend items={['Expert Pro 48 (37,5%)', 'Expert Plus 40 (31,3%)', 'Expert Essential 28 (21,9%)', 'Trial 12 (9,4%)']} /></div><a className="ec-v2-table-link">Ver todos os planos</a></Card>
-        <div className="ec-v2-side-stack"><Card className="ec-v2-operation-alerts"><div className="ec-v2-card-head"><h2>Alertas da operação</h2><a>Ver todos</a></div>{[['Churn acima do limite', 'Churn de 2,1% acima da meta (2,0%)', 'danger'], ['Pagamento falhou', '12 assinaturas com falha de pagamento', 'warning'], ['Workspace inativo', '7 workspaces sem atividade há 14+ dias', 'violet'], ['Tickets críticos', '3 tickets críticos aguardando resposta', 'info'], ['Novo workspace criado', 'Growth Hub acabou de ser criado', 'success']].map(([title, body, tone]) => <p key={title}><IconBubble icon={ShieldAlert} tone={tone as Tone} /><span><strong>{title}</strong><small>{body}</small></span><em>Há 20 min</em></p>)}</Card><Card className="ec-v2-quick-actions"><h2>Ações rápidas</h2>{['Novo workspace', 'Convidar usuário', 'Criar campanha', 'Ver relatórios financeiros'].map((item, index) => {
+        <Card className="ec-v2-chart-card" id="metricas"><div className="ec-v2-card-head"><h2>MRR / crescimento <HelpCircle size={16} /></h2><button type="button" className="ec-v2-control">Diário <ChevronDown size={15} /></button></div><LineAreaChart dotted /><div className="ec-v2-chart-tooltip is-admin">1 de jun. de 2024<br /><strong>MRR atual R$ 245.760</strong></div></Card>
+        <Card className="ec-v2-donut-card" id="assinaturas"><div className="ec-v2-card-head"><h2>Distribuição de planos</h2></div><div className="ec-v2-donut-layout"><DonutChart center="128" label="workspaces" /><Legend items={['Expert Pro 48 (37,5%)', 'Expert Plus 40 (31,3%)', 'Expert Essential 28 (21,9%)', 'Trial 12 (9,4%)']} /></div><a className="ec-v2-table-link">Ver todos os planos</a></Card>
+        <div className="ec-v2-side-stack"><Card className="ec-v2-operation-alerts" id="suporte"><div className="ec-v2-card-head"><h2>Alertas da operação</h2><a>Ver todos</a></div>{[['Churn acima do limite', 'Churn de 2,1% acima da meta (2,0%)', 'danger'], ['Pagamento falhou', '12 assinaturas com falha de pagamento', 'warning'], ['Workspace inativo', '7 workspaces sem atividade há 14+ dias', 'violet'], ['Tickets críticos', '3 tickets críticos aguardando resposta', 'info'], ['Novo workspace criado', 'Growth Hub acabou de ser criado', 'success']].map(([title, body, tone]) => <p key={title}><IconBubble icon={ShieldAlert} tone={tone as Tone} /><span><strong>{title}</strong><small>{body}</small></span><em>Há 20 min</em></p>)}</Card><Card className="ec-v2-quick-actions" id="conteudo"><h2>Ações rápidas</h2>{['Novo workspace', 'Convidar usuário', 'Criar campanha', 'Ver relatórios financeiros'].map((item, index) => {
           const Icon = [Calendar, UserPlus, ShieldCheck, BookOpen][index]
           return <V2Button key={item} icon={<Icon size={18} />}>{item}</V2Button>
         })}</Card></div>
-        <Card className="ec-v2-revenue-origin"><h2>Origem da receita (MRR)</h2><DonutChart center="R$ 245.760" label="MRR total" /><Legend items={['Assinaturas 78,2%', 'Add-ons 12,6%', 'One-offs 6,3%', 'Outros 2,9%']} /></Card>
-        <Card className="ec-v2-health-card"><h2>Saúde da operação</h2>{['Receita', 'Engajamento', 'Suporte', 'Infraestrutura', 'Satisfação (NPS)'].map((item, index) => <p key={item}><IconBubble icon={[Clock, Heart, ShieldCheck, Building2, Star][index]} /><span>{item}</span><Badge tone={index === 1 ? 'warning' : 'success'}>{index === 1 ? 'Atenção' : index === 4 ? 'Bom 72' : 'Saudável'}</Badge></p>)}<a className="ec-v2-table-link">Ver detalhes da saúde</a></Card>
-        <Card className="ec-v2-bars-card"><h2>Ativação de workspaces</h2>{['Criado', 'Convite enviado', 'Ativo', 'Pago', 'Engajado'].map((item, index) => <p key={item}><span>{index + 1}</span>{item}<ProgressBar value={[100, 73, 61, 45, 36][index]} /><b>{[128, 94, 78, 58, 46][index]}</b></p>)}</Card>
+        <Card className="ec-v2-revenue-origin" id="financeiro"><h2>Origem da receita (MRR)</h2><DonutChart center="R$ 245.760" label="MRR total" /><Legend items={['Assinaturas 78,2%', 'Add-ons 12,6%', 'One-offs 6,3%', 'Outros 2,9%']} /></Card>
+        <Card className="ec-v2-health-card" id="configuracoes"><h2>Saúde da operação</h2>{['Receita', 'Engajamento', 'Suporte', 'Infraestrutura', 'Satisfação (NPS)'].map((item, index) => <p key={item}><IconBubble icon={[Clock, Heart, ShieldCheck, Building2, Star][index]} /><span>{item}</span><Badge tone={index === 1 ? 'warning' : 'success'}>{index === 1 ? 'Atenção' : index === 4 ? 'Bom 72' : 'Saudável'}</Badge></p>)}<a className="ec-v2-table-link">Ver detalhes da saúde</a></Card>
+        <Card className="ec-v2-bars-card" id="usuarios"><h2>Ativação de workspaces</h2>{['Criado', 'Convite enviado', 'Ativo', 'Pago', 'Engajado'].map((item, index) => <p key={item}><span>{index + 1}</span>{item}<ProgressBar value={[100, 73, 61, 45, 36][index]} /><b>{[128, 94, 78, 58, 46][index]}</b></p>)}</Card>
         <Card className="ec-v2-bars-card"><h2>Feature adoption</h2>{['Check-ins', 'Planos', 'Treinos', 'Conteúdo', 'Relatórios'].map((item, index) => <p key={item}><IconBubble icon={[CalendarCheck, Dumbbell, ClipboardCheck, BookOpen, BarChart3][index]} />{item}<ProgressBar value={[92, 78, 64, 58, 46][index]} /><b>{[92, 78, 64, 58, 46][index]}%</b></p>)}</Card>
-        <Card className="ec-v2-table-card ec-v2-wide-table"><div className="ec-v2-card-head"><h2>Workspaces em destaque</h2></div><DataTable columns={['Workspace', 'Plano', 'Usuários', 'Receita (MRR)', 'Saúde', 'Última atividade']} rows={rows} action /><a className="ec-v2-table-link">Ver todos os workspaces</a></Card>
+        <Card className="ec-v2-table-card ec-v2-wide-table" id="workspaces"><div className="ec-v2-card-head"><h2>Workspaces em destaque</h2></div><DataTable columns={['Workspace', 'Plano', 'Usuários', 'Receita (MRR)', 'Saúde', 'Última atividade']} rows={rows} action /><a className="ec-v2-table-link">Ver todos os workspaces</a></Card>
+        <div id="influencers" />
       </div>
     </DesktopShell>
   )
@@ -985,7 +997,7 @@ function MobileBottomNav({ active }: { active: 'Início' | 'Treinos' | 'Dieta' |
     ['Treinos', Dumbbell, '/student/workout'],
     ['Dieta', Utensils, '/student/diet'],
     ['Ranking', Trophy, '/student/ranking'],
-    ['Perfil', UserRound, '/student/profile'],
+    ['Perfil', UserRound, '/student/dashboard#perfil'],
   ] as const
 
   return (
@@ -1035,7 +1047,7 @@ export function StudentMobileDashboardScreen() {
           [Moon, 'Sono', '7h 30m', 'Qualidade: Boa'],
           [Heart, 'Bem-estar', '8,5 /10', 'Muito bem!'],
           [Zap, 'Energia', 'Alta', 'Pronta para o dia!'],
-        ].map(([Icon, title, value, meta]) => <Card key={title as string} className="ec-v2-mobile-stat"><h2><Icon />{title as string}</h2><strong>{value as string}</strong><span>{meta as string}</span></Card>)}
+        ].map(([Icon, title, value, meta], index) => <Card key={title as string} className="ec-v2-mobile-stat" {...(index === 0 ? { id: 'perfil' } : {})}><h2><Icon />{title as string}</h2><strong>{value as string}</strong><span>{meta as string}</span></Card>)}
       </div>
     </MobileShell>
   )
