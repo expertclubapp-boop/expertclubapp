@@ -5,6 +5,7 @@ import { router } from './router/AppRouter'
 import { referralUtils } from './utils/referral'
 import { RouteLoader } from './router/RouteLoader'
 import { ErrorBoundary } from './components/shared/ErrorBoundary'
+import { ToastContainer } from './components/ui/Toast'
 
 function App() {
   useEffect(() => {
@@ -13,6 +14,7 @@ function App() {
 
   return (
     <ErrorBoundary>
+      <ToastContainer />
       <AuthProvider>
         <Suspense fallback={<RouteLoader />}>
           <RouterProvider router={router} future={{ v7_startTransition: true } as any} />

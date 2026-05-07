@@ -91,7 +91,6 @@ export const adminUserService = {
   },
 
   async softDelete(actor: AdminActor, uid: string) {
-    if (!window.confirm('Desativar este usuário? Ele não será removido fisicamente, mas ficará marcado como inativo.')) return
     const before = await getDoc(doc(db, COLLECTIONS.USERS, uid))
     await updateDoc(doc(db, COLLECTIONS.USERS, uid), { disabled: true, updatedAt: new Date().toISOString() })
     await adminAuditLogService.create(actor, 'desativar_usuario', 'user', uid, before.exists() ? before.data() : null, { disabled: true })

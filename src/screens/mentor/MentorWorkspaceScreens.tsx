@@ -316,12 +316,26 @@ export function MentorAgendaScreen() {
 }
 
 export function MentorFinanceScreen() {
+  const { user: currentUser } = useAuth()
   const { data, isLoading, error } = useMentorFinance()
+
+  // MRR is unreliable if price=0 on all subscriptions (common when not set manually)
+  const hasPriceData = data ? data.planMix.some(r => r.revenue > 0) : true
+  const isMentorRole = currentUser?.role === 'mentor'
 
   return (
     <PageShell wide>
       <AdminToolbar title="Financeiro" eyebrow="Mentor" description="Visao real de receita, risco e comissoes dentro do schema atual." />
       {data && <ScopeNote text={data.scopeNote} />}
+      {/* MRR quality guard — only for mentor role */}
+      {data && isMentorRole && !hasPriceData && (
+        <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-text-muted">
+          <span className="font-bold text-white">Receita nao disponivel com o schema atual.</span>{' '}
+          Os campos <code className="font-mono text-xs">subscription.price</code> dos seus alunos estao zerados ou
+          ausentes. Os totais de MRR e receita em risco abaixo serao R$ 0,00 ate que os valores sejam preenchidos.
+          Contate o admin para corrigir as assinaturas.
+        </div>
+      )}
       <div className="mt-6">
         <AdminState isLoading={isLoading} error={error} empty={!data}>
           {data && (

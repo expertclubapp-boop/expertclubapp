@@ -11,7 +11,8 @@
     "smoke:setup": "node scripts/operationalSmokeSetup.mjs",
     "smoke:setup:dry": "node scripts/operationalSmokeSetup.mjs --dry-run",
     "smoke:roles": "tsx scripts/roleRedirectSmoke.ts",
-    "seed:prescriptors": "node scripts/seedPrescriptors.mjs"
+    "seed:prescriptors": "node scripts/seedPrescriptors.mjs",
+    "backfill:mentor-assignments": "node scripts/backfillMentorAssignments.mjs"
   },
   "dependencies": {
     "firebase": "^12.12.1",

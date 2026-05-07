@@ -1,14 +1,16 @@
 import { useState, useEffect } from 'react'
-import { 
-  Users, 
-  Search, 
+import {
+  Users,
+  Search,
   Plus,
   ShieldCheck,
   ShieldAlert,
   ShieldX,
   Clock,
   ArrowUpRight,
-  UserPlus
+  UserPlus,
+  X,
+  Loader2,
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '../../components/ui/Button'
@@ -16,6 +18,12 @@ import { PageShell } from '../../components/ui/Premium'
 import type { AffiliateAccount } from '../../types/domain'
 import { adminAffiliateService } from '../../services/adminAffiliateService'
 import { useAuth } from '../../contexts/AuthContext'
+import { toastSuccess, toastError } from '../../components/ui/Toast'
+
+interface NewAffiliateForm {
+  name: string
+  email: string
+}
 
 export function AdminAffiliatesScreen() {
   const navigate = useNavigate()
@@ -23,42 +31,46 @@ export function AdminAffiliatesScreen() {
   const [affiliates, setAffiliates] = useState<AffiliateAccount[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
-  const pendingCommissionTotal = affiliates.reduce((total, affiliate) => total + (affiliate.pendingCommission || 0), 0)
+  const [showForm, setShowForm] = useState(false)
+  const [form, setForm] = useState<NewAffiliateForm>({ name: '', email: '' })
+  const [isSaving, setIsSaving] = useState(false)
+
+  const pendingCommissionTotal = affiliates.reduce((total, a) => total + (a.pendingCommission || 0), 0)
 
   useEffect(() => {
-    async function loadAffiliates() {
-      try {
-        setAffiliates(await adminAffiliateService.list())
-      } catch (error) {
-        console.error('Error loading affiliates:', error)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-    loadAffiliates()
+    adminAffiliateService
+      .list()
+      .then(setAffiliates)
+      .catch(() => setAffiliates([]))
+      .finally(() => setIsLoading(false))
   }, [])
 
-  const filteredAffiliates = affiliates.filter(a => 
-    a.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    a.email.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredAffiliates = affiliates.filter(
+    a =>
+      a.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      a.email.toLowerCase().includes(searchTerm.toLowerCase()),
   )
 
-  const handleCreateAffiliate = async () => {
-    const name = window.prompt('Nome da Afiliada:')
-    const email = window.prompt('E-mail da Afiliada:')
-    if (!name || !email) return
-
+  async function handleCreateAffiliate() {
+    if (!form.name.trim() || !form.email.trim()) {
+      toastError('Preencha nome e e-mail antes de criar a afiliada.')
+      return
+    }
+    setIsSaving(true)
     try {
       const { code, affiliate } = await adminAffiliateService.create(
         { uid: firebaseUser?.uid, email: firebaseUser?.email },
-        { name, email },
+        { name: form.name.trim(), email: form.email.trim() },
       )
-
-      setAffiliates([affiliate, ...affiliates])
-      alert(`Afiliada criada! Código gerado: ${code}`)
+      setAffiliates(prev => [affiliate, ...prev])
+      setShowForm(false)
+      setForm({ name: '', email: '' })
+      toastSuccess(`Afiliada criada! Código gerado: ${code}`)
     } catch (error) {
       console.error('Error creating affiliate:', error)
-      alert('Erro ao criar afiliada.')
+      toastError('Erro ao criar afiliada. Verifique o console.')
+    } finally {
+      setIsSaving(false)
     }
   }
 
@@ -80,26 +92,88 @@ export function AdminAffiliatesScreen() {
           </div>
           <h1 className="font-display text-h1 text-white uppercase italic font-black">Gestão de Afiliadas</h1>
         </div>
-        <Button variant="primary" className="md:w-auto" onClick={handleCreateAffiliate}>
+        <Button variant="primary" className="md:w-auto" onClick={() => setShowForm(v => !v)}>
           <Plus className="w-5 h-5 mr-2" /> Nova Afiliada
         </Button>
       </header>
 
+      {/* Inline create form */}
+      {showForm && (
+        <div className="mb-8 rounded-2xl border border-accent-lime/20 bg-accent-lime/5 p-5">
+          <div className="mb-4 flex items-center justify-between">
+            <p className="text-sm font-bold text-white">Nova afiliada</p>
+            <button onClick={() => setShowForm(false)} className="text-text-muted hover:text-white">
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div>
+              <label className="mb-1 block text-[10px] font-black uppercase tracking-widest text-text-muted">
+                Nome completo
+              </label>
+              <input
+                id="new-affiliate-name"
+                value={form.name}
+                onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                placeholder="Ex: Maria Silva"
+                className="ec-input w-full rounded-xl px-4 py-3 text-sm text-white outline-none"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-[10px] font-black uppercase tracking-widest text-text-muted">
+                E-mail
+              </label>
+              <input
+                id="new-affiliate-email"
+                type="email"
+                value={form.email}
+                onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+                placeholder="Ex: maria@exemplo.com"
+                className="ec-input w-full rounded-xl px-4 py-3 text-sm text-white outline-none"
+              />
+            </div>
+          </div>
+          <div className="mt-4 flex justify-end gap-3">
+            <Button variant="ghost" onClick={() => setShowForm(false)}>
+              Cancelar
+            </Button>
+            <Button
+              id="btn-create-affiliate"
+              variant="primary"
+              onClick={handleCreateAffiliate}
+              disabled={isSaving || !form.name.trim() || !form.email.trim()}
+            >
+              {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Criar afiliada'}
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
         <KPICard label="Total Afiliadas" value={affiliates.length.toString()} icon={Users} color="purple" />
-        <KPICard label="Status Ativo" value={affiliates.filter(a => a.status === 'active').length.toString()} icon={ShieldCheck} color="lime" />
-        <KPICard label="Aguardando pagamento" value={`R$ ${pendingCommissionTotal.toFixed(2)}`} icon={Clock} color="sky" />
+        <KPICard
+          label="Status Ativo"
+          value={affiliates.filter(a => a.status === 'active').length.toString()}
+          icon={ShieldCheck}
+          color="lime"
+        />
+        <KPICard
+          label="Aguardando pagamento"
+          value={`R$ ${pendingCommissionTotal.toFixed(2)}`}
+          icon={Clock}
+          color="sky"
+        />
       </div>
 
       {/* Search */}
       <div className="relative mb-8">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
-        <input 
-          type="text" 
+        <input
+          type="text"
           placeholder="Buscar afiliada por nome ou e-mail..."
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={e => setSearchTerm(e.target.value)}
           className="ec-input w-full rounded-xl py-3 pl-12 pr-4 text-sm text-text-primary outline-none transition-all"
         />
       </div>
@@ -118,7 +192,7 @@ export function AdminAffiliatesScreen() {
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5">
-            {filteredAffiliates.map((affiliate) => (
+            {filteredAffiliates.map(affiliate => (
               <tr key={affiliate.id} className="hover:bg-white/[0.02] transition-colors">
                 <td className="p-5">
                   <div className="flex items-center gap-3">
@@ -138,13 +212,18 @@ export function AdminAffiliatesScreen() {
                   <span className="text-xs font-bold text-white">{(affiliate.commissionRate * 100).toFixed(0)}% Recorrente</span>
                 </td>
                 <td className="p-5">
-                  <span className="text-xs font-display font-bold text-accent-lime italic">R$ {affiliate.totalCommissionPaid.toFixed(2)}</span>
+                  <span className="text-xs font-display font-bold text-accent-lime italic">
+                    R$ {affiliate.totalCommissionPaid.toFixed(2)}
+                  </span>
                 </td>
                 <td className="p-5">
-                  <span className="text-xs text-text-secondary">{new Date(affiliate.createdAt).toLocaleDateString('pt-BR')}</span>
+                  <span className="text-xs text-text-secondary">
+                    {new Date(affiliate.createdAt).toLocaleDateString('pt-BR')}
+                  </span>
                 </td>
                 <td className="p-5">
-                  <button 
+                  <button
+                    id={`btn-open-affiliate-${affiliate.id}`}
                     onClick={() => navigate(`/admin/affiliates/${affiliate.id}`)}
                     className="p-2 bg-white/5 border border-subtle rounded-lg text-text-muted hover:text-white hover:border-accent-purple transition-all group"
                   >
@@ -156,17 +235,25 @@ export function AdminAffiliatesScreen() {
           </tbody>
         </table>
         {filteredAffiliates.length === 0 && (
-          <div className="p-20 text-center text-text-muted italic text-sm">
-            Nenhuma afiliada encontrada.
-          </div>
+          <div className="p-20 text-center text-text-muted italic text-sm">Nenhuma afiliada encontrada.</div>
         )}
       </div>
     </PageShell>
   )
 }
 
-function KPICard({ label, value, icon: Icon, color }: { label: string, value: string, icon: any, color: string }) {
-  const colors: any = {
+function KPICard({
+  label,
+  value,
+  icon: Icon,
+  color,
+}: {
+  label: string
+  value: string
+  icon: React.ComponentType<{ className?: string }>
+  color: string
+}) {
+  const colors: Record<string, string> = {
     purple: 'text-accent-purple bg-accent-purple/10 border-accent-purple/20',
     lime: 'text-accent-lime bg-accent-lime/10 border-accent-lime/20',
     sky: 'text-accent-sky bg-accent-sky/10 border-accent-sky/20',
@@ -183,11 +270,11 @@ function KPICard({ label, value, icon: Icon, color }: { label: string, value: st
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const configs: any = {
-    active: { color: 'text-accent-lime', bg: 'bg-accent-lime/10', icon: ShieldCheck, label: 'Ativa' },
-    inactive: { color: 'text-text-muted', bg: 'bg-white/5', icon: ShieldAlert, label: 'Inativa' },
-    blocked: { color: 'text-accent-red', bg: 'bg-accent-red/10', icon: ShieldX, label: 'Bloqueada' },
-    pending: { color: 'text-accent-sky', bg: 'bg-accent-sky/10', icon: Clock, label: 'Pendente' },
+  const configs: Record<string, { color: string; bg: string; icon: React.ComponentType<{ className?: string }>; label: string }> = {
+    active:   { color: 'text-accent-lime', bg: 'bg-accent-lime/10', icon: ShieldCheck, label: 'Ativa' },
+    inactive: { color: 'text-text-muted',  bg: 'bg-white/5',        icon: ShieldAlert, label: 'Inativa' },
+    blocked:  { color: 'text-accent-red',  bg: 'bg-accent-red/10',  icon: ShieldX,     label: 'Bloqueada' },
+    pending:  { color: 'text-accent-sky',  bg: 'bg-accent-sky/10',  icon: Clock,       label: 'Pendente' },
   }
   const config = configs[status] || configs.inactive
   return (

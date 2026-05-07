@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 type ButtonVariant = 'primary' | 'lime' | 'ghost' | 'google' | 'destructive'
 
 interface ButtonProps {
+  id?: string
   variant?: ButtonVariant
   fullWidth?: boolean
   isLoading?: boolean
@@ -14,6 +15,7 @@ interface ButtonProps {
   type?: 'button' | 'submit' | 'reset'
   onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void
   'aria-label'?: string
+  'aria-describedby'?: string
 }
 
 const variantStyles: Record<ButtonVariant, string> = {

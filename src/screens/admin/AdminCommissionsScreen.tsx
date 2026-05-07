@@ -1,18 +1,20 @@
 import { useState, useEffect } from 'react'
-import { 
-  DollarSign, 
+import {
+  DollarSign,
   CheckCircle2,
   Clock,
   Filter,
   TrendingUp,
   AlertCircle,
-  FileText
+  FileText,
+  Loader2,
 } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
 import { PageShell } from '../../components/ui/Premium'
 import type { CommissionEntry } from '../../types/domain'
 import { adminCommissionService } from '../../services/adminCommissionService'
 import { useAuth } from '../../contexts/AuthContext'
+import { toastSuccess, toastError, toastInfo } from '../../components/ui/Toast'
 
 export function AdminCommissionsScreen() {
   const { firebaseUser } = useAuth()
@@ -20,6 +22,7 @@ export function AdminCommissionsScreen() {
   const [isLoading, setIsLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState('all')
   const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const [isSaving, setIsSaving] = useState(false)
 
   useEffect(() => {
     async function loadCommissions() {
@@ -43,29 +46,33 @@ export function AdminCommissionsScreen() {
   const handleCreatePayout = async () => {
     if (selectedIds.length === 0) return
     const itemsToPay = entries.filter(e => selectedIds.includes(e.id))
-    
-    // Group by affiliate to ensure we only pay one at a time for safety in MVP or validate they are the same
+
     const affiliateIds = new Set(itemsToPay.map(i => i.affiliateId))
     if (affiliateIds.size > 1) {
-      alert('Para criar um pagamento, selecione apenas comissões da mesma afiliada.')
+      toastInfo('Selecione apenas comissões da mesma afiliada para criar um pagamento.')
       return
     }
 
     const totalAmount = itemsToPay.reduce((sum, i) => sum + i.commissionAmount, 0)
     const affiliateId = Array.from(affiliateIds)[0]
 
-    if (!window.confirm(`Criar pagamento de R$ ${totalAmount.toFixed(2)} para a afiliada ${affiliateId}?`)) return
+    if (!window.confirm(`Criar pagamento de R$ ${totalAmount.toFixed(2)} para ${affiliateId}?`)) return
 
+    setIsSaving(true)
     try {
-      await adminCommissionService.createPayout({ uid: firebaseUser?.uid, email: firebaseUser?.email }, affiliateId, selectedIds)
-      
-      // Update local state
+      await adminCommissionService.createPayout(
+        { uid: firebaseUser?.uid, email: firebaseUser?.email },
+        affiliateId,
+        selectedIds,
+      )
       setEntries(prev => prev.map(e => selectedIds.includes(e.id) ? { ...e, status: 'paid' } : e))
       setSelectedIds([])
-      alert('Pagamento criado e comissões marcadas como pagas!')
+      toastSuccess(`Pagamento criado — ${selectedIds.length} comissão(ões) marcadas como pagas.`)
     } catch (error) {
       console.error('Error creating payment:', error)
-      alert('Erro ao processar pagamento.')
+      toastError('Erro ao processar pagamento. Verifique o console.')
+    } finally {
+      setIsSaving(false)
     }
   }
 
@@ -133,8 +140,9 @@ export function AdminCommissionsScreen() {
         </div>
         
         {selectedIds.length > 0 && (
-          <Button variant="primary" onClick={handleCreatePayout}>
-            <FileText className="w-4 h-4 mr-2" /> Criar pagamento selecionado
+          <Button variant="primary" onClick={handleCreatePayout} disabled={isSaving}>
+            {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <FileText className="w-4 h-4 mr-2" />}
+            Criar pagamento selecionado
           </Button>
         )}
       </div>

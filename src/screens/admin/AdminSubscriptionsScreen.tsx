@@ -1,29 +1,21 @@
 import { useState, useEffect } from 'react'
-import { 
-  collection, 
-  getDocs, 
-  query, 
-  orderBy, 
-  doc, 
-  updateDoc, 
+import {
+  collection,
+  getDocs,
+  query,
+  orderBy,
+  doc,
+  updateDoc,
   addDoc,
-  serverTimestamp 
+  serverTimestamp,
 } from 'firebase/firestore'
 import { db } from '../../lib/firebase/firebase'
 import { COLLECTIONS } from '../../lib/firebase/paths'
-import { 
-  Users, 
-  Search, 
-  CheckCircle2,
-  AlertCircle,
-  XCircle,
-  Clock,
-  ShieldAlert
-} from 'lucide-react'
+import { Users, Search, CheckCircle2, AlertCircle, XCircle, Clock, ShieldAlert } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { PageShell } from '../../components/ui/Premium'
-import type { Subscription } from '../../types/domain'
-import type { User } from '../../types/domain'
+import type { Subscription, User } from '../../types/domain'
+import { toastSuccess, toastError } from '../../components/ui/Toast'
 
 export function AdminSubscriptionsScreen() {
   const { firebaseUser } = useAuth()
@@ -54,16 +46,10 @@ export function AdminSubscriptionsScreen() {
   }, [])
 
   const handleStatusChange = async (uid: string, newStatus: any, currentSub: Subscription) => {
-    if (!window.confirm(`Deseja alterar o status para ${newStatus}?`)) return
-    
+    if (newStatus === currentSub.status) return
     try {
       const docRef = doc(db, COLLECTIONS.SUBSCRIPTIONS, uid)
-      await updateDoc(docRef, {
-        status: newStatus,
-        updatedAt: new Date().toISOString()
-      })
-
-      // Create Audit Log
+      await updateDoc(docRef, { status: newStatus, updatedAt: new Date().toISOString() })
       await addDoc(collection(db, COLLECTIONS.AUDIT_LOGS), {
         actorUid: firebaseUser?.uid,
         actorEmail: firebaseUser?.email,
@@ -72,15 +58,13 @@ export function AdminSubscriptionsScreen() {
         targetId: uid,
         before: currentSub.status,
         after: newStatus,
-        createdAt: serverTimestamp()
+        createdAt: serverTimestamp(),
       })
-
-      // Update local state
       setSubscriptions(prev => prev.map(s => s.uid === uid ? { ...s, status: newStatus } : s))
-      alert('Status atualizado com sucesso!')
+      toastSuccess(`Assinatura atualizada para "${newStatus}".`)
     } catch (error) {
       console.error('Error updating status:', error)
-      alert('Falha ao atualizar status.')
+      toastError('Falha ao atualizar status. Verifique o console.')
     }
   }
 
