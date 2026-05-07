@@ -40,7 +40,6 @@ const PaymentSuccessScreen = lazy(() => import('../screens/billing/PaymentSucces
 const PaymentFailureScreen = lazy(() => import('../screens/billing/PaymentFailureScreen').then(m => ({ default: m.PaymentFailureScreen })))
 const PaymentPendingScreen = lazy(() => import('../screens/billing/PaymentPendingScreen').then(m => ({ default: m.PaymentPendingScreen })))
 const AdminSubscriptionsScreen = lazy(() => import('../screens/admin/AdminSubscriptionsScreen').then(m => ({ default: m.AdminSubscriptionsScreen })))
-const AdminDashboardScreen = lazy(() => import('../screens/admin/AdminDashboardScreen').then(m => ({ default: m.AdminDashboardScreen })))
 const AdminAffiliatesScreen = lazy(() => import('../screens/admin/AdminAffiliatesScreen').then(m => ({ default: m.AdminAffiliatesScreen })))
 const AdminAffiliateDetailScreen = lazy(() => import('../screens/admin/AdminAffiliateDetailScreen').then(m => ({ default: m.AdminAffiliateDetailScreen })))
 const AdminCommissionsScreen = lazy(() => import('../screens/admin/AdminCommissionsScreen').then(m => ({ default: m.AdminCommissionsScreen })))
@@ -108,32 +107,33 @@ export const router = createBrowserRouter([
   { path: '/expert-club', element: <PublicLandingScreen /> },
   { path: '/design-system', element: <DesignSystemScreen /> },
   { path: '/ux-blueprint', element: <UxBlueprintScreen /> },
-  { path: '/student/dashboard', element: <StudentMobileDashboardScreen /> },
-  { path: '/dashboard/aluno', element: <StudentMobileDashboardScreen /> },
-  { path: '/student/workout', element: <StudentWorkoutPreviewScreen /> },
-  { path: '/student/workouts', element: <StudentWorkoutPreviewScreen /> },
-  { path: '/student/workout/session', element: <StudentWorkoutSessionScreen /> },
-  { path: '/student/workout-monitor', element: <StudentWorkoutSessionScreen /> },
-  { path: '/student/diet', element: <StudentDietMobileScreen /> },
-  { path: '/student/dieta', element: <StudentDietMobileScreen /> },
-  { path: '/student/ranking', element: <StudentRankingMobileScreen /> },
+  { path: '/student/dashboard', element: <AppRoute><StudentMobileDashboardScreen /></AppRoute> },
+  { path: '/dashboard/aluno', element: <AppRoute><StudentMobileDashboardScreen /></AppRoute> },
+  { path: '/student/workout', element: <AppRoute><StudentWorkoutPreviewScreen /></AppRoute> },
+  { path: '/student/workouts', element: <AppRoute><StudentWorkoutPreviewScreen /></AppRoute> },
+  { path: '/student/workout/session', element: <AppRoute><StudentWorkoutSessionScreen /></AppRoute> },
+  { path: '/student/workout-monitor', element: <AppRoute><StudentWorkoutSessionScreen /></AppRoute> },
+  { path: '/student/diet', element: <AppRoute><StudentDietMobileScreen /></AppRoute> },
+  { path: '/student/dieta', element: <AppRoute><StudentDietMobileScreen /></AppRoute> },
+  { path: '/student/ranking', element: <AppRoute><StudentRankingMobileScreen /></AppRoute> },
   { path: '/student/legacy-dashboard', element: <StudentDashboardScreen /> },
-  { path: '/mentor/overview', element: <MentorOverviewScreen /> },
-  { path: '/mentor/dashboard', element: <MentorOverviewScreen /> },
-  { path: '/dashboard/mentor', element: <MentorOverviewScreen /> },
-  { path: '/mentor/financeiro', element: <MentorFinanceScreen /> },
-  { path: '/mentor/finance', element: <MentorFinanceScreen /> },
-  { path: '/mentor/treinos/prescritor', element: <MentorWorkoutPrescriptorScreen /> },
-  { path: '/mentor/workouts/prescriptor', element: <MentorWorkoutPrescriptorScreen /> },
-  { path: '/mentor/dietas/prescritor', element: <MentorDietPrescriptorScreen /> },
-  { path: '/mentor/diets/prescriptor', element: <MentorDietPrescriptorScreen /> },
-  { path: '/mentor/alunos', element: <MentorStudentsScreen /> },
-  { path: '/mentor/students', element: <MentorStudentsScreen /> },
-  { path: '/mentor/influencers', element: <MentorInfluencersScreen /> },
+  { path: '/mentor/overview', element: <AdminRoute><MentorOverviewScreen /></AdminRoute> },
+  { path: '/mentor/dashboard', element: <AdminRoute><MentorOverviewScreen /></AdminRoute> },
+  { path: '/dashboard/mentor', element: <AdminRoute><MentorOverviewScreen /></AdminRoute> },
+  { path: '/mentor/financeiro', element: <AdminRoute><MentorFinanceScreen /></AdminRoute> },
+  { path: '/mentor/finance', element: <AdminRoute><MentorFinanceScreen /></AdminRoute> },
+  { path: '/mentor/treinos/prescritor', element: <AdminRoute><MentorWorkoutPrescriptorScreen /></AdminRoute> },
+  { path: '/mentor/workouts/prescriptor', element: <AdminRoute><MentorWorkoutPrescriptorScreen /></AdminRoute> },
+  { path: '/mentor/dietas/prescritor', element: <AdminRoute><MentorDietPrescriptorScreen /></AdminRoute> },
+  { path: '/mentor/diets/prescriptor', element: <AdminRoute><MentorDietPrescriptorScreen /></AdminRoute> },
+  { path: '/mentor/alunos', element: <AdminRoute><MentorStudentsScreen /></AdminRoute> },
+  { path: '/mentor/students', element: <AdminRoute><MentorStudentsScreen /></AdminRoute> },
+  { path: '/mentor/influencers', element: <AdminRoute><MentorInfluencersScreen /></AdminRoute> },
   { path: '/mentor/legacy-dashboard', element: <MentorDashboardScreen /> },
-  { path: '/admin/overview', element: <AdminProductOverviewScreen /> },
-  { path: '/admin/produto', element: <AdminProductOverviewScreen /> },
-  { path: '/admin/product', element: <AdminProductOverviewScreen /> },
+  { path: '/admin/dashboard', element: <AdminRoute><AdminProductOverviewScreen /></AdminRoute> },
+  { path: '/admin/overview', element: <AdminRoute><AdminProductOverviewScreen /></AdminRoute> },
+  { path: '/admin/produto', element: <AdminRoute><AdminProductOverviewScreen /></AdminRoute> },
+  { path: '/admin/product', element: <AdminRoute><AdminProductOverviewScreen /></AdminRoute> },
   {
     path: '/login',
     element: (
@@ -285,11 +285,7 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <AdminDashboardScreen />,
-      },
-      {
-        path: 'dashboard',
-        element: <AdminDashboardScreen />,
+        element: <Navigate to="/admin/dashboard" replace />,
       },
       {
         path: 'launch',

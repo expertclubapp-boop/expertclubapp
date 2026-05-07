@@ -54,5 +54,5 @@ export function getDefaultRouteForUser(
     return '/app/billing/lock'
   }
   
-  return '/app/today'
+  return '/student/dashboard'
 }

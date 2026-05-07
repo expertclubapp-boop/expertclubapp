@@ -71,7 +71,7 @@ export function AppShell() {
               </p>
               {user?.role === 'admin' && (
                 <button
-                  onClick={() => navigate(isAdmin ? '/app/today' : '/admin/subscriptions')}
+                  onClick={() => navigate(isAdmin ? '/student/dashboard' : '/admin/dashboard')}
                   className="text-[10px] font-bold text-accent-sky hover:underline"
                 >
                   {isAdmin ? 'Ver App' : 'Ver Admin'}
