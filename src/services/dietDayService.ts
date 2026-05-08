@@ -1,5 +1,6 @@
 import { doc, getDoc, setDoc } from 'firebase/firestore'
 import { db } from '../lib/firebase/firebase'
+import { nowTimestamp, toFirestoreDate } from '../lib/firebase/date'
 import { COLLECTIONS, SUB_COLLECTIONS, getSubCollectionPath } from '../lib/firebase/paths'
 import type { DietDay, DietDayMealLog, Diet } from '../types/domain'
 import { challengeScoringService } from './challengeScoringService'
@@ -15,7 +16,11 @@ export const dietDayService = {
   async saveDay(uid: string, dietDay: DietDay): Promise<void> {
     const path = getSubCollectionPath(COLLECTIONS.USERS, uid, SUB_COLLECTIONS.DIET_DAYS)
     const docRef = doc(db, path, dietDay.dateKey)
-    await setDoc(docRef, { ...dietDay, updatedAt: new Date().toISOString() }, { merge: true })
+    await setDoc(docRef, {
+      ...dietDay,
+      createdAt: toFirestoreDate(dietDay.createdAt as any) ?? nowTimestamp(),
+      updatedAt: nowTimestamp(),
+    }, { merge: true })
 
     // Non-blocking scoring
     challengeScoringService.processUserAction({
@@ -36,8 +41,12 @@ export const dietDayService = {
         foodName: item.foodName,
         amount: `${item.quantity}${item.unit}`,
         completed: false,
-        kcal: item.macros.calories,
-        macros: { carbs: item.macros.carbs, protein: item.macros.protein, fat: item.macros.fat },
+        kcal: item.macros?.calories ?? 0,
+        macros: {
+          carbs: item.macros?.carbs ?? 0,
+          protein: item.macros?.protein ?? 0,
+          fat: item.macros?.fat ?? 0,
+        },
       })),
     }))
 
@@ -48,20 +57,20 @@ export const dietDayService = {
       dateKey,
       dietId: diet.id,
       meals,
-      totalCaloriesPlanned: diet.calories,
+      totalCaloriesPlanned: diet.calories ?? 0,
       totalCaloriesConsumed: 0,
-      totalProteinPlanned: diet.protein,
+      totalProteinPlanned: diet.protein ?? 0,
       totalProteinConsumed: 0,
-      totalCarbsPlanned: diet.carbs,
+      totalCarbsPlanned: diet.carbs ?? 0,
       totalCarbsConsumed: 0,
-      totalFatPlanned: diet.fat,
+      totalFatPlanned: diet.fat ?? 0,
       totalFatConsumed: 0,
       adherencePercent: 0,
       completedMealsCount: 0,
       completedItemsCount: 0,
       totalItemsCount: totalItems,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      createdAt: nowTimestamp() as any,
+      updatedAt: nowTimestamp() as any,
     }
   },
 

@@ -29,11 +29,16 @@ export function ChallengesScreen() {
   const { leaderboard, isLoading: isLeaderboardLoading } = useLeaderboard(challenge?.id)
   const { badges } = useUserBadges(firebaseUser?.uid)
   const [isJoining, setIsJoining] = useState(false)
+  const [joinFeedback, setJoinFeedback] = useState<string | null>(null)
+  const [joinError, setJoinError] = useState<string | null>(null)
+  const [joinedOptimistic, setJoinedOptimistic] = useState(false)
   const [activeTab, setActiveTab] = useState<'missions' | 'ranking' | 'badges'>('missions')
 
   const handleJoin = async () => {
     if (!challenge || !firebaseUser) return
     setIsJoining(true)
+    setJoinFeedback(null)
+    setJoinError(null)
     try {
       await challengeService.joinChallenge(
         challenge.id, 
@@ -41,9 +46,11 @@ export function ChallengesScreen() {
         firebaseUser.displayName || 'Expert',
         firebaseUser.photoURL || undefined
       )
-      window.location.reload()
+      setJoinedOptimistic(true)
+      setJoinFeedback('Participacao registrada. Continue completando missoes para pontuar.')
     } catch (error) {
       console.error("Error joining challenge:", error)
+      setJoinError('Nao foi possivel entrar no desafio agora. Tente novamente em instantes.')
     } finally {
       setIsJoining(false)
     }
@@ -123,19 +130,31 @@ export function ChallengesScreen() {
                 <span className="font-display text-sm text-text-primary italic font-bold uppercase tracking-widest">Badges & XP</span>
               </div>
             </div>
-            {!participant && (
+            {!participant && !joinedOptimistic && (
               <div className="ml-auto">
                 <Button variant="primary" className="px-10 h-14 font-black uppercase italic shadow-xl" onClick={handleJoin} isLoading={isJoining}>
                   Quero Participar
                 </Button>
               </div>
             )}
+            {(participant || joinedOptimistic) && (
+              <div className="ml-auto">
+                <span className="inline-flex h-12 items-center rounded-2xl border border-accent-lime/30 bg-accent-lime/10 px-5 text-[10px] font-black uppercase tracking-widest text-accent-lime">
+                  Participando
+                </span>
+              </div>
+            )}
           </div>
+          {(joinFeedback || joinError) && (
+            <div className={`mt-6 rounded-2xl border px-4 py-3 text-xs font-bold ${joinError ? 'border-red-500/30 bg-red-500/10 text-red-200' : 'border-accent-lime/30 bg-accent-lime/10 text-accent-lime'}`}>
+              {joinError || joinFeedback}
+            </div>
+          )}
         </div>
       </section>
 
       {/* Navigation Tabs */}
-      <div className="flex items-center gap-2 mb-8 bg-white/5 p-1 rounded-2xl w-fit border border-white/5">
+      <div className="grid grid-cols-3 gap-1 mb-8 bg-white/5 p-1 rounded-2xl w-full border border-white/5 sm:inline-grid sm:w-fit sm:gap-2">
         <TabButton active={activeTab === 'missions'} onClick={() => setActiveTab('missions')} label="Missões" icon={<Zap className="w-3.5 h-3.5" />} />
         <TabButton active={activeTab === 'ranking'} onClick={() => setActiveTab('ranking')} label="Ranking" icon={<Trophy className="w-3.5 h-3.5" />} />
         <TabButton active={activeTab === 'badges'} onClick={() => setActiveTab('badges')} label="Badges" icon={<Award className="w-3.5 h-3.5" />} />
@@ -162,7 +181,7 @@ export function ChallengesScreen() {
                 ))}
               </div>
               
-              {!participant && (
+              {!participant && !joinedOptimistic && (
                 <div className="ec-card p-10 rounded-3xl text-center border-dashed">
                   <Lock className="w-10 h-10 text-white/10 mx-auto mb-4" />
                   <p className="text-text-muted text-sm mb-6 max-w-xs mx-auto">Você precisa entrar no desafio para começar a completar as missões e ganhar pontos.</p>
@@ -239,7 +258,12 @@ export function ChallengesScreen() {
                   </div>
                 </div>
 
-                <button className="w-full mt-10 bg-white/5 border border-white/5 text-text-primary py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-white/10 transition-all flex items-center justify-center gap-3">
+                <button
+                  type="button"
+                  disabled
+                  title="Compartilhamento de ranking ainda nao esta conectado neste modulo."
+                  className="w-full mt-10 bg-white/5 border border-white/5 text-text-primary py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all flex items-center justify-center gap-3 disabled:cursor-not-allowed disabled:opacity-60"
+                >
                   <Share2 className="w-4 h-4 text-ec-violet" /> Compartilhar Ranking
                 </button>
               </div>
@@ -276,7 +300,7 @@ function TabButton({ active, onClick, label, icon }: any) {
   return (
     <button 
       onClick={onClick}
-      className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${active ? 'bg-ec-violet text-white shadow-lg' : 'text-text-muted hover:text-white'}`}
+        className={`flex min-w-0 items-center justify-center gap-1.5 px-2 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all sm:gap-2 sm:px-6 ${active ? 'bg-ec-violet text-white shadow-lg' : 'text-text-muted hover:text-white'}`}
     >
       {icon}
       {label}

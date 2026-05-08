@@ -3,6 +3,7 @@ import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom'
 import { AppShell } from '../components/layout/AppShell'
 import { useAuth } from '../contexts/AuthContext'
 import { useSubscription } from '../hooks/useSubscription'
+import { AdminLayout, MentorLayout } from './Layouts'
 import { AdminRoute } from './AdminRoute'
 import { AffiliateRoute } from './AffiliateRoute'
 import { AppRoute } from './AppRoute'
@@ -236,20 +237,20 @@ export const router = createBrowserRouter([
             element: <ChallengesScreen />,
           },
           {
-            path: 'content',
-            element: <ExpertCenterScreen />,
-          },
-          {
-            path: 'content/:contentId',
-            element: <ExpertCenterScreen />,
-          },
-          {
             path: 'badges',
             element: <ChallengesScreen />,
           },
           {
             path: 'community',
             element: <CommunityScreen />,
+          },
+          {
+            path: 'content',
+            element: <ExpertCenterScreen />,
+          },
+          {
+            path: 'content/:contentId',
+            element: <ExpertCenterScreen />,
           },
           {
             path: 'hydration',
@@ -267,7 +268,7 @@ export const router = createBrowserRouter([
     path: '/mentor',
     element: (
       <MentorRoute>
-        <AppShell />
+        <MentorLayout />
       </MentorRoute>
     ),
     children: [
@@ -341,7 +342,7 @@ export const router = createBrowserRouter([
     path: '/admin',
     element: (
       <AdminRoute>
-        <AppShell />
+        <AdminLayout />
       </AdminRoute>
     ),
     children: [

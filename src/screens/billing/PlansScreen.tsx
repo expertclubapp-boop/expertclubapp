@@ -15,6 +15,7 @@ export function PlansScreen() {
   const [isLoading, setIsLoading] = useState(true)
   const [isProcessing, setIsProcessing] = useState<string | null>(null)
   const [appliedReferral, setAppliedReferral] = useState<string | null>(null)
+  const [checkoutError, setCheckoutError] = useState<string | null>(null)
 
   useEffect(() => {
     referralUtils.captureReferralParams()
@@ -34,6 +35,7 @@ export function PlansScreen() {
 
   const handleSubscribe = async (planId: string) => {
     setIsProcessing(planId)
+    setCheckoutError(null)
     try {
       const createCheckout = httpsCallable(functions, 'createMercadoPagoCheckout')
       
@@ -55,7 +57,7 @@ export function PlansScreen() {
       }
     } catch (error) {
       console.error('Error initiating subscription:', error)
-      alert('Falha ao iniciar checkout. Tente novamente ou fale com o suporte.')
+      setCheckoutError('Falha ao iniciar checkout. Tente novamente ou fale com o suporte.')
     } finally {
       setIsProcessing(null)
     }
@@ -94,6 +96,12 @@ export function PlansScreen() {
         </div>
         </div>
       </header>
+
+      {checkoutError && (
+        <div className="mx-auto mt-4 max-w-3xl rounded-2xl border border-accent-red/35 bg-accent-red/10 px-4 py-3 text-sm font-bold text-accent-red">
+          {checkoutError}
+        </div>
+      )}
 
       <main className="max-w-7xl mx-auto px-6 py-12">
         <section className="text-center mb-16">

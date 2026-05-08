@@ -1,195 +1,158 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Eye, UserCog, UserX } from 'lucide-react'
-import { PageShell } from '../../components/ui/Premium'
+import { 
+  Search, 
+  SlidersHorizontal, 
+  ChevronRight
+} from 'lucide-react'
 import { useAdminUsers } from '../../hooks/admin/useAdminUsers'
-import { adminUserService } from '../../services/adminUserService'
-import { AdminSearchFilter, AdminState, AdminToolbar } from './AdminShared'
-import type { User } from '../../types/domain'
+import { V2Card, V2Avatar, V2Badge, V2Button, V2IconBubble } from '../../components/v2/ExpertClubV2Base'
+import type { Subscription, User } from '../../types/domain'
 
-const roleLabel: Record<string, string> = {
-  admin: 'Admin',
-  mentor: 'Mentor',
-  member: 'Aluno',
-  affiliate: 'Afiliada',
-}
-
-const statusLabel: Record<string, string> = {
-  active: 'Ativa',
-  trialing: 'Teste',
-  pending: 'Pendente',
-  past_due: 'Atrasada',
-  cancelled: 'Cancelada',
-  expired: 'Expirada',
+type UserTableRow = User & {
+  subscription?: Subscription | null
 }
 
 export function AdminUsersScreen() {
   const navigate = useNavigate()
-  const { users, isLoading, error } = useAdminUsers()
+  const { users, isLoading } = useAdminUsers()
 
   const [search, setSearch] = useState('')
   const [role, setRole] = useState('all')
-  const [mentorFilter, setMentorFilter] = useState('all') // 'all' | 'none' | mentorUid
-  const [mentors, setMentors] = useState<User[]>([])
 
-  useEffect(() => {
-    adminUserService
-      .listMentors()
-      .then(setMentors)
-      .catch(() => setMentors([]))
-  }, [])
+  const tableUsers = useMemo<UserTableRow[]>(() => {
+    return users.map((row) => ({
+      ...row.user,
+      subscription: row.subscription,
+    }))
+  }, [users])
 
-  const filtered = useMemo(
-    () =>
-      users.filter(({ user, subscription }) => {
-        const haystack = `${user.displayName} ${user.email} ${subscription?.planName || ''}`.toLowerCase()
-        const matchesSearch = haystack.includes(search.toLowerCase())
-        const matchesRole = role === 'all' || user.role === role
-        const matchesMentor =
-          mentorFilter === 'all' ||
-          (mentorFilter === 'none' && !user.mentorId) ||
-          user.mentorId === mentorFilter
-        return matchesSearch && matchesRole && matchesMentor
-      }),
-    [users, search, role, mentorFilter],
-  )
+  const filteredUsers = useMemo(() => {
+    return tableUsers.filter(user => {
+      const matchesSearch = 
+        (user.displayName || '').toLowerCase().includes(search.toLowerCase()) || 
+        (user.email || '').toLowerCase().includes(search.toLowerCase())
+      const matchesRole = role === 'all' || user.role === role
+      return matchesSearch && matchesRole
+    })
+  }, [tableUsers, search, role])
 
-  const mentorMap = useMemo(
-    () => Object.fromEntries(mentors.map(m => [m.uid, m.displayName || m.email])),
-    [mentors],
-  )
+  if (isLoading) return <div className="py-20 flex justify-center"><div className="w-8 h-8 border-4 border-ec-violet/30 border-t-ec-violet rounded-full animate-spin" /></div>
 
   return (
-    <PageShell wide>
-      <AdminToolbar
-        title="Usuários"
-        eyebrow="Operação"
-        description="Gerencie alunos, afiliadas, admins, assinatura e histórico de uso."
-      />
-
-      {/* Search + role filter */}
-      <AdminSearchFilter
-        search={search}
-        onSearch={setSearch}
-        status={role}
-        onStatus={setRole}
-        statuses={[
-          ['all', 'Todos'],
-          ['member', 'Alunos'],
-          ['mentor', 'Mentores'],
-          ['affiliate', 'Afiliadas'],
-          ['admin', 'Admins'],
-        ]}
-      />
-
-      {/* Mentor filter row */}
-      <div className="mb-5 flex flex-wrap items-center gap-2">
-        <span className="text-[10px] font-black uppercase tracking-widest text-text-muted">Filtrar por mentor:</span>
-        <button
-          onClick={() => setMentorFilter('all')}
-          className={`rounded-full px-3 py-1 text-xs font-bold transition-colors ${mentorFilter === 'all' ? 'bg-accent-lime/20 text-accent-lime' : 'bg-white/5 text-text-muted hover:text-white'}`}
-        >
-          Todos
-        </button>
-        <button
-          onClick={() => setMentorFilter('none')}
-          className={`flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold transition-colors ${mentorFilter === 'none' ? 'bg-accent-yellow/20 text-accent-yellow' : 'bg-white/5 text-text-muted hover:text-white'}`}
-        >
-          <UserX className="h-3 w-3" /> Sem mentor
-        </button>
-        {mentors.map(m => (
-          <button
-            key={m.uid}
-            onClick={() => setMentorFilter(m.uid)}
-            className={`rounded-full px-3 py-1 text-xs font-bold transition-colors ${mentorFilter === m.uid ? 'bg-ec-violet/30 text-white' : 'bg-white/5 text-text-muted hover:text-white'}`}
-          >
-            {m.displayName || m.email}
-          </button>
-        ))}
-      </div>
-
-      <AdminState isLoading={isLoading} error={error} empty={filtered.length === 0}>
-        <div className="ec-card overflow-hidden rounded-2xl">
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[1080px] text-left">
-              <thead className="border-b border-white/10 bg-white/5">
-                <tr>
-                  {['Usuário', 'Role', 'Mentor', 'Assinatura', 'Plano', 'Entrada', 'Ações'].map(h => (
-                    <th key={h} className="p-4 text-[10px] font-black uppercase tracking-widest text-text-muted">
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5">
-                {filtered.map(({ user, subscription }) => (
-                  <tr key={user.uid} className="hover:bg-white/[0.025]">
-                    <td className="p-4">
-                      <p className="text-sm font-bold text-white">{user.displayName || 'Usuário sem nome'}</p>
-                      <p className="text-[10px] text-text-muted">{user.email}</p>
-                    </td>
-                    <td className="p-4 text-xs text-white">{roleLabel[user.role] || user.role}</td>
-
-                    {/* Mentor column */}
-                    <td className="p-4">
-                      {user.mentorId ? (
-                        <span className="inline-block rounded-full bg-ec-violet/20 px-2 py-0.5 text-[10px] font-bold text-white">
-                          {mentorMap[user.mentorId] || user.mentorId.slice(0, 8) + '…'}
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-accent-yellow/10 px-2 py-0.5 text-[10px] font-bold text-accent-yellow">
-                          <UserX className="h-2.5 w-2.5" /> Sem mentor
-                        </span>
-                      )}
-                    </td>
-
-                    <td className="p-4 text-xs text-text-secondary">
-                      {statusLabel[subscription?.status || user.subscriptionStatus || 'pending'] || 'Pendente'}
-                    </td>
-                    <td className="p-4 text-xs text-text-secondary">
-                      {subscription?.planName || user.subscriptionPlan || '-'}
-                    </td>
-                    <td className="p-4 text-xs text-text-muted">
-                      {user.createdAt ? new Date(user.createdAt).toLocaleDateString('pt-BR') : '-'}
-                    </td>
-                    <td className="p-4">
-                      <div className="flex items-center gap-2">
-                        <button
-                          id={`btn-open-user-${user.uid}`}
-                          onClick={() => navigate(`/admin/users/${user.uid}`)}
-                          className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs font-bold text-white hover:border-accent-lime/40"
-                        >
-                          <Eye className="h-4 w-4" /> Abrir
-                        </button>
-                        {/* Quick assign mentor shortcut for students without mentor */}
-                        {user.role === 'member' && !user.mentorId && (
-                          <button
-                            id={`btn-assign-mentor-${user.uid}`}
-                            onClick={() => navigate(`/admin/users/${user.uid}`)}
-                            title="Atribuir mentor"
-                            className="inline-flex items-center gap-1 rounded-lg border border-accent-yellow/20 bg-accent-yellow/10 px-3 py-2 text-xs font-bold text-accent-yellow hover:border-accent-yellow/40"
-                          >
-                            <UserCog className="h-4 w-4" />
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+    <div className="space-y-8 animate-in fade-in duration-500">
+      
+      {/* FILTERS */}
+      <V2Card className="p-6">
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
+            <input 
+              type="text"
+              placeholder="Buscar por nome ou email..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full bg-white/5 border border-white/5 rounded-xl py-3 pl-12 pr-4 text-sm font-bold placeholder:text-text-muted outline-none focus:border-ec-violet/50 transition-all"
+            />
+          </div>
+          <div className="flex gap-4">
+            <select 
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+              className="bg-white/5 border border-white/5 rounded-xl py-3 px-6 text-sm font-bold text-white outline-none focus:border-ec-violet/50 transition-all appearance-none cursor-pointer"
+            >
+              <option value="all">TODOS OS ROLES</option>
+              <option value="admin">ADMIN</option>
+              <option value="mentor">MENTOR</option>
+              <option value="member">ALUNO</option>
+              <option value="affiliate">AFILIADO</option>
+            </select>
+            <V2Button
+              variant="secondary"
+              disabled
+              title="Os filtros de role e busca ja estao ativos; filtros avancados ainda nao existem neste modulo."
+              className="px-6 flex items-center gap-2"
+            >
+              <SlidersHorizontal size={16} />
+              FILTROS ATIVOS
+            </V2Button>
           </div>
         </div>
-      </AdminState>
+      </V2Card>
 
-      <div className="mt-4 flex items-center gap-2 text-xs text-text-muted">
-        <UserCog className="h-4 w-4" /> UID aparece apenas no detalhe do usuário.
-        {mentorFilter === 'none' && (
-          <span className="ml-4 text-accent-yellow">
-            Mostrando {filtered.length} aluno{filtered.length !== 1 ? 's' : ''} sem mentor.
-          </span>
+      {/* USERS TABLE */}
+      <V2Card className="overflow-hidden border-white/5">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead>
+              <tr className="border-b border-white/5 bg-white/[0.02]">
+                <th className="px-6 py-4 text-[10px] font-black tracking-[0.2em] text-text-muted uppercase">Usuário</th>
+                <th className="px-6 py-4 text-[10px] font-black tracking-[0.2em] text-text-muted uppercase">Role</th>
+                <th className="px-6 py-4 text-[10px] font-black tracking-[0.2em] text-text-muted uppercase">Plano</th>
+                <th className="px-6 py-4 text-[10px] font-black tracking-[0.2em] text-text-muted uppercase">Status</th>
+                <th className="px-6 py-4 text-[10px] font-black tracking-[0.2em] text-text-muted uppercase text-right">Ações</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/5">
+              {filteredUsers.map((user) => (
+                <tr key={user.uid} className="hover:bg-white/[0.01] transition-colors group">
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      <V2Avatar uid={user.uid} name={user.displayName || ''} size="md" />
+                      <div>
+                        <p className="text-sm font-black italic text-white uppercase group-hover:text-ec-violet transition-colors">{user.displayName || 'Sem nome'}</p>
+                        <p className="text-xs text-text-muted">{user.email}</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <V2Badge tone={
+                      user.role === 'admin' ? 'warning' : 
+                      user.role === 'mentor' ? 'violet' : 
+                      user.role === 'affiliate' ? 'info' : 'neutral'
+                    }>
+                      {user.role?.toUpperCase()}
+                    </V2Badge>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className="text-xs font-bold text-white uppercase">{user.subscription?.planName || user.subscriptionPlan || '-'}</span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <V2Badge tone={(user.subscription?.status || user.subscriptionStatus) === 'active' ? 'success' : 'neutral'}>
+                      {(user.subscription?.status || user.subscriptionStatus)?.toUpperCase() || 'INATIVO'}
+                    </V2Badge>
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <button 
+                      onClick={() => navigate(`/admin/users/${user.uid}`)}
+                      className="p-2 text-text-muted hover:text-white transition-colors"
+                    >
+                      <ChevronRight size={18} />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        
+        {filteredUsers.length === 0 && (
+          <div className="py-20 text-center">
+            <V2IconBubble icon={Search} tone="neutral" size={24} className="mx-auto mb-4" />
+            <p className="text-text-muted font-bold uppercase tracking-widest text-[10px]">Nenhum usuário encontrado com estes filtros.</p>
+          </div>
         )}
+      </V2Card>
+
+      {/* FOOTER STATS */}
+      <div className="flex justify-between items-center text-[10px] font-black tracking-[0.2em] text-text-muted uppercase px-2">
+         <span>{filteredUsers.length} USUÁRIOS FILTRADOS</span>
+         <div className="flex items-center gap-4">
+            <span className="flex items-center gap-2"><i className="w-2 h-2 rounded-full bg-accent-lime" /> {tableUsers.filter(u => (u.subscription?.status || u.subscriptionStatus) === 'active').length} ATIVOS</span>
+            <span className="flex items-center gap-2"><i className="w-2 h-2 rounded-full bg-ec-violet" /> {tableUsers.filter(u => u.role === 'mentor').length} MENTORES</span>
+         </div>
       </div>
-    </PageShell>
+
+    </div>
   )
 }

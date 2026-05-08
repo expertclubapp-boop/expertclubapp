@@ -87,7 +87,9 @@ service cloud.firestore {
     }
 
     match /users/{uid} {
-      allow read: if isOwner(uid) || isAdmin() || isMentorOf(uid);
+      allow read: if isOwner(uid)
+        || isAdmin()
+        || (isMentor() && resource.data.mentorId == request.auth.uid);
       allow create: if isAdmin()
         || (
           isOwner(uid)
@@ -156,7 +158,7 @@ service cloud.firestore {
     }
 
     match /billingEvents/{eventId} {
-      allow read: if isAdmin();
+      allow read: if isAdmin() || (isAuthenticated() && resource.data.uid == request.auth.uid);
       allow write: if isAdmin();
     }
 
@@ -234,31 +236,31 @@ service cloud.firestore {
     }
 
     match /users/{uid}/hydrationDays/{date} {
-      allow read: if (isOwner(uid) && canUseStudentApp()) || isAdmin() || isMentorOf(uid);
+      allow read: if (isOwner(uid) && canUseStudentApp()) || isAdmin() || (resource.data.uid == uid && isMentorOf(uid));
       allow create, update: if ((isOwner(uid) && canUseStudentApp() && ownsWrittenDoc(uid)) || isAdmin());
       allow delete: if isAdmin();
     }
 
     match /users/{uid}/workoutSessions/{sessionId} {
-      allow read: if (isOwner(uid) && canUseStudentApp()) || isAdmin() || isMentorOf(uid);
+      allow read: if (isOwner(uid) && canUseStudentApp()) || isAdmin() || (resource.data.uid == uid && isMentorOf(uid));
       allow create, update: if ((isOwner(uid) && canUseStudentApp() && ownsWrittenDoc(uid)) || isAdmin());
       allow delete: if isAdmin();
     }
 
     match /users/{uid}/dietDays/{dateKey} {
-      allow read: if (isOwner(uid) && canUseStudentApp()) || isAdmin() || isMentorOf(uid);
+      allow read: if (isOwner(uid) && canUseStudentApp()) || isAdmin() || (resource.data.uid == uid && isMentorOf(uid));
       allow create, update: if ((isOwner(uid) && canUseStudentApp() && ownsWrittenDoc(uid)) || isAdmin());
       allow delete: if isAdmin();
     }
 
     match /users/{uid}/bodyCheckins/{checkinId} {
-      allow read: if (isOwner(uid) && canUseStudentApp()) || isAdmin() || isMentorOf(uid);
+      allow read: if (isOwner(uid) && canUseStudentApp()) || isAdmin() || (resource.data.uid == uid && isMentorOf(uid));
       allow create, update: if ((isOwner(uid) && canUseStudentApp() && ownsWrittenDoc(uid)) || isAdmin());
       allow delete: if isAdmin();
     }
 
     match /users/{uid}/dailyCheckins/{date} {
-      allow read: if (isOwner(uid) && canUseStudentApp()) || isAdmin() || isMentorOf(uid);
+      allow read: if (isOwner(uid) && canUseStudentApp()) || isAdmin() || (resource.data.uid == uid && isMentorOf(uid));
       allow create, update: if ((isOwner(uid) && canUseStudentApp() && ownsWrittenDoc(uid)) || isAdmin());
       allow delete: if isAdmin();
     }
@@ -365,6 +367,29 @@ service cloud.firestore {
       // Only admin/system can create notifications
       allow create: if isAdmin();
       allow delete: if isAdmin();
+    }
+
+    // ═══════════════════════════════════════════════
+    // COLLECTION GROUPS (For Admin/Mentor Dashboards)
+    // ═══════════════════════════════════════════════
+    match /{path=**}/workoutSessions/{sessionId} {
+      allow read: if isAdmin() || (isMentor() && isMentorOf(resource.data.uid));
+    }
+
+    match /{path=**}/dietDays/{dateKey} {
+      allow read: if isAdmin() || (isMentor() && isMentorOf(resource.data.uid));
+    }
+
+    match /{path=**}/dailyCheckins/{date} {
+      allow read: if isAdmin() || (isMentor() && isMentorOf(resource.data.uid));
+    }
+
+    match /{path=**}/bodyCheckins/{checkinId} {
+      allow read: if isAdmin() || (isMentor() && isMentorOf(resource.data.uid));
+    }
+
+    match /{path=**}/hydrationDays/{date} {
+      allow read: if isAdmin() || (isMentor() && isMentorOf(resource.data.uid));
     }
   }
 }

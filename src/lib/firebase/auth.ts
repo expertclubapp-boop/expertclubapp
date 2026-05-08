@@ -11,6 +11,7 @@ import {
 } from 'firebase/auth'
 import { auth, db, firebaseEnvReady } from './firebase'
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore'
+import { nowTimestamp, toFirestoreDate } from './date'
 import { COLLECTIONS } from './paths'
 
 const googleProvider = new GoogleAuthProvider()
@@ -93,7 +94,6 @@ export async function ensureUserExists(user: FirebaseUser, fallbackDisplayName =
   const userRef = doc(db, COLLECTIONS.USERS, user.uid)
   const userSnap = await getDoc(userRef)
   const displayName = user.displayName || fallbackDisplayName || ''
-  const nowIso = new Date().toISOString()
 
   if (!userSnap.exists()) {
     await setDoc(userRef, {
@@ -142,6 +142,8 @@ export async function ensureUserExists(user: FirebaseUser, fallbackDisplayName =
   const subscriptionRef = doc(db, COLLECTIONS.SUBSCRIPTIONS, user.uid)
   const subscriptionSnap = await getDoc(subscriptionRef)
   if (!subscriptionSnap.exists()) {
+    const now = nowTimestamp()
+    const nextMonth = toFirestoreDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000))
     await setDoc(subscriptionRef, {
       uid: user.uid,
       planId: 'founder',
@@ -151,17 +153,17 @@ export async function ensureUserExists(user: FirebaseUser, fallbackDisplayName =
       price: 49,
       currency: 'BRL',
       interval: 'monthly',
-      startedAt: nowIso,
-      currentPeriodStart: nowIso,
-      currentPeriodEnd: nowIso,
-      createdAt: nowIso,
-      updatedAt: nowIso,
+      startedAt: now,
+      currentPeriodStart: now,
+      currentPeriodEnd: nextMonth,
+      createdAt: now,
+      updatedAt: now,
     })
   } else {
     // For testing: Force any pending subscription to active
     const subData = subscriptionSnap.data()
     if (subData.status === 'pending') {
-      await setDoc(subscriptionRef, { status: 'active', updatedAt: nowIso }, { merge: true })
+      await setDoc(subscriptionRef, { status: 'active', updatedAt: nowTimestamp() }, { merge: true })
     }
   }
 }

@@ -1,18 +1,12 @@
 import { useState, useEffect } from 'react'
-import { 
-  collection, 
-  getDocs, 
-  query, 
-  where, 
-  doc, 
-  getDoc
-} from 'firebase/firestore'
+import { collection, getDocs, query, where, doc, getDoc } from 'firebase/firestore'
 import { db } from '../../lib/firebase/firebase'
 import { COLLECTIONS } from '../../lib/firebase/paths'
-import { 
-  Users, 
+import {
+  Users,
   ArrowLeft,
   Copy,
+  Check,
   CheckCircle2,
   CreditCard,
   DollarSign,
@@ -20,7 +14,7 @@ import {
   ShieldAlert,
   ShieldCheck,
   ShieldX,
-  Target
+  Target,
 } from 'lucide-react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Button } from '../../components/ui/Button'
@@ -28,6 +22,7 @@ import { PageShell } from '../../components/ui/Premium'
 import type { AffiliateAccount, ReferralCode, CommissionEntry, ReferralAttribution } from '../../types/domain'
 import { adminAffiliateService } from '../../services/adminAffiliateService'
 import { useAuth } from '../../contexts/AuthContext'
+import { toastSuccess, toastError } from '../../components/ui/Toast'
 
 export function AdminAffiliateDetailScreen() {
   const { affiliateId } = useParams()
@@ -38,6 +33,8 @@ export function AdminAffiliateDetailScreen() {
   const [commissions, setCommissions] = useState<CommissionEntry[]>([])
   const [attributions, setAttributions] = useState<ReferralAttribution[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [statusSaving, setStatusSaving] = useState(false)
+  const [copiedCode, setCopiedCode] = useState<string | null>(null)
 
   useEffect(() => {
     async function loadData() {
@@ -45,36 +42,30 @@ export function AdminAffiliateDetailScreen() {
       try {
         const affDoc = await getDoc(doc(db, COLLECTIONS.AFFILIATE_ACCOUNTS, affiliateId))
         if (!affDoc.exists()) {
-          alert('Afiliada não encontrada.')
+          toastError('Afiliada não encontrada.')
           navigate('/admin/affiliates')
           return
         }
         setAffiliate(affDoc.data() as AffiliateAccount)
-
-        // Load Referral Codes
-        const codesSnap = await getDocs(query(collection(db, COLLECTIONS.REFERRAL_CODES), where('affiliateId', '==', affiliateId)))
+        const codesSnap = await getDocs(
+          query(collection(db, COLLECTIONS.REFERRAL_CODES), where('affiliateId', '==', affiliateId)),
+        )
         setReferralCodes(codesSnap.docs.map(d => d.data() as ReferralCode))
-
-        // Load Commissions (Limit 20)
-        const commSnap = await getDocs(query(
-          collection(db, COLLECTIONS.COMMISSION_LEDGER), 
-          where('affiliateId', '==', affiliateId)
-        ))
+        const commSnap = await getDocs(
+          query(collection(db, COLLECTIONS.COMMISSION_LEDGER), where('affiliateId', '==', affiliateId)),
+        )
         const allCommissions = commSnap.docs.map(d => d.data() as CommissionEntry)
         allCommissions.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
         setCommissions(allCommissions.slice(0, 20))
-
-        // Load Attributions
-        const attrSnap = await getDocs(query(
-          collection(db, COLLECTIONS.REFERRAL_ATTRIBUTIONS),
-          where('affiliateId', '==', affiliateId)
-        ))
+        const attrSnap = await getDocs(
+          query(collection(db, COLLECTIONS.REFERRAL_ATTRIBUTIONS), where('affiliateId', '==', affiliateId)),
+        )
         const allAttributions = attrSnap.docs.map(d => d.data() as ReferralAttribution)
         allAttributions.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
         setAttributions(allAttributions.slice(0, 20))
-
       } catch (error) {
         console.error('Error loading affiliate details:', error)
+        toastError('Erro ao carregar dados da afiliada.')
       } finally {
         setIsLoading(false)
       }
@@ -83,24 +74,39 @@ export function AdminAffiliateDetailScreen() {
   }, [affiliateId, navigate])
 
   const handleUpdateStatus = async (status: AffiliateAccount['status']) => {
-    if (!affiliate) return
-    if (status === 'blocked' && !window.confirm(`Bloquear ${affiliate.name}? Os códigos de indicação ativos serão inativados.`)) return
-    if (status === 'active' && !window.confirm(`Ativar ${affiliate.name}?`)) return
+    if (!affiliate || statusSaving) return
+    setStatusSaving(true)
     try {
-      await adminAffiliateService.updateStatus({ uid: firebaseUser?.uid, email: firebaseUser?.email }, affiliate.id, status)
+      await adminAffiliateService.updateStatus(
+        { uid: firebaseUser?.uid, email: firebaseUser?.email },
+        affiliate.id,
+        status,
+      )
       if (status === 'blocked') {
         setReferralCodes(prev => prev.map(code => ({ ...code, status: 'inactive' })))
+        toastSuccess(`${affiliate.name} bloqueada. Códigos de indicação desativados.`)
+      } else {
+        toastSuccess(`${affiliate.name} ativada com sucesso.`)
       }
       setAffiliate({ ...affiliate, status })
     } catch (e) {
       console.error(e)
+      toastError('Erro ao atualizar status da afiliada.')
+    } finally {
+      setStatusSaving(false)
     }
   }
 
-  const handleCopyLink = (code: string) => {
+  const handleCopyLink = async (code: string) => {
     const link = `https://expertclub.com.br/?ref=${code}&utm_source=affiliate`
-    navigator.clipboard.writeText(link)
-    alert('Link copiado!')
+    try {
+      await navigator.clipboard.writeText(link)
+      setCopiedCode(code)
+      toastSuccess('Link copiado para a área de transferência.')
+      setTimeout(() => setCopiedCode(null), 2000)
+    } catch {
+      toastError('Falha ao copiar link. Copie manualmente.')
+    }
   }
 
   if (isLoading || !affiliate) {
@@ -169,8 +175,12 @@ export function AdminAffiliateDetailScreen() {
                     <p className="text-[10px] font-black uppercase text-accent-purple tracking-widest mb-1">CÓDIGO: {code.code}</p>
                     <p className="text-xs font-bold text-white">{code.usageCount} Conversões</p>
                   </div>
-                  <button onClick={() => handleCopyLink(code.code)} className="p-3 bg-white/5 rounded-xl text-text-muted hover:text-accent-lime transition-all">
-                    <Copy className="w-5 h-5" />
+                  <button
+                    onClick={() => handleCopyLink(code.code)}
+                    className="p-3 bg-white/5 rounded-xl text-text-muted hover:text-accent-lime transition-all"
+                    title="Copiar link de indicação"
+                  >
+                    {copiedCode === code.code ? <Check className="w-5 h-5 text-accent-lime" /> : <Copy className="w-5 h-5" />}
                   </button>
                 </div>
               ))}

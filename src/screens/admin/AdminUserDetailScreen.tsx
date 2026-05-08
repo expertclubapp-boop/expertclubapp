@@ -51,10 +51,11 @@ export function AdminUserDetailScreen() {
     if (!uid || !role) return
     if (
       uid === firebaseUser?.uid &&
-      role !== 'admin' &&
-      !window.confirm('Você está removendo seu próprio admin. Confirme novamente.')
-    )
+      role !== 'admin'
+    ) {
+      toastError('Por segurança, não é possível remover seu próprio acesso admin por esta tela.')
       return
+    }
     setSavingRole(true)
     try {
       await adminUserService.updateRole(actor, uid, role as never)

@@ -99,14 +99,14 @@ export function WeeklyCheckinScreen() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-bg-primary flex items-center justify-center">
+      <div className="ec-student-standalone min-h-screen flex items-center justify-center">
         <div className="w-10 h-10 border-4 border-ec-violet/30 border-t-ec-violet rounded-full animate-spin" />
       </div>
     )
   }
 
   return (
-    <div className="ec-app-bg min-h-screen bg-bg-primary text-text-primary pb-32">
+    <div className="ec-student-standalone ec-app-bg min-h-screen text-text-primary pb-32">
       {/* Header */}
       <header className="sticky top-0 z-50 px-4 py-3">
         <div className="ec-glass mx-auto flex max-w-lg items-center gap-4 rounded-shell px-4 py-3">

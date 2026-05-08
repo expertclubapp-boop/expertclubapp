@@ -1,6 +1,8 @@
 {
   "projects": {
-    "default": "expertcoaching-b91e2"
+    "production": "expertcoaching-b91e2",
+    "staging": "expertclub-staging",
+    "dev": "expertclub-dev"
   },
   "targets": {},
   "etags": {}

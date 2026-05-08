@@ -190,7 +190,9 @@ async function getExistingDoc<T>(collectionName: string, id: string): Promise<T 
 }
 
 async function listUserSubcollection<T>(uid: string, subcollectionName: string): Promise<T[]> {
-  const snapshot = await getDocs(collection(db, COLLECTIONS.USERS, uid, subcollectionName))
+  const snapshot = await getDocs(
+    query(collection(db, COLLECTIONS.USERS, uid, subcollectionName), where('uid', '==', uid)),
+  )
   return snapshot.docs.map((subDoc) => ({ id: subDoc.id, ...subDoc.data() }) as T)
 }
 

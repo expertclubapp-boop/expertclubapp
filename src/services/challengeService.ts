@@ -84,13 +84,13 @@ export const challengeService = {
       uid,
       challengeId,
       displayName,
-      photoURL,
       points: 0,
       rank: 0,
       completedMissions: [],
       joinedAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     }
+    if (photoURL) participant.photoURL = photoURL
     
     await setDoc(participantRef, participant)
   },

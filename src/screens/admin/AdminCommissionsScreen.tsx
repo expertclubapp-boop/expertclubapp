@@ -53,10 +53,7 @@ export function AdminCommissionsScreen() {
       return
     }
 
-    const totalAmount = itemsToPay.reduce((sum, i) => sum + i.commissionAmount, 0)
     const affiliateId = Array.from(affiliateIds)[0]
-
-    if (!window.confirm(`Criar pagamento de R$ ${totalAmount.toFixed(2)} para ${affiliateId}?`)) return
 
     setIsSaving(true)
     try {

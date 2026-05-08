@@ -6,12 +6,33 @@ const admin = require('firebase-admin')
 
 const args = new Set(process.argv.slice(2))
 const dryRun = args.has('--dry-run')
+const staging = args.has('--staging')
+const confirmQaProject = args.has('--confirm-qa-project') || process.env.EXPERT_CLUB_CONFIRM_QA_PROJECT === 'true'
 const projectIdArg = process.argv.find((arg) => arg.startsWith('--project='))
 const projectId =
   projectIdArg?.split('=')[1] ||
-  process.env.VITE_FIREBASE_PROJECT_ID ||
+  (staging ? process.env.EXPERT_CLUB_STAGING_PROJECT_ID || 'expertclub-staging' : null) ||
+  process.env.FIREBASE_PROJECT_ID ||
   process.env.GCLOUD_PROJECT ||
-  'expertcoaching-b91e2'
+  process.env.VITE_FIREBASE_PROJECT_ID
+
+const environment = process.env.EXPERT_CLUB_FIREBASE_ENV || process.env.FIREBASE_ENV || (staging ? 'staging' : 'unconfirmed')
+
+if (!projectId) {
+  console.error('Missing Firebase project. Run with --project=<projectId> or set FIREBASE_PROJECT_ID/GCLOUD_PROJECT.')
+  process.exit(1)
+}
+
+if (environment === 'production') {
+  console.error('Refusing to write smoke setup data while EXPERT_CLUB_FIREBASE_ENV/FIREBASE_ENV is production.')
+  process.exit(1)
+}
+
+if (projectId === 'expertcoaching-b91e2' && !confirmQaProject) {
+  console.error('Refusing to write smoke setup data to expertcoaching-b91e2 without explicit confirmation.')
+  console.error('This project is tied to Vercel Production. Use a separate staging project for QA smoke data.')
+  process.exit(1)
+}
 
 const smokePassword = process.env.SMOKE_TEST_PASSWORD
 
@@ -28,8 +49,8 @@ if (!admin.apps.length) {
 const db = admin.firestore()
 const auth = admin.auth()
 
-const nowIso = () => new Date().toISOString()
-const nextMonthIso = () => new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+const nowTimestamp = () => admin.firestore.Timestamp.now()
+const nextMonthTimestamp = () => admin.firestore.Timestamp.fromDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000))
 
 const qaUsers = [
   {
@@ -194,8 +215,8 @@ function profileFor(uid, displayName) {
     waterProgressMl: 0,
     notificationsEnabled: { push: true, email: true },
     onboardingDraft: false,
-    createdAt: nowIso(),
-    updatedAt: nowIso(),
+    createdAt: nowTimestamp(),
+    updatedAt: nowTimestamp(),
   }
 }
 
@@ -209,32 +230,32 @@ function subscriptionFor(uid, status, referralCode = null) {
     price: founderPlan.price,
     currency: 'BRL',
     interval: 'monthly',
-    currentPeriodStart: nowIso(),
-    currentPeriodEnd: nextMonthIso(),
-    renewalDate: status === 'active' ? nextMonthIso() : null,
+    currentPeriodStart: nowTimestamp(),
+    currentPeriodEnd: nextMonthTimestamp(),
+    renewalDate: status === 'active' ? nextMonthTimestamp() : null,
     referralCode,
-    createdAt: nowIso(),
-    updatedAt: nowIso(),
+    createdAt: nowTimestamp(),
+    updatedAt: nowTimestamp(),
   }
 }
 
 async function seedCatalog() {
   await db.collection('plans').doc(founderPlan.id).set({
     ...founderPlan,
-    createdAt: nowIso(),
-    updatedAt: nowIso(),
+    createdAt: nowTimestamp(),
+    updatedAt: nowTimestamp(),
   }, { merge: true })
 
   await db.collection('workouts').doc(smokeWorkout.id).set({
     ...smokeWorkout,
-    createdAt: nowIso(),
-    updatedAt: nowIso(),
+    createdAt: nowTimestamp(),
+    updatedAt: nowTimestamp(),
   }, { merge: true })
 
   await db.collection('diets').doc(smokeDiet.id).set({
     ...smokeDiet,
-    createdAt: nowIso(),
-    updatedAt: nowIso(),
+    createdAt: nowTimestamp(),
+    updatedAt: nowTimestamp(),
   }, { merge: true })
 
   await db.collection('content').doc('smoke-intro').set({
@@ -247,7 +268,7 @@ async function seedCatalog() {
     thumbnailUrl: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=800',
     duration: '08:00',
     author: 'Expert Club',
-    publishedAt: nowIso(),
+    publishedAt: nowTimestamp(),
   }, { merge: true })
 
   await db.collection('challenges').doc('smoke-constancia').set({
@@ -256,15 +277,15 @@ async function seedCatalog() {
     objective: 'Completar check-ins e manter a rotina por 7 dias.',
     status: 'active',
     type: 'constancy',
-    startsAt: nowIso(),
-    endsAt: nextMonthIso(),
+    startsAt: nowTimestamp(),
+    endsAt: nextMonthTimestamp(),
     points: 700,
     missions: [
       { id: 'm1', title: 'Fazer check-in diario', points: 100, type: 'daily' },
       { id: 'm2', title: 'Registrar agua', points: 100, type: 'daily' },
     ],
-    createdAt: nowIso(),
-    updatedAt: nowIso(),
+    createdAt: nowTimestamp(),
+    updatedAt: nowTimestamp(),
   }, { merge: true })
 
   await db.collection('settings').doc('community').set({
@@ -276,7 +297,7 @@ async function seedCatalog() {
       'Compartilhe rotina, duvidas gerais e evolucao.',
       'Nao compartilhe spam.',
     ],
-    updatedAt: nowIso(),
+    updatedAt: nowTimestamp(),
   }, { merge: true })
 }
 
@@ -296,8 +317,8 @@ async function seedAffiliate(influencerUser, activeStudentUser) {
     pixKey: 'mari-smoke@example.com',
     totalCommissionPaid: 0,
     pendingCommission: 9.8,
-    createdAt: nowIso(),
-    updatedAt: nowIso(),
+    createdAt: nowTimestamp(),
+    updatedAt: nowTimestamp(),
   }, { merge: true })
 
   await db.collection('referralCodes').doc(referralCode).set({
@@ -310,8 +331,8 @@ async function seedAffiliate(influencerUser, activeStudentUser) {
     commissionRate: 0.20,
     usageCount: 1,
     activeSubscriptionsCount: 1,
-    createdAt: nowIso(),
-    updatedAt: nowIso(),
+    createdAt: nowTimestamp(),
+    updatedAt: nowTimestamp(),
   }, { merge: true })
 
   await db.collection('referralAttributions').doc('smoke_attr_mari384').set({
@@ -322,11 +343,11 @@ async function seedAffiliate(influencerUser, activeStudentUser) {
     source: 'affiliate',
     campaign: 'stories',
     status: 'converted',
-    firstSeenAt: nowIso(),
-    attributedAt: nowIso(),
+    firstSeenAt: nowTimestamp(),
+    attributedAt: nowTimestamp(),
     subscriptionId: activeStudentUser.uid,
-    createdAt: nowIso(),
-    updatedAt: nowIso(),
+    createdAt: nowTimestamp(),
+    updatedAt: nowTimestamp(),
   }, { merge: true })
 
   await db.collection('commissionLedger').doc('smoke_commission_mari384').set({
@@ -345,8 +366,8 @@ async function seedAffiliate(influencerUser, activeStudentUser) {
     currency: 'BRL',
     status: 'approved',
     isDemo: true,
-    createdAt: nowIso(),
-    approvedAt: nowIso(),
+    createdAt: nowTimestamp(),
+    approvedAt: nowTimestamp(),
   }, { merge: true })
 }
 
@@ -367,9 +388,9 @@ async function seedUsers() {
       onboardingComplete: true,
       ...(qaUser.affiliateId ? { affiliateId: qaUser.affiliateId } : {}),
       ...(qaUser.referralCode ? { referralCode: qaUser.referralCode } : {}),
-      createdAt: nowIso(),
-      updatedAt: nowIso(),
-      lastLoginAt: nowIso(),
+      createdAt: nowTimestamp(),
+      updatedAt: nowTimestamp(),
+      lastLoginAt: nowTimestamp(),
     }, { merge: true })
 
     await db.collection('profiles').doc(authUser.uid).set(

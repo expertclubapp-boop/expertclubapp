@@ -1,8 +1,52 @@
-import { collection, doc, setDoc, getDoc, updateDoc, serverTimestamp, query, orderBy, limit, getDocs } from 'firebase/firestore'
+import { collection, doc, setDoc, getDoc, updateDoc, query, orderBy, limit, getDocs } from 'firebase/firestore'
 import { db } from '../lib/firebase/firebase'
+import { nowTimestamp, toFirestoreDate } from '../lib/firebase/date'
 import { COLLECTIONS, SUB_COLLECTIONS, getSubCollectionPath } from '../lib/firebase/paths'
 import type { WorkoutSession } from '../types/domain'
 import { challengeScoringService } from './challengeScoringService'
+
+const SESSION_DATE_FIELDS = [
+  'startedAt',
+  'completedAt',
+  'finishedAt',
+  'lastInteractionAt',
+  'inactiveWarningShownAt',
+  'createdAt',
+  'updatedAt',
+] as const
+
+function normalizeSessionDateFields(data: Partial<WorkoutSession>) {
+  const normalized: Record<string, unknown> = { ...data }
+  SESSION_DATE_FIELDS.forEach((field) => {
+    if (field in normalized) {
+      const timestamp = toFirestoreDate(normalized[field] as any)
+      if (timestamp) normalized[field] = timestamp
+    }
+  })
+  return normalized as Partial<WorkoutSession>
+}
+
+function sessionStartedAtMs(session: WorkoutSession) {
+  const raw = (session as any).startedAt
+
+  if (!raw) return 0
+  if (typeof raw?.toDate === 'function') return raw.toDate().getTime()
+  if (raw instanceof Date) return raw.getTime()
+  if (typeof raw === 'number') return Number.isFinite(raw) ? raw : 0
+  if (typeof raw === 'string') {
+    const parsed = Date.parse(raw)
+    return Number.isFinite(parsed) ? parsed : 0
+  }
+
+  return 0
+}
+
+function isMissingIndexError(error: unknown) {
+  const code = (error as any)?.code
+  const message = String((error as any)?.message ?? '')
+
+  return code === 'failed-precondition' && /index|requires/i.test(message)
+}
 
 export const workoutSessionService = {
   async startSession(uid: string, session: Partial<WorkoutSession>): Promise<string> {
@@ -11,18 +55,18 @@ export const workoutSessionService = {
     const sessionId = newDocRef.id
     
     await setDoc(newDocRef, {
-      ...session,
+      ...normalizeSessionDateFields(session),
       id: sessionId,
       uid,
       status: 'active',
-      startedAt: serverTimestamp(),
-      lastInteractionAt: serverTimestamp(),
+      startedAt: nowTimestamp(),
+      lastInteractionAt: nowTimestamp(),
       durationSeconds: 0,
       totalTonnageKg: 0,
       exercisesCompleted: 0,
       totalSets: 0,
       prs: [],
-      createdAt: serverTimestamp(),
+      createdAt: nowTimestamp(),
     })
     
     return sessionId
@@ -39,8 +83,8 @@ export const workoutSessionService = {
     const path = getSubCollectionPath(COLLECTIONS.USERS, uid, SUB_COLLECTIONS.WORKOUT_SESSIONS)
     const docRef = doc(db, path, sessionId)
     await updateDoc(docRef, {
-      ...data,
-      updatedAt: serverTimestamp(),
+      ...normalizeSessionDateFields(data),
+      updatedAt: nowTimestamp(),
     })
 
     if (data.status === 'completed') {
@@ -64,7 +108,17 @@ export const workoutSessionService = {
     const path = getSubCollectionPath(COLLECTIONS.USERS, uid, SUB_COLLECTIONS.WORKOUT_SESSIONS)
     const colRef = collection(db, path)
     const q = query(colRef, orderBy('startedAt', 'desc'), limit(limitCount))
-    const snap = await getDocs(q)
-    return snap.docs.map(d => d.data() as WorkoutSession)
+    try {
+      const snap = await getDocs(q)
+      return snap.docs.map(d => d.data() as WorkoutSession)
+    } catch (error) {
+      if (!isMissingIndexError(error)) throw error
+
+      const fallbackSnap = await getDocs(colRef)
+      return fallbackSnap.docs
+        .map(d => d.data() as WorkoutSession)
+        .sort((a, b) => sessionStartedAtMs(b) - sessionStartedAtMs(a))
+        .slice(0, limitCount)
+    }
   }
 }

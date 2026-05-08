@@ -1,5 +1,6 @@
 import { collection, collectionGroup, getDocs } from 'firebase/firestore'
 import { db } from '../lib/firebase/firebase'
+import { fromFirestoreDate } from '../lib/firebase/date'
 import { COLLECTIONS } from '../lib/firebase/paths'
 import type { AffiliateAccount, CommissionEntry, Subscription, User } from '../types/domain'
 
@@ -47,7 +48,7 @@ export const adminMetricsService = {
     const commissions = commissionsSnap.docs.map(d => d.data() as CommissionEntry)
     const daily = dailySnap.docs.map(d => d.data() as { dateKey?: string })
     const body = bodySnap.docs.map(d => d.data() as { date?: string })
-    const workouts = workoutSnap.docs.map(d => d.data() as { completedAt?: string; status?: string })
+    const workouts = workoutSnap.docs.map(d => d.data() as { completedAt?: unknown; status?: string })
     const dietDays = dietSnap.docs.map(d => d.data() as { adherencePercent?: number; dateKey?: string })
     const thisMonth = new Date()
     thisMonth.setDate(1)
@@ -62,7 +63,10 @@ export const adminMetricsService = {
       estimatedMrr: activeSubs.reduce((sum, sub) => sum + (sub.price || 0), 0),
       activeStudents: users.filter(user => user.role !== 'admin' && ['active', 'trialing'].includes(user.subscriptionStatus || '')).length || activeSubs.length,
       blockedStudents: subscriptions.filter(sub => ['past_due', 'expired'].includes(sub.status)).length,
-      newStudents: users.filter(user => user.createdAt && new Date(user.createdAt) >= thisMonth).length,
+      newStudents: users.filter(user => {
+        const createdAt = fromFirestoreDate(user.createdAt as any)
+        return createdAt ? createdAt >= thisMonth : false
+      }).length,
       cancelledSubscriptions: subscriptions.filter(sub => sub.status === 'cancelled').length,
       pendingSubscriptions: subscriptions.filter(sub => ['pending', 'past_due'].includes(sub.status)).length,
       pendingCommissions: commissions.filter(item => ['pending', 'approved'].includes(item.status)).reduce((sum, item) => sum + item.commissionAmount, 0),
@@ -70,7 +74,10 @@ export const adminMetricsService = {
       paidCommissions: commissions.filter(item => item.status === 'paid').reduce((sum, item) => sum + item.commissionAmount, 0),
       dailyCheckinsWeek: daily.filter(item => item.dateKey && new Date(item.dateKey) >= weekAgo).length,
       bodyCheckinsMonth: body.filter(item => item.date && new Date(item.date) >= monthAgo).length,
-      completedWorkoutsWeek: workouts.filter(item => item.status === 'completed' && item.completedAt && new Date(item.completedAt) >= weekAgo).length,
+      completedWorkoutsWeek: workouts.filter(item => {
+        const completedAt = fromFirestoreDate(item.completedAt as any)
+        return item.status === 'completed' && completedAt ? completedAt >= weekAgo : false
+      }).length,
       averageDietAdherence: dietDays.length ? Math.round(dietDays.reduce((sum, item) => sum + (item.adherencePercent || 0), 0) / dietDays.length) : null,
       appUsage: {
         workouts: workouts.length,

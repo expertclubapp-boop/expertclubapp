@@ -1,5 +1,6 @@
 import { collection, deleteField, doc, getDoc, getDocs, orderBy, query, setDoc, updateDoc } from 'firebase/firestore'
 import { db } from '../lib/firebase/firebase'
+import { nowTimestamp } from '../lib/firebase/date'
 import { COLLECTIONS } from '../lib/firebase/paths'
 import type { AuditLog, BodyCheckin, DietDay, Subscription, User, UserProfile, WorkoutSession } from '../types/domain'
 import { adminAuditLogService, type AdminActor } from './adminAuditLogService'
@@ -64,7 +65,7 @@ export const adminUserService = {
 
   async updateRole(actor: AdminActor, uid: string, role: User['role']) {
     const before = await getDoc(doc(db, COLLECTIONS.USERS, uid))
-    await updateDoc(doc(db, COLLECTIONS.USERS, uid), { role, updatedAt: new Date().toISOString() })
+    await updateDoc(doc(db, COLLECTIONS.USERS, uid), { role, updatedAt: nowTimestamp() })
     await adminAuditLogService.create(actor, 'alterar_role', 'user', uid, before.exists() ? before.data() : null, { role })
   },
 
@@ -77,7 +78,7 @@ export const adminUserService = {
     const before = await getDoc(ref)
     await updateDoc(ref, {
       mentorId: mentorId || deleteField(),
-      updatedAt: new Date().toISOString(),
+      updatedAt: nowTimestamp(),
     })
     await adminAuditLogService.create(actor, 'atribuir_mentor', 'user', uid, before.exists() ? before.data() : null, { mentorId })
   },
@@ -86,13 +87,13 @@ export const adminUserService = {
     const ref = doc(db, COLLECTIONS.SUBSCRIPTIONS, uid)
     const before = await getDoc(ref)
     const current = before.exists() ? before.data() : {}
-    await setDoc(ref, { ...current, ...data, uid, updatedAt: new Date().toISOString() }, { merge: true })
+    await setDoc(ref, { ...current, ...data, uid, updatedAt: nowTimestamp() }, { merge: true })
     await adminAuditLogService.create(actor, 'alterar_assinatura', 'subscription', uid, current, data)
   },
 
   async softDelete(actor: AdminActor, uid: string) {
     const before = await getDoc(doc(db, COLLECTIONS.USERS, uid))
-    await updateDoc(doc(db, COLLECTIONS.USERS, uid), { disabled: true, updatedAt: new Date().toISOString() })
+    await updateDoc(doc(db, COLLECTIONS.USERS, uid), { disabled: true, updatedAt: nowTimestamp() })
     await adminAuditLogService.create(actor, 'desativar_usuario', 'user', uid, before.exists() ? before.data() : null, { disabled: true })
   },
 }

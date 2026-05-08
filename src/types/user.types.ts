@@ -7,7 +7,7 @@ export type SubscriptionStatus =
   | 'expired'
 
 export type SubscriptionPlan = 'pro' | 'basic'
-export type UserRole = 'admin' | 'member' | 'affiliate'
+export type UserRole = 'admin' | 'mentor' | 'member' | 'affiliate'
 
 export type ExperienceLevel = 'beginner' | 'intermediate' | 'advanced'
 

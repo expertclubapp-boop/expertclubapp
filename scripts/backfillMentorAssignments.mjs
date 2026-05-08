@@ -16,9 +16,12 @@
  *   uid_aluno_1,uid_mentor_1
  */
 
-import admin from 'firebase-admin'
+import { createRequire } from 'node:module'
 import { readFileSync, existsSync } from 'fs'
 import { resolve } from 'path'
+
+const require = createRequire(new URL('../functions/package.json', import.meta.url))
+const admin = require('firebase-admin')
 
 // ─── Parse args ────────────────────────────────────────────────────────────
 const args = process.argv.slice(2)
@@ -35,12 +38,35 @@ const FORCE = flags['force'] === true || flags['force'] === ''
 const FROM_FILE = flags['from-file']
 const MENTOR_ID = flags['mentor']
 const STUDENT_IDS = flags['students'] ? String(flags['students']).split(',').map(s => s.trim()) : []
+const CONFIRM_QA_PROJECT = flags['confirm-qa-project'] === true || flags['confirm-qa-project'] === ''
+const STAGING = flags.staging === true || flags.staging === ''
 
 // ─── Firebase init ──────────────────────────────────────────────────────────
-const PROJECT_ID = process.env.FIREBASE_PROJECT_ID || 'expertcoaching-b91e2'
+const PROJECT_ID =
+  flags.project ||
+  (STAGING ? process.env.EXPERT_CLUB_STAGING_PROJECT_ID || 'expertclub-staging' : null) ||
+  process.env.FIREBASE_PROJECT_ID ||
+  process.env.GCLOUD_PROJECT
+const ENVIRONMENT = process.env.EXPERT_CLUB_FIREBASE_ENV || process.env.FIREBASE_ENV || (STAGING ? 'staging' : 'unconfirmed')
 const serviceAccountPath = process.env.GOOGLE_APPLICATION_CREDENTIALS
   ? resolve(process.env.GOOGLE_APPLICATION_CREDENTIALS)
   : null
+
+if (!PROJECT_ID) {
+  console.error('\u274C  Informe --project=<projectId> ou configure FIREBASE_PROJECT_ID/GCLOUD_PROJECT.')
+  process.exit(1)
+}
+
+if (ENVIRONMENT === 'production') {
+  console.error('\u274C  Recusando backfill com EXPERT_CLUB_FIREBASE_ENV/FIREBASE_ENV=production.')
+  process.exit(1)
+}
+
+if (PROJECT_ID === 'expertcoaching-b91e2' && !CONFIRM_QA_PROJECT) {
+  console.error('\u274C  Recusando escrita em expertcoaching-b91e2 sem --confirm-qa-project.')
+  console.error('    Este projeto esta ligado a Vercel Production. Use um projeto staging separado para backfill de QA.')
+  process.exit(1)
+}
 
 if (admin.apps.length === 0) {
   if (serviceAccountPath && existsSync(serviceAccountPath)) {

@@ -9,6 +9,7 @@ import {
   limit
 } from 'firebase/firestore'
 import { db } from '../lib/firebase/firebase'
+import { nowTimestamp, toFirestoreDate } from '../lib/firebase/date'
 import { COLLECTIONS } from '../lib/firebase/paths'
 import type { DailyCheckin, WeeklyCheckin } from '../types/domain'
 import { challengeScoringService } from './challengeScoringService'
@@ -25,7 +26,8 @@ export const checkinService = {
     const docRef = doc(db, COLLECTIONS.USERS, uid, 'dailyCheckins', checkin.dateKey)
     await setDoc(docRef, {
       ...checkin,
-      updatedAt: new Date().toISOString()
+      createdAt: toFirestoreDate(checkin.createdAt as any) ?? nowTimestamp(),
+      updatedAt: nowTimestamp()
     }, { merge: true })
 
     // Non-blocking scoring
@@ -54,7 +56,8 @@ export const checkinService = {
     const docRef = doc(db, COLLECTIONS.USERS, uid, 'weeklyCheckins', checkin.weekKey)
     await setDoc(docRef, {
       ...checkin,
-      updatedAt: new Date().toISOString()
+      createdAt: toFirestoreDate(checkin.createdAt as any) ?? nowTimestamp(),
+      updatedAt: nowTimestamp()
     }, { merge: true })
 
     // Non-blocking scoring
