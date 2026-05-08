@@ -17,6 +17,7 @@ import { adminChallengeService, createEmptyChallenge } from '../../services/admi
 import { adminBadgeService, createEmptyBadge } from '../../services/adminBadgeService'
 import { adminPlanService, createEmptyPlan } from '../../services/adminPlanService'
 import { makeId, sanitizeTags } from '../../services/adminCrudService'
+import { fromFirestoreDate } from '../../lib/firebase/date'
 import { Badge, Challenge, ExpertContent, Diet, Plan, Workout } from '../../types/domain'
 import { AdminSearchFilter, AdminState, AdminToolbar, ConfirmButton, Field, parseJson, StatusSelect, TextArea, TextInput, toJson } from './AdminShared'
 import { DietPrescriptor } from './components/DietPrescriptor'
@@ -80,12 +81,17 @@ function ResourceList<T extends { id: string; title?: string; name?: string; sta
                     <td className="p-4"><p className="text-sm font-bold text-white">{item.title || item.name || item.id}</p><p className="text-[10px] text-text-muted">{item.id}</p></td>
                     <td className="p-4 text-xs text-text-secondary">{statusPt(item.status)}</td>
                     <td className="p-4 text-xs text-text-muted">{item.tags?.slice(0, 4).join(', ') || '-'}</td>
-                    <td className="p-4 text-xs text-text-muted">{item.updatedAt ? new Date(item.updatedAt).toLocaleDateString('pt-BR') : '-'}</td>
+                    <td className="p-4 text-xs text-text-muted">{fromFirestoreDate(item.updatedAt as any)?.toLocaleDateString('pt-BR') || '-'}</td>
                     <td className="p-4">
                       <div className="flex gap-2">
                         <button className="rounded-lg border border-white/10 bg-white/5 p-2 text-white" onClick={() => navigate(config[resource].editPath(item.id))}><Eye className="h-4 w-4" /></button>
                         <button className="rounded-lg border border-white/10 bg-white/5 p-2 text-white" onClick={() => duplicate(item)}><Copy className="h-4 w-4" /></button>
-                        <button className="rounded-lg border border-white/10 bg-white/5 p-2 text-accent-yellow" onClick={async () => { if (window.confirm('Arquivar este item?')) { await serviceFor(resource)!.archive(actor, item.id); reload() } }}><Archive className="h-4 w-4" /></button>
+                        <ConfirmButton
+                          message="Arquivar este item?"
+                          onConfirm={() => serviceFor(resource)!.archive(actor, item.id).then(reload)}
+                        >
+                          <Archive className="h-4 w-4" />
+                        </ConfirmButton>
                       </div>
                     </td>
                   </tr>
@@ -144,7 +150,6 @@ function DietEditor({ id }: { id?: string }) {
   }
 
   async function publish() {
-    if (!window.confirm('Deseja publicar esta versão? Ela ficará ativa imediatamente para os alunos.')) return
     setIsSaving(true)
     try {
       const next = { ...item, meals: parseJson(mealsJson, []), shoppingList: parseJson(shoppingJson, []), mealsPerDay: parseJson(mealsJson, []).length || item.mealsPerDay }
@@ -240,10 +245,8 @@ function DietEditor({ id }: { id?: string }) {
         type="diet" 
         versions={versions} 
         onRollback={async (v) => {
-          if (window.confirm('Restaurar esta versão como rascunho? Isso não alterará o plano ativo até que você publique.')) {
-            await adminDietService.rollback(actor, item.id, v as Diet)
-            window.location.reload()
-          }
+          await adminDietService.rollback(actor, item.id, v as Diet)
+          window.location.reload()
         }}
         onPreview={(v) => {
           setPreviewData(v as Diet)
@@ -291,7 +294,6 @@ export function AdminWorkoutEditorScreen() {
   }
 
   async function publish() {
-    if (!window.confirm('Deseja publicar esta versão? Ela ficará ativa imediatamente para os alunos.')) return
     setIsSaving(true)
     try {
       const next = { ...item, days: parseJson(daysJson, []) }
@@ -383,10 +385,8 @@ export function AdminWorkoutEditorScreen() {
         type="workout" 
         versions={versions} 
         onRollback={async (v) => {
-          if (window.confirm('Restaurar esta versão como rascunho? Isso não alterará o plano ativo até que você publique.')) {
-            await adminWorkoutService.rollback(actor, item.id, v as Workout)
-            window.location.reload()
-          }
+          await adminWorkoutService.rollback(actor, item.id, v as Workout)
+          window.location.reload()
         }}
         onPreview={(v) => {
           setPreviewData(v as Workout)
@@ -402,6 +402,7 @@ export function AdminContentEditorScreen() {
   const navigate = useNavigate()
   const { firebaseUser } = useAuth()
   const [item, setItem] = useState<ExpertContent>(createEmptyContent())
+  const [formError, setFormError] = useState<string | null>(null)
   const actor = { uid: firebaseUser?.uid, email: firebaseUser?.email }
   
   useEffect(() => { 
@@ -413,8 +414,9 @@ export function AdminContentEditorScreen() {
   const embedUrl = useMemo(() => getYoutubeEmbedUrl(item.youtubeUrl || ''), [item.youtubeUrl])
 
   async function save(status?: ExpertContent['status']) { 
+    setFormError(null)
     if (item.type === 'youtube' && !isValidYoutubeUrl(item.youtubeUrl || '')) {
-      alert('URL do YouTube inválida.')
+      setFormError('URL do YouTube invalida. Corrija o link antes de salvar.')
       return
     }
     const next = { 
@@ -434,6 +436,11 @@ export function AdminContentEditorScreen() {
         eyebrow="Editor de conteúdo" 
         action={<Button className="md:w-auto" onClick={() => save()}>{contentId ? 'Salvar' : 'Criar'}</Button>} 
       />
+      {formError && (
+        <p className="mb-4 rounded-xl border border-accent-red/20 bg-accent-red/10 px-4 py-3 text-sm font-bold text-accent-red">
+          {formError}
+        </p>
+      )}
       <div className="grid gap-5 lg:grid-cols-3">
         <section className="ec-card rounded-2xl p-5 lg:col-span-2 grid gap-4 md:grid-cols-2">
           <Field label="Título"><TextInput value={item.title} onChange={e => setItem({ ...item, title: e.target.value })} /></Field>

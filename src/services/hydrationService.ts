@@ -1,12 +1,13 @@
-import { doc, getDoc, setDoc, updateDoc, increment, serverTimestamp } from 'firebase/firestore'
+import { doc, getDoc, setDoc, updateDoc, increment } from 'firebase/firestore'
 import { db } from '../lib/firebase/firebase'
+import { nowTimestamp, safeDateKey } from '../lib/firebase/date'
 import { COLLECTIONS, SUB_COLLECTIONS, getSubCollectionPath } from '../lib/firebase/paths'
 import { challengeScoringService } from './challengeScoringService'
 import { profileService } from './profileService'
 
 export const hydrationService = {
   async getToday(uid: string): Promise<any> {
-    const dateKey = new Date().toISOString().split('T')[0]
+    const dateKey = safeDateKey()
     const path = getSubCollectionPath(COLLECTIONS.USERS, uid, SUB_COLLECTIONS.HYDRATION_DAYS)
     const docRef = doc(db, path, dateKey)
     const snap = await getDoc(docRef)
@@ -27,7 +28,7 @@ export const hydrationService = {
   },
 
   async addWater(uid: string, ml: number, goalMl?: number): Promise<void> {
-    const dateKey = new Date().toISOString().split('T')[0]
+    const dateKey = safeDateKey()
     const path = getSubCollectionPath(COLLECTIONS.USERS, uid, SUB_COLLECTIONS.HYDRATION_DAYS)
     const docRef = doc(db, path, dateKey)
     const snap = await getDoc(docRef)
@@ -40,7 +41,7 @@ export const hydrationService = {
       await updateDoc(docRef, {
         totalMl: increment(ml),
         goalMl: currentGoal, // Ensure it's normalized if it was missing
-        updatedAt: serverTimestamp(),
+        updatedAt: nowTimestamp(),
         goalReached: newTotal >= currentGoal
       })
     } else {
@@ -50,8 +51,8 @@ export const hydrationService = {
         goalMl: currentGoal,
         totalMl: ml,
         goalReached: ml >= currentGoal,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
+        createdAt: nowTimestamp(),
+        updatedAt: nowTimestamp(),
       })
     }
 

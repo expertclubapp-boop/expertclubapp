@@ -1,29 +1,30 @@
 import { useState, useEffect } from 'react'
-import { 
-  collection, 
-  getDocs, 
-  query, 
-  orderBy, 
-  doc, 
-  updateDoc, 
+import {
+  collection,
+  getDocs,
+  query,
+  orderBy,
+  doc,
+  updateDoc,
   addDoc,
-  serverTimestamp 
+  serverTimestamp,
 } from 'firebase/firestore'
 import { db } from '../../lib/firebase/firebase'
+import { fromFirestoreDate, nowTimestamp } from '../../lib/firebase/date'
 import { COLLECTIONS } from '../../lib/firebase/paths'
-import { 
-  Users, 
-  Search, 
-  CheckCircle2,
-  AlertCircle,
-  XCircle,
-  Clock,
-  ShieldAlert
-} from 'lucide-react'
+import { Search } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
-import { PageShell } from '../../components/ui/Premium'
-import type { Subscription } from '../../types/domain'
-import type { User } from '../../types/domain'
+import type { Subscription, User } from '../../types/domain'
+import { toastSuccess, toastError } from '../../components/ui/Toast'
+import { V2Card, V2Badge, V2Avatar, cx } from '../../components/v2/ExpertClubV2Base'
+
+const statusTone: Record<string, any> = {
+  active: 'success',
+  trialing: 'info',
+  past_due: 'warning',
+  cancelled: 'neutral',
+  expired: 'neutral',
+}
 
 export function AdminSubscriptionsScreen() {
   const { firebaseUser } = useAuth()
@@ -54,16 +55,10 @@ export function AdminSubscriptionsScreen() {
   }, [])
 
   const handleStatusChange = async (uid: string, newStatus: any, currentSub: Subscription) => {
-    if (!window.confirm(`Deseja alterar o status para ${newStatus}?`)) return
-    
+    if (newStatus === currentSub.status) return
     try {
       const docRef = doc(db, COLLECTIONS.SUBSCRIPTIONS, uid)
-      await updateDoc(docRef, {
-        status: newStatus,
-        updatedAt: new Date().toISOString()
-      })
-
-      // Create Audit Log
+      await updateDoc(docRef, { status: newStatus, updatedAt: nowTimestamp() })
       await addDoc(collection(db, COLLECTIONS.AUDIT_LOGS), {
         actorUid: firebaseUser?.uid,
         actorEmail: firebaseUser?.email,
@@ -72,15 +67,13 @@ export function AdminSubscriptionsScreen() {
         targetId: uid,
         before: currentSub.status,
         after: newStatus,
-        createdAt: serverTimestamp()
+        createdAt: serverTimestamp(),
       })
-
-      // Update local state
       setSubscriptions(prev => prev.map(s => s.uid === uid ? { ...s, status: newStatus } : s))
-      alert('Status atualizado com sucesso!')
+      toastSuccess(`Assinatura atualizada para "${newStatus}".`)
     } catch (error) {
       console.error('Error updating status:', error)
-      alert('Falha ao atualizar status.')
+      toastError('Falha ao atualizar status.')
     }
   }
 
@@ -92,133 +85,111 @@ export function AdminSubscriptionsScreen() {
     return matchesSearch && matchesStatus
   })
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-[60vh]">
-        <div className="w-10 h-10 border-4 border-ec-violet/30 border-t-ec-violet rounded-full animate-spin" />
-      </div>
-    )
-  }
+  if (isLoading) return <div className="py-20 flex justify-center"><div className="w-8 h-8 border-4 border-ec-violet/30 border-t-ec-violet rounded-full animate-spin" /></div>
 
   return (
-    <PageShell wide>
-      <header className="mb-10">
-        <div className="flex items-center gap-3 text-accent-red mb-2">
-          <ShieldAlert className="w-5 h-5" />
-          <span className="text-[10px] font-black uppercase tracking-widest">Painel administrativo</span>
+    <div className="space-y-8">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div>
+          <span className="text-[10px] font-black tracking-[0.2em] text-ec-violet uppercase mb-1 block">OPERAÇÃO FINANCEIRA</span>
+          <h1 className="text-3xl font-black italic text-white uppercase leading-tight">GESTÃO DE ASSINATURAS</h1>
         </div>
-        <h1 className="font-display text-h1 text-white uppercase italic font-black">Gestão de Assinaturas</h1>
-      </header>
+      </div>
 
-      {/* Filters */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-4 mb-8">
-        <div className="md:col-span-6 relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
+      <div className="flex flex-col lg:flex-row gap-4">
+        <div className="flex-1 relative group">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted group-focus-within:text-ec-violet transition-colors" />
           <input 
             type="text" 
             placeholder="Buscar por nome, email ou plano..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-          className="ec-input w-full rounded-xl py-3 pl-12 pr-4 text-sm text-text-primary outline-none transition-all"
+            className="w-full bg-white/5 border border-white/5 rounded-2xl py-3 pl-11 pr-4 text-sm font-bold placeholder:text-text-muted focus:border-ec-violet/50 outline-none transition-all"
           />
         </div>
-        <div className="md:col-span-3">
-          <select 
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="ec-input w-full rounded-xl py-3 px-4 text-sm text-text-primary outline-none transition-all appearance-none"
-          >
-            <option value="all">Todos os status</option>
-            <option value="active">Ativos</option>
-            <option value="trialing">Em teste</option>
-            <option value="past_due">Pendentes</option>
-            <option value="cancelled">Cancelados</option>
-            <option value="expired">Expirados</option>
-          </select>
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+          {[
+            ['all', 'Todos'], ['active', 'Ativos'], ['past_due', 'Pendente'], ['cancelled', 'Cancelados']
+          ].map(([id, label]) => (
+            <button
+              key={id}
+              onClick={() => setStatusFilter(id)}
+              className={cx(
+                "px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap",
+                statusFilter === id ? "bg-ec-violet text-white" : "bg-white/5 text-text-muted hover:text-white"
+              )}
+            >
+              {label}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Table */}
-      <div className="ec-card rounded-2xl overflow-hidden overflow-x-auto">
-        <table className="w-full text-left border-collapse min-w-[1000px]">
-          <thead>
-            <tr className="bg-white/5 border-b border-subtle">
-              <th className="p-5 text-[10px] font-black uppercase text-text-muted tracking-widest">Usuário</th>
-              <th className="p-5 text-[10px] font-black uppercase text-text-muted tracking-widest">Plano</th>
-              <th className="p-5 text-[10px] font-black uppercase text-text-muted tracking-widest">Status</th>
-              <th className="p-5 text-[10px] font-black uppercase text-text-muted tracking-widest">Provedor</th>
-              <th className="p-5 text-[10px] font-black uppercase text-text-muted tracking-widest">Próxima Renovação</th>
-              <th className="p-5 text-[10px] font-black uppercase text-text-muted tracking-widest">Ações</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-white/5">
-            {filteredSubs.map((sub) => {
-              const user = usersById[sub.uid]
-              return (
-              <tr key={sub.uid} className="hover:bg-white/[0.02] transition-colors">
-                <td className="p-5">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center">
-                      <Users className="w-4 h-4 text-text-muted" />
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-white">{user?.displayName || 'Usuário sem nome'}</p>
-                      <p className="text-[10px] text-text-muted">{user?.email || sub.uid}</p>
-                    </div>
-                  </div>
-                </td>
-                <td className="p-5">
-                  <span className="text-xs font-bold text-white">{sub.planName}</span>
-                </td>
-                <td className="p-5">
-                  <StatusBadge status={sub.status} />
-                </td>
-                <td className="p-5">
-                  <span className="text-[10px] font-black uppercase text-text-muted tracking-widest">{sub.provider}</span>
-                </td>
-                <td className="p-5">
-                  <span className="text-xs text-text-secondary">{new Date(sub.currentPeriodEnd).toLocaleDateString('pt-BR')}</span>
-                </td>
-                <td className="p-5">
-                  <select 
-                    className="bg-bg-primary border border-subtle rounded-lg py-1 px-2 text-[10px] font-bold text-text-primary outline-none focus:border-accent-lime transition-all"
-                    onChange={(e) => handleStatusChange(sub.uid, e.target.value, sub)}
-                    value={sub.status}
-                  >
-                    <option value="active">Ativar</option>
-                    <option value="past_due">Marcar pendente</option>
-                    <option value="cancelled">Cancelar</option>
-                    <option value="expired">Expirar</option>
-                    <option value="trialing">Marcar teste</option>
-                  </select>
-                </td>
+      <V2Card className="p-0 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse min-w-[1000px]">
+            <thead>
+              <tr className="bg-white/[0.02] text-[10px] font-black uppercase text-text-muted tracking-widest border-b border-white/5">
+                <th className="p-6">Assinante</th>
+                <th className="p-6">Plano</th>
+                <th className="p-6 text-center">Status</th>
+                <th className="p-6 text-center">Provedor</th>
+                <th className="p-6 text-center">Próxima Renovação</th>
+                <th className="p-6 text-right">Alterar Status</th>
               </tr>
-            )})}
-          </tbody>
-        </table>
-        {filteredSubs.length === 0 && (
-          <div className="p-20 text-center text-text-muted italic text-sm">
-            Nenhuma assinatura encontrada com os filtros aplicados.
-          </div>
-        )}
-      </div>
-    </PageShell>
-  )
-}
-
-function StatusBadge({ status }: { status: string }) {
-  const configs: any = {
-    active: { color: 'text-accent-lime', bg: 'bg-accent-lime/10', icon: CheckCircle2, label: 'Ativa' },
-    trialing: { color: 'text-accent-sky', bg: 'bg-accent-sky/10', icon: Clock, label: 'Trial' },
-    past_due: { color: 'text-accent-red', bg: 'bg-accent-red/10', icon: AlertCircle, label: 'Pendente' },
-    cancelled: { color: 'text-text-muted', bg: 'bg-white/5', icon: XCircle, label: 'Cancelada' },
-    expired: { color: 'text-accent-red', bg: 'bg-accent-red/5', icon: XCircle, label: 'Expirada' },
-  }
-  const config = configs[status] || configs.cancelled
-  return (
-    <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full ${config.bg} ${config.color}`}>
-      <config.icon className="w-3 h-3" />
-      <span className="text-[9px] font-black uppercase tracking-widest">{config.label}</span>
+            </thead>
+            <tbody>
+              {filteredSubs.map((sub) => {
+                const user = usersById[sub.uid]
+                const currentPeriodEnd = fromFirestoreDate(sub.currentPeriodEnd as any)
+                return (
+                  <tr key={sub.uid} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors group">
+                    <td className="p-6">
+                      <div className="flex items-center gap-3">
+                        <V2Avatar uid={sub.uid} name={user?.displayName} size="sm" />
+                        <div>
+                          <p className="text-sm font-black italic text-white uppercase group-hover:text-ec-violet transition-colors">{user?.displayName || 'Sem nome'}</p>
+                          <p className="text-[10px] text-text-muted font-bold">{user?.email || sub.uid}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="p-6">
+                      <p className="text-xs font-bold text-white uppercase tracking-widest">{sub.planName}</p>
+                    </td>
+                    <td className="p-6 text-center">
+                      <V2Badge tone={statusTone[sub.status]}>
+                        {sub.status?.toUpperCase()}
+                      </V2Badge>
+                    </td>
+                    <td className="p-6 text-center">
+                      <span className="text-[10px] font-black uppercase text-text-muted tracking-[0.2em]">{sub.provider}</span>
+                    </td>
+                    <td className="p-6 text-center text-xs text-text-muted font-bold">
+                      {currentPeriodEnd ? currentPeriodEnd.toLocaleDateString('pt-BR') : '-'}
+                    </td>
+                    <td className="p-6 text-right">
+                       <select
+                        className="bg-white/5 border border-white/5 rounded-xl py-2 px-3 text-[10px] font-black uppercase italic text-white outline-none focus:border-ec-violet/50 transition-all cursor-pointer"
+                        onChange={(e) => handleStatusChange(sub.uid, e.target.value, sub)}
+                        value={sub.status}
+                      >
+                        <option value="active">Ativar</option>
+                        <option value="past_due">Pendente</option>
+                        <option value="cancelled">Cancelar</option>
+                        <option value="expired">Expirar</option>
+                        <option value="trialing">Teste</option>
+                      </select>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+          {filteredSubs.length === 0 && (
+            <div className="p-20 text-center text-text-muted font-black uppercase italic">Nenhuma assinatura encontrada.</div>
+          )}
+        </div>
+      </V2Card>
     </div>
   )
 }

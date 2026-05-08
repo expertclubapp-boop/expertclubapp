@@ -8,6 +8,7 @@ import {
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth'
 import { doc, onSnapshot } from 'firebase/firestore'
 import { auth, db, firebaseEnvReady } from '../lib/firebase/firebase'
+import { getQaBypassSession } from '../lib/dev/qaBypass'
 import {
   createAccountWithEmail,
   ensureUserExists,
@@ -24,6 +25,7 @@ interface AuthContextType {
   firebaseUser: FirebaseUser | null
   isAuthenticated: boolean
   isLoading: boolean
+  isQaBypass: boolean
   isFirebaseConfigured: boolean
   loginWithGoogle: () => Promise<void>
   loginWithEmail: (email: string, password: string) => Promise<void>
@@ -38,6 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [isQaBypass, setIsQaBypass] = useState(false)
 
   useEffect(() => {
     if (!firebaseEnvReady || !auth || !db) {
@@ -51,9 +54,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let isActive = true
 
     const unsubscribeAuth = onAuthStateChanged(auth, async (fUser) => {
+      const qaBypass = getQaBypassSession()
+      if (qaBypass) {
+        setIsQaBypass(true)
+        setUser(qaBypass.user)
+        setFirebaseUser(qaBypass.firebaseUser)
+        setIsLoading(false)
+        return
+      }
+
       unsubscribeDoc?.()
       unsubscribeDoc = undefined
       setFirebaseUser(fUser)
+      setIsQaBypass(false)
       
       if (!fUser) {
         setUser(null)
@@ -148,6 +161,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         firebaseUser,
         isAuthenticated: !!firebaseUser,
         isLoading,
+        isQaBypass,
         isFirebaseConfigured: firebaseEnvReady,
         loginWithGoogle,
         loginWithEmail,

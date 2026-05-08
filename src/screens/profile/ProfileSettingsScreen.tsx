@@ -28,6 +28,8 @@ export function ProfileSettingsScreen() {
 
   const [isEditing, setIsEditing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [profileFeedback, setProfileFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
+  const [isConfirmingLogout, setIsConfirmingLogout] = useState(false)
   const [formData, setFormData] = useState({
     displayName: authUser?.displayName || '',
     weight: profile?.weight || 0,
@@ -37,14 +39,17 @@ export function ProfileSettingsScreen() {
   })
 
   const handleLogout = () => {
-    if (confirm('Tem certeza que deseja sair?')) {
-      logout()
+    if (!isConfirmingLogout) {
+      setIsConfirmingLogout(true)
+      return
     }
+    logout()
   }
 
   const handleSave = async () => {
     if (!authUser) return
     setIsSaving(true)
+    setProfileFeedback(null)
     try {
       await profileService.updateProfile(authUser.uid, {
         weight: Number(formData.weight),
@@ -52,9 +57,10 @@ export function ProfileSettingsScreen() {
         goal: formData.goal as any
       })
       setIsEditing(false)
+      setProfileFeedback({ type: 'success', message: 'Perfil atualizado com sucesso.' })
     } catch (error) {
       console.error(error)
-      alert('Erro ao salvar perfil')
+      setProfileFeedback({ type: 'error', message: 'Erro ao salvar perfil. Revise os dados e tente novamente.' })
     } finally {
       setIsSaving(false)
     }
@@ -135,7 +141,11 @@ export function ProfileSettingsScreen() {
           <h4 className="font-display text-sm font-bold text-text-primary uppercase">{subscription?.planName || 'Assinatura Expert'}</h4>
           <p className="text-[11px] text-text-muted font-medium">Expira em: {subscription?.expiresAt ? new Date(subscription.expiresAt).toLocaleDateString('pt-BR') : '--'}</p>
         </div>
-        <button className="bg-ec-violet/12 border border-ec-violet/22 text-ec-violet text-[11px] font-bold rounded-lg px-4 py-2 uppercase tracking-widest hover:bg-ec-violet/20 transition-all">
+        <button
+          type="button"
+          onClick={() => navigate('/app/billing')}
+          className="bg-ec-violet/12 border border-ec-violet/22 text-ec-violet text-[11px] font-bold rounded-lg px-4 py-2 uppercase tracking-widest hover:bg-ec-violet/20 transition-all"
+        >
           Gerenciar
         </button>
       </div>
@@ -214,11 +224,42 @@ export function ProfileSettingsScreen() {
           <SettingsDivider />
           <SettingsRow icon={<Headphones className="w-4 h-4" />} label="Falar com Suporte" value="WhatsApp" />
           <SettingsDivider />
-          <SettingsRow icon={<CreditCard className="w-4 h-4" />} label="Gerenciar Assinatura" value="Ativa" />
+          <SettingsRow icon={<CreditCard className="w-4 h-4" />} label="Gerenciar Assinatura" value="Ativa" onClick={() => navigate('/app/billing')} />
           <SettingsDivider />
           <SettingsRow icon={<LogOut className="w-4 h-4 text-accent-red" />} label="Sair da Conta" onClick={handleLogout} />
+          {isConfirmingLogout && (
+            <div className="mx-4 mb-3 rounded-xl border border-accent-yellow/35 bg-accent-yellow/10 p-3">
+              <p className="text-xs font-bold text-text-primary">Confirmar saída da conta?</p>
+              <div className="mt-3 flex gap-2">
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="rounded-lg bg-accent-red px-3 py-2 text-[11px] font-black uppercase tracking-widest text-white"
+                >
+                  Sair
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsConfirmingLogout(false)}
+                  className="rounded-lg border border-white/12 px-3 py-2 text-[11px] font-black uppercase tracking-widest text-text-primary"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
+
+      {profileFeedback && (
+        <div className={`mb-6 rounded-2xl border px-4 py-3 text-sm font-bold ${
+          profileFeedback.type === 'success'
+            ? 'border-accent-lime/35 bg-accent-lime/10 text-accent-lime'
+            : 'border-accent-red/35 bg-accent-red/10 text-accent-red'
+        }`}>
+          {profileFeedback.message}
+        </div>
+      )}
 
       <p className="text-center text-[10px] text-text-muted uppercase font-bold tracking-widest">Expert Club v2.5.0 • ID: {authUser?.uid || '--'}</p>
 
@@ -293,17 +334,32 @@ function SettingsRow({ icon, label, value, color, onClick }: { icon: React.React
     yellow: 'bg-accent-yellow/10 text-accent-yellow',
   }
 
-  return (
-    <button 
-      onClick={onClick}
-      className="flex items-center gap-4 w-full p-4 rounded-xl hover:bg-white/[0.04] transition-all group"
-    >
+  const content = (
+    <>
       <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${color ? colorMap[color] : 'bg-white/5 text-text-muted'}`}>
         {icon}
       </div>
       <span className="flex-1 text-sm font-medium text-text-primary text-left">{label}</span>
       {value && <span className="text-xs text-text-muted font-bold mr-2 uppercase">{value}</span>}
-      <ChevronRight className="w-4 h-4 text-text-disabled group-hover:text-white transition-colors" />
+      {onClick && <ChevronRight className="w-4 h-4 text-text-disabled group-hover:text-white transition-colors" />}
+    </>
+  )
+
+  if (!onClick) {
+    return (
+      <div className="flex items-center gap-4 w-full p-4 rounded-xl">
+        {content}
+      </div>
+    )
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex items-center gap-4 w-full p-4 rounded-xl hover:bg-white/[0.04] transition-all group"
+    >
+      {content}
     </button>
   )
 }

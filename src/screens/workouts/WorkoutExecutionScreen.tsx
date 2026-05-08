@@ -17,6 +17,38 @@ import type { SetLog, WorkoutPR, WorkoutExercise } from '../../types/domain'
 
 type ScreenPhase = 'workout' | 'completion'
 
+function WorkoutExecutionEmptyState({
+  title,
+  description,
+  onBack,
+}: {
+  title: string
+  description: string
+  onBack: () => void
+}) {
+  return (
+    <div className="ec-student-standalone min-h-screen px-5 py-8 text-text-primary">
+      <div className="mx-auto flex min-h-[calc(100dvh-4rem)] max-w-md flex-col justify-center">
+        <div className="rounded-[28px] border border-white/10 bg-[#111a2c] p-6 shadow-2xl shadow-black/30">
+          <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-ec-violet/15 text-ec-violet">
+            <Dumbbell className="h-6 w-6" />
+          </div>
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-ec-violet">Treino</p>
+          <h1 className="mt-2 font-display text-2xl font-black uppercase italic leading-tight text-white">
+            {title}
+          </h1>
+          <p className="mt-3 text-sm font-medium leading-relaxed text-text-secondary">
+            {description}
+          </p>
+          <Button variant="primary" className="mt-6 w-full py-4" onClick={onBack}>
+            Voltar para treinos
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function WorkoutExecutionScreen() {
   const { sessionId } = useParams()
   const navigate = useNavigate()
@@ -36,6 +68,7 @@ export function WorkoutExecutionScreen() {
   const [showInactivityWarning, setShowInactivityWarning] = useState(false)
   const [completionPrs, setCompletionPrs] = useState<WorkoutPR[]>([])
   const [volumeDeltaPct, setVolumeDeltaPct] = useState<number | null>(null)
+  const [shareFeedback, setShareFeedback] = useState<string | null>(null)
   const [videoModalOpen, setVideoModalOpen] = useState(false)
   const [substitutionModalOpen, setSubstitutionModalOpen] = useState(false)
   const lastInteraction = useRef(Date.now())
@@ -133,18 +166,26 @@ export function WorkoutExecutionScreen() {
 
   if (sessionLoading || workoutLoading) {
     return (
-      <div className="min-h-screen bg-bg-primary flex items-center justify-center">
+      <div className="ec-student-standalone min-h-screen flex items-center justify-center">
         <div className="w-10 h-10 border-4 border-ec-violet/30 border-t-ec-violet rounded-full animate-spin" />
       </div>
     )
   }
 
-  if (!currentDay || !session) return <div className="p-10 text-center text-text-muted">Sessão não encontrada</div>
+  if (!currentDay || !session) {
+    return (
+      <WorkoutExecutionEmptyState
+        title="Sessão não encontrada"
+        description="Esta sessão não existe para o usuário logado ou ainda não foi iniciada. Abra a biblioteca e inicie um treino real para registrar séries."
+        onBack={() => navigate('/app/workouts')}
+      />
+    )
+  }
 
   // ============ COMPLETION SCREEN ============
   if (phase === 'completion') {
     return (
-      <div className="min-h-screen bg-bg-primary text-text-primary flex flex-col">
+      <div className="ec-student-standalone min-h-screen text-text-primary flex flex-col">
         <div className="flex-1 flex flex-col items-center justify-center px-6 py-12 text-center">
           <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', damping: 12 }}>
             <div className="w-24 h-24 rounded-full bg-accent-lime/20 flex items-center justify-center mb-8 mx-auto ring-4 ring-accent-lime/10">
@@ -209,12 +250,17 @@ export function WorkoutExecutionScreen() {
                   navigator.share({ text }).catch(() => {})
                 } else {
                   navigator.clipboard.writeText(text)
-                  alert('Resultado copiado!')
+                  setShareFeedback('Resultado copiado para a área de transferência.')
                 }
               }}
             >
               Compartilhar
             </Button>
+            {shareFeedback && (
+              <p className="rounded-xl border border-accent-lime/35 bg-accent-lime/10 px-4 py-3 text-center text-xs font-bold text-accent-lime">
+                {shareFeedback}
+              </p>
+            )}
             <Button variant="ghost" className="w-full py-5 border-subtle" onClick={() => navigate('/app/evolution')}>
               Ver Evolução
             </Button>
@@ -228,7 +274,15 @@ export function WorkoutExecutionScreen() {
   }
 
   // ============ WORKOUT SCREEN ============
-  if (!exercise) return <div className="p-10 text-center text-text-muted">Exercício não encontrado</div>
+  if (!exercise) {
+    return (
+      <WorkoutExecutionEmptyState
+        title="Exercício não encontrado"
+        description="A sessão foi aberta, mas não há exercício válido para registrar. Volte para a biblioteca e escolha um treino publicado."
+        onBack={() => navigate('/app/workouts')}
+      />
+    )
+  }
 
   const handleSetComplete = async (setNumber: number) => {
     if (!firebaseUser || !sessionId) return
@@ -292,9 +346,9 @@ export function WorkoutExecutionScreen() {
         const previousReps = Math.max(0, ...previousForExercise.map(item => item.reps || 0))
         const previousVolume = Math.max(0, ...previousForExercise.map(item => (item.loadKg || 0) * (item.reps || 0)))
         const currentVolume = log.loadKg * log.reps
-        if (log.loadKg > previousLoad) prs.push({ exerciseId: log.exerciseId, exerciseName, type: 'load', value: log.loadKg, previousValue: previousLoad || undefined })
-        if (log.reps > previousReps) prs.push({ exerciseId: log.exerciseId, exerciseName, type: 'reps', value: log.reps, previousValue: previousReps || undefined })
-        if (currentVolume > previousVolume) prs.push({ exerciseId: log.exerciseId, exerciseName, type: 'volume', value: currentVolume, previousValue: previousVolume || undefined })
+        if (log.loadKg > previousLoad) prs.push({ exerciseId: log.exerciseId, exerciseName, type: 'load', value: log.loadKg, previousValue: previousLoad })
+        if (log.reps > previousReps) prs.push({ exerciseId: log.exerciseId, exerciseName, type: 'reps', value: log.reps, previousValue: previousReps })
+        if (currentVolume > previousVolume) prs.push({ exerciseId: log.exerciseId, exerciseName, type: 'volume', value: currentVolume, previousValue: previousVolume })
       }
       const previousTonnage = previousLogs.reduce((sum, item) => sum + item.loadKg * item.reps, 0)
       setCompletionPrs(prs)
@@ -328,7 +382,7 @@ export function WorkoutExecutionScreen() {
   }
 
   return (
-    <div className="ec-app-bg min-h-screen bg-bg-primary text-text-primary pb-40" onClick={touchInteraction}>
+    <div className="ec-student-standalone ec-app-bg min-h-screen text-text-primary pb-40" onClick={touchInteraction}>
       {/* Inactivity Warning */}
       <AnimatePresence>
         {showInactivityWarning && (

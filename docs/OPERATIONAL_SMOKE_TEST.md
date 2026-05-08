@@ -2,6 +2,8 @@
 
 Projeto Firebase alvo: `expertcoaching-b91e2`.
 
+Status: projeto tratado como ambiente unico de pre-lancamento / QA controlado, confirmado pelo owner enquanto nao houver usuarios reais. Ver `docs/firebase/FIREBASE_ENVIRONMENTS.md`.
+
 ## Setup de QA
 
 O script `npm run smoke:setup` cria/atualiza:
@@ -18,6 +20,7 @@ Antes de rodar em projeto real, configure credencial Admin SDK:
 gcloud auth application-default login
 gcloud config set project expertcoaching-b91e2
 $env:SMOKE_TEST_PASSWORD="use-uma-senha-temporaria-forte"
+$env:EXPERT_CLUB_FIREBASE_ENV="staging"
 npm run smoke:setup
 ```
 
@@ -74,3 +77,4 @@ Validar sem overflow horizontal e sem erro de console em:
 - O webhook do Mercado Pago agora exige `MERCADO_PAGO_WEBHOOK_SECRET`; sem esse secret, notificacoes sao rejeitadas.
 - O script de smoke usa Admin SDK e nao deve ser exposto para usuario final.
 - A senha dos usuarios de QA nao fica versionada; use `SMOKE_TEST_PASSWORD` localmente.
+- O script recusa ambiente marcado como `production` e exige confirmacao explicita para escrever em `expertcoaching-b91e2`.

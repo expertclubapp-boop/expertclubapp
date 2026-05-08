@@ -7,6 +7,7 @@ import {
   where
 } from 'firebase/firestore'
 import { db } from '../lib/firebase/firebase'
+import { dateMillis } from '../lib/firebase/date'
 import { COLLECTIONS } from '../lib/firebase/paths'
 import type { Subscription, CheckoutSession, BillingEvent } from '../types/domain'
 
@@ -23,7 +24,7 @@ export const billingService = {
     const snap = await getDocs(q)
     if (snap.empty) return null
     const sessions = snap.docs.map(d => ({ id: d.id, ...d.data() } as CheckoutSession))
-    sessions.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    sessions.sort((a, b) => dateMillis(b.createdAt as any) - dateMillis(a.createdAt as any))
     return sessions[0]
   },
 
@@ -32,6 +33,6 @@ export const billingService = {
     const q = query(colRef, where('uid', '==', uid))
     const snap = await getDocs(q)
     const events = snap.docs.map(d => ({ id: d.id, ...d.data() } as BillingEvent))
-    return events.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    return events.sort((a, b) => dateMillis(b.createdAt as any) - dateMillis(a.createdAt as any))
   }
 }

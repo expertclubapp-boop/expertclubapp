@@ -1,8 +1,10 @@
-import { collection, doc, getDoc, getDocs, orderBy, query, setDoc, updateDoc } from 'firebase/firestore'
+import { collection, deleteField, doc, getDoc, getDocs, orderBy, query, setDoc, updateDoc } from 'firebase/firestore'
 import { db } from '../lib/firebase/firebase'
+import { nowTimestamp } from '../lib/firebase/date'
 import { COLLECTIONS } from '../lib/firebase/paths'
 import type { AuditLog, BodyCheckin, DietDay, Subscription, User, UserProfile, WorkoutSession } from '../types/domain'
 import { adminAuditLogService, type AdminActor } from './adminAuditLogService'
+import { mentorAssignmentService } from './mentorAssignmentService'
 
 export interface AdminUserRow {
   user: User
@@ -11,6 +13,7 @@ export interface AdminUserRow {
 
 export interface AdminUserDetail extends AdminUserRow {
   profile?: UserProfile | null
+  mentor?: User | null
   dietDays: DietDay[]
   workoutSessions: WorkoutSession[]
   bodyCheckins: BodyCheckin[]
@@ -47,10 +50,12 @@ export const adminUserService = {
       adminAuditLogService.list(),
     ])
     const user = { uid: userSnap.id, ...userSnap.data() } as User
+    const mentor = user.mentorId ? await getDoc(doc(db, COLLECTIONS.USERS, user.mentorId)) : null
     return {
       user,
       subscription: subSnap.exists() ? (subSnap.data() as Subscription) : null,
       profile: profileSnap.exists() ? (profileSnap.data() as UserProfile) : null,
+      mentor: mentor?.exists() ? ({ uid: mentor.id, ...mentor.data() } as User) : null,
       dietDays,
       workoutSessions,
       bodyCheckins,
@@ -60,22 +65,35 @@ export const adminUserService = {
 
   async updateRole(actor: AdminActor, uid: string, role: User['role']) {
     const before = await getDoc(doc(db, COLLECTIONS.USERS, uid))
-    await updateDoc(doc(db, COLLECTIONS.USERS, uid), { role, updatedAt: new Date().toISOString() })
+    await updateDoc(doc(db, COLLECTIONS.USERS, uid), { role, updatedAt: nowTimestamp() })
     await adminAuditLogService.create(actor, 'alterar_role', 'user', uid, before.exists() ? before.data() : null, { role })
+  },
+
+  async listMentors() {
+    return mentorAssignmentService.listMentors()
+  },
+
+  async assignMentor(actor: AdminActor, uid: string, mentorId: string | null) {
+    const ref = doc(db, COLLECTIONS.USERS, uid)
+    const before = await getDoc(ref)
+    await updateDoc(ref, {
+      mentorId: mentorId || deleteField(),
+      updatedAt: nowTimestamp(),
+    })
+    await adminAuditLogService.create(actor, 'atribuir_mentor', 'user', uid, before.exists() ? before.data() : null, { mentorId })
   },
 
   async updateSubscription(actor: AdminActor, uid: string, data: Partial<Subscription>) {
     const ref = doc(db, COLLECTIONS.SUBSCRIPTIONS, uid)
     const before = await getDoc(ref)
     const current = before.exists() ? before.data() : {}
-    await setDoc(ref, { ...current, ...data, uid, updatedAt: new Date().toISOString() }, { merge: true })
+    await setDoc(ref, { ...current, ...data, uid, updatedAt: nowTimestamp() }, { merge: true })
     await adminAuditLogService.create(actor, 'alterar_assinatura', 'subscription', uid, current, data)
   },
 
   async softDelete(actor: AdminActor, uid: string) {
-    if (!window.confirm('Desativar este usuário? Ele não será removido fisicamente, mas ficará marcado como inativo.')) return
     const before = await getDoc(doc(db, COLLECTIONS.USERS, uid))
-    await updateDoc(doc(db, COLLECTIONS.USERS, uid), { disabled: true, updatedAt: new Date().toISOString() })
+    await updateDoc(doc(db, COLLECTIONS.USERS, uid), { disabled: true, updatedAt: nowTimestamp() })
     await adminAuditLogService.create(actor, 'desativar_usuario', 'user', uid, before.exists() ? before.data() : null, { disabled: true })
   },
 }

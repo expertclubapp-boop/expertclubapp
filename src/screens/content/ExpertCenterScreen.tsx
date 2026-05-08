@@ -83,9 +83,19 @@ export function ExpertCenterScreen() {
   return (
     <PageShell wide>
         <div className="flex items-center justify-between mb-8">
-           <h1 className="font-display text-h2 text-text-primary uppercase italic font-bold">Expert Center</h1>
+           <div>
+             <p className="mb-2 text-[10px] font-black uppercase tracking-[0.2em] text-ec-violet">Conteudos</p>
+             <h1 className="font-display text-h2 text-text-primary uppercase italic font-bold">Expert Center</h1>
+           </div>
            <div className="flex gap-4 items-center">
-              <button className="text-text-muted hover:text-ec-violet transition-colors"><Search className="w-6 h-6" /></button>
+              <button
+                type="button"
+                disabled
+                title="Busca de conteudos ainda nao esta conectada neste modulo."
+                className="text-text-muted transition-colors disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <Search className="w-6 h-6" />
+              </button>
               <NotificationsDrawer uid={firebaseUser?.uid} />
            </div>
         </div>
@@ -100,7 +110,7 @@ export function ExpertCenterScreen() {
             
             <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
               <div 
-                className="ec-card md:col-span-8 relative group overflow-hidden rounded-2xl aspect-video md:aspect-auto md:h-[420px] cursor-pointer"
+                className="ec-card ec-student-image-hero md:col-span-8 relative group overflow-hidden rounded-2xl aspect-video md:aspect-auto md:h-[420px] cursor-pointer"
                 onClick={() => handleOpenContent(featured)}
               >
                 <img 
@@ -134,7 +144,7 @@ export function ExpertCenterScreen() {
                   </div>
                   <p className="text-ec-violet text-[10px] font-bold uppercase tracking-widest mb-2">Comunidade</p>
                   <h4 className="font-display text-lg text-white mb-4 italic font-bold">Participe das discussões e tire dúvidas.</h4>
-                  <button onClick={() => navigate('/app/community')} className="text-text-muted text-[10px] font-bold uppercase tracking-widest border border-white/10 px-4 py-2 rounded-lg hover:bg-white/5 transition-colors">Entrar</button>
+                  <button onClick={() => navigate('/app/community')} className="text-text-muted text-[10px] font-bold uppercase tracking-widest border border-white/10 px-4 py-2 rounded-lg hover:bg-white/5 transition-colors">Abrir comunidade</button>
                 </div>
                 <div className="ec-card flex-1 p-6 rounded-2xl relative overflow-hidden group ec-highlight-ring">
                   <div className="absolute top-0 right-0 p-4 opacity-10">
@@ -331,7 +341,7 @@ export function ExpertCenterScreen() {
 function VideoCard({ item, isMock, isCompleted, onPlay }: any) {
   if (isMock) {
     return (
-      <div className="group cursor-pointer opacity-40 grayscale hover:grayscale-0 hover:opacity-100 transition-all">
+      <div className="group opacity-40 grayscale transition-all">
         <div className="relative aspect-video rounded-xl overflow-hidden mb-3 border border-white/5 bg-surface-2" />
         <div className="h-4 bg-white/5 rounded w-3/4 mb-2" />
         <div className="h-3 bg-white/5 rounded w-1/2" />
@@ -340,7 +350,7 @@ function VideoCard({ item, isMock, isCompleted, onPlay }: any) {
   }
 
   return (
-    <button className="group cursor-pointer text-left" onClick={onPlay} disabled={!onPlay}>
+    <button className="group text-left disabled:cursor-not-allowed disabled:opacity-60" onClick={onPlay} disabled={!onPlay}>
       <div className="relative aspect-video rounded-xl overflow-hidden mb-3 border border-white/5">
         <img 
           src={item.thumbnailUrl || "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=400"} 
@@ -369,7 +379,7 @@ function VideoCard({ item, isMock, isCompleted, onPlay }: any) {
 
 function MaterialCard({ icon, title, desc, info }: any) {
   return (
-    <div className="ec-card p-6 rounded-2xl flex items-start gap-4 hover:border-ec-violet/30 transition-all group cursor-pointer">
+    <div className="ec-card p-6 rounded-2xl flex items-start gap-4 transition-all group">
       <div className="bg-ec-violet/10 p-3 rounded-xl text-ec-violet group-hover:scale-110 transition-transform">
         {icon}
       </div>
@@ -378,7 +388,14 @@ function MaterialCard({ icon, title, desc, info }: any) {
         <p className="text-text-muted text-xs mb-3 font-body-md">{desc}</p>
         <div className="flex items-center gap-4">
           <span className="text-[9px] font-bold text-text-muted/40 uppercase tracking-widest">{info}</span>
-          <button className="text-ec-violet text-[10px] font-black uppercase tracking-widest hover:underline">Download</button>
+          <button
+            type="button"
+            disabled
+            title="Download de materiais ainda não está disponível neste módulo."
+            className="text-text-muted text-[10px] font-black uppercase tracking-widest disabled:cursor-not-allowed disabled:opacity-70"
+          >
+            Download indisponível
+          </button>
         </div>
       </div>
     </div>

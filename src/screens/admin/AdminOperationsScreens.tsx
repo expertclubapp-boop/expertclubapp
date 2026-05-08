@@ -39,7 +39,6 @@ export function AdminCommunityScreen() {
   }, [posts, search, filter])
 
   const handleAction = async (action: () => Promise<void>) => {
-    if (!window.confirm('Confirmar ação?')) return
     await action()
     reload()
   }
@@ -162,18 +161,26 @@ export function AdminPayoutsScreen() {
   const [payouts, setPayouts] = useState<AffiliatePayout[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [search, setSearch] = useState('')
+  const [copyStatus, setCopyStatus] = useState<string | null>(null)
   const actor = { uid: firebaseUser?.uid, email: firebaseUser?.email }
   const reload = () => adminCommissionService.listPayouts().then(setPayouts).finally(() => setIsLoading(false))
   useEffect(() => { reload() }, [])
   const filtered = payouts.filter(p => `${p.affiliateId} ${p.status} ${p.id}`.toLowerCase().includes(search.toLowerCase()))
   const exportCsv = () => {
     const csv = ['id,affiliateId,amount,status,createdAt', ...filtered.map(p => `${p.id},${p.affiliateId},${p.amount},${p.status},${p.createdAt}`)].join('\n')
-    navigator.clipboard.writeText(csv)
-    alert('CSV copiado para a área de transferência.')
+    navigator.clipboard
+      .writeText(csv)
+      .then(() => setCopyStatus('CSV copiado para a area de transferencia.'))
+      .catch(() => setCopyStatus('Nao foi possivel copiar o CSV.'))
   }
   return (
     <PageShell wide>
       <AdminToolbar title="Pagamentos" eyebrow="Financeiro" action={<Button className="md:w-auto" variant="ghost" onClick={exportCsv} icon={<Download className="h-4 w-4" />}>Exportar CSV</Button>} />
+      {copyStatus && (
+        <p className="mb-4 rounded-xl border border-accent-sky/20 bg-accent-sky/10 px-4 py-3 text-sm font-bold text-accent-sky">
+          {copyStatus}
+        </p>
+      )}
       <AdminSearchFilter search={search} onSearch={setSearch} />
       <AdminState isLoading={isLoading} empty={filtered.length === 0}>
         <div className="grid gap-3">

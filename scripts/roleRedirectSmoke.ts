@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import {
   getDefaultRouteForUser,
   getSubscriptionStatus,
@@ -43,7 +45,7 @@ const cases = [
     label: 'admin',
     user: user({ role: 'admin', email: 'admin@expertclub.com' }),
     subscription: null,
-    expectedRoute: '/admin',
+    expectedRoute: '/admin/dashboard',
   },
   {
     label: 'affiliate',
@@ -55,6 +57,12 @@ const cases = [
     }),
     subscription: subscription('pending'),
     expectedRoute: '/affiliate/dashboard',
+  },
+  {
+    label: 'mentor',
+    user: user({ role: 'mentor', email: 'mentor@expertclub.com.br' }),
+    subscription: null,
+    expectedRoute: '/mentor/overview',
   },
   {
     label: 'member active',
@@ -94,6 +102,35 @@ for (const smokeCase of cases) {
       smokeCase.user,
     )}; subscription=${getSubscriptionStatus(smokeCase.user, smokeCase.subscription)}`,
   )
+}
+
+const routerSource = readFileSync(resolve(process.cwd(), 'src/router/AppRouter.tsx'), 'utf8')
+const mentorScreenSource = readFileSync(
+  resolve(process.cwd(), 'src/screens/mentor/MentorWorkspaceScreens.tsx'),
+  'utf8',
+)
+
+const requiredRedirects = [
+  "path: '/student/dashboard', element: <Navigate to=\"/app/today\" replace />",
+  "path: '/student/workout', element: <Navigate to=\"/app/workouts\" replace />",
+  "path: '/student/workout/session', element: <Navigate to=\"/app/workouts\" replace />",
+  "path: '/student/diet', element: <Navigate to=\"/app/diets/today\" replace />",
+  "path: '/student/profile', element: <Navigate to=\"/app/profile\" replace />",
+  "path: '/student/ranking', element: <Navigate to=\"/app/challenges\" replace />",
+]
+
+for (const redirectSnippet of requiredRedirects) {
+  if (!routerSource.includes(redirectSnippet)) {
+    throw new Error(`Missing student alias redirect: ${redirectSnippet}`)
+  }
+}
+
+if (routerSource.includes('ExpertClubV2Screens')) {
+  throw new Error('AppRouter still references ExpertClubV2Screens.')
+}
+
+if (mentorScreenSource.includes('ExpertClubV2Screens')) {
+  throw new Error('Mentor workspace screens still reference ExpertClubV2Screens.')
 }
 
 console.log('Role redirect smoke passed.')

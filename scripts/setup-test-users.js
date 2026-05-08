@@ -1,9 +1,30 @@
 const admin = require('firebase-admin');
 
+const args = new Set(process.argv.slice(2));
+const projectIdArg = process.argv.find((arg) => arg.startsWith('--project='));
+const projectId = projectIdArg?.split('=')[1] || process.env.FIREBASE_PROJECT_ID || process.env.GCLOUD_PROJECT;
+const environment = process.env.EXPERT_CLUB_FIREBASE_ENV || process.env.FIREBASE_ENV || 'unconfirmed';
+const confirmQaProject = args.has('--confirm-qa-project') || process.env.EXPERT_CLUB_CONFIRM_QA_PROJECT === 'true';
+
+if (!projectId) {
+  console.error('Missing Firebase project. Run with --project=<projectId> or set FIREBASE_PROJECT_ID/GCLOUD_PROJECT.');
+  process.exit(1);
+}
+
+if (environment === 'production') {
+  console.error('Refusing to write setup data while EXPERT_CLUB_FIREBASE_ENV/FIREBASE_ENV is production.');
+  process.exit(1);
+}
+
+if (projectId === 'expertcoaching-b91e2' && !confirmQaProject) {
+  console.error('Refusing to write setup data to expertcoaching-b91e2 without --confirm-qa-project.');
+  process.exit(1);
+}
+
 // Initialize with project ID. It might pick up ADC if available.
 // If not, this script will fail and we'll ask for a service account key.
 admin.initializeApp({
-  projectId: 'expertcoaching-b91e2'
+  projectId
 });
 
 const db = admin.firestore();
@@ -36,12 +57,36 @@ async function setupUsers() {
       }
     },
     {
+      uid: '9Df8S4u4mXvY3qR2nKj7Lh6P0Tg1',
+      data: {
+        uid: '9Df8S4u4mXvY3qR2nKj7Lh6P0Tg1',
+        displayName: 'Mentor Expert',
+        email: 'mentor@expertclub.com.br',
+        role: 'mentor',
+        onboardingComplete: true,
+        createdAt: new Date().toISOString()
+      },
+      profile: {
+        uid: '9Df8S4u4mXvY3qR2nKj7Lh6P0Tg1',
+        experienceLevel: 'advanced',
+        goal: 'hypertrophy',
+        waterGoalMl: 2000
+      },
+      stats: {
+        uid: '9Df8S4u4mXvY3qR2nKj7Lh6P0Tg1',
+        currentStreak: 0,
+        totalXP: 0,
+        level: 1
+      }
+    },
+    {
       uid: '1qvkudqmK6Wg42ebVIYEc5nKDL43',
       data: {
         uid: '1qvkudqmK6Wg42ebVIYEc5nKDL43',
         displayName: 'Aluno Ativo',
         email: 'aluno@expertclub.com.br',
         role: 'member',
+        mentorId: '9Df8S4u4mXvY3qR2nKj7Lh6P0Tg1',
         subscriptionStatus: 'active',
         subscriptionPlan: 'pro',
         onboardingComplete: true,

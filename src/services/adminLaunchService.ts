@@ -1,5 +1,6 @@
-import { collection, getDocs, query, where, collectionGroup } from 'firebase/firestore'
+import { collection, getDocs, query, where, collectionGroup, orderBy } from 'firebase/firestore'
 import { db } from '../lib/firebase/firebase'
+import { toFirestoreDate } from '../lib/firebase/date'
 import { COLLECTIONS, SUB_COLLECTIONS } from '../lib/firebase/paths'
 import type { 
   Subscription, 
@@ -74,8 +75,8 @@ export const adminLaunchService = {
       startDate = new Date(now.getFullYear(), now.getMonth(), 1)
     }
 
-    const startDateIso = startDate.toISOString()
-    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString()
+    const startDateCursor = toFirestoreDate(startDate)
+    const sevenDaysAgoCursor = toFirestoreDate(new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000))
 
     // 2. Fetch Data (Client-side aggregation for V1 Launch)
     // NOTE: In production with many users, these should be migrated to Cloud Functions aggregations.
@@ -93,15 +94,27 @@ export const adminLaunchService = {
       checkinsSnap
     ] = await Promise.all([
       getDocs(collection(db, COLLECTIONS.SUBSCRIPTIONS)),
-      getDocs(query(collection(db, COLLECTIONS.CHECKOUT_SESSIONS), where('createdAt', '>=', startDateIso))),
-      getDocs(query(collection(db, COLLECTIONS.BILLING_EVENTS), where('createdAt', '>=', startDateIso))),
+      getDocs(query(collection(db, COLLECTIONS.CHECKOUT_SESSIONS), where('createdAt', '>=', startDateCursor))),
+      getDocs(query(collection(db, COLLECTIONS.BILLING_EVENTS), where('createdAt', '>=', startDateCursor))),
       getDocs(collection(db, COLLECTIONS.USERS)),
       getDocs(collection(db, COLLECTIONS.PROFILES)),
       getDocs(collection(db, COLLECTIONS.AFFILIATE_ACCOUNTS)),
       getDocs(collection(db, COLLECTIONS.COMMISSION_LEDGER)),
-      getDocs(query(collectionGroup(db, SUB_COLLECTIONS.WORKOUT_SESSIONS), where('startedAt', '>=', sevenDaysAgo))),
-      getDocs(query(collectionGroup(db, SUB_COLLECTIONS.DIET_DAYS), where('createdAt', '>=', sevenDaysAgo))),
-      getDocs(query(collectionGroup(db, SUB_COLLECTIONS.DAILY_CHECKINS), where('createdAt', '>=', sevenDaysAgo)))
+      getDocs(query(
+        collectionGroup(db, SUB_COLLECTIONS.WORKOUT_SESSIONS),
+        where('startedAt', '>=', sevenDaysAgoCursor),
+        orderBy('startedAt', 'desc')
+      )),
+      getDocs(query(
+        collectionGroup(db, SUB_COLLECTIONS.DIET_DAYS),
+        where('createdAt', '>=', sevenDaysAgoCursor),
+        orderBy('createdAt', 'desc')
+      )),
+      getDocs(query(
+        collectionGroup(db, SUB_COLLECTIONS.DAILY_CHECKINS),
+        where('createdAt', '>=', sevenDaysAgoCursor),
+        orderBy('createdAt', 'desc')
+      ))
     ])
 
     const subscriptions = subsSnap.docs.map(d => d.data() as Subscription)

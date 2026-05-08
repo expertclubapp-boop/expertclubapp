@@ -1,15 +1,16 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Search, SlidersHorizontal } from 'lucide-react'
-import { FilterChip } from '../../components/ui/FilterChip'
-import { DietCard } from '../../components/ui/DietCard'
-import { PageShell, SectionHeader } from '../../components/ui/Premium'
 import { useDiets } from '../../hooks/useDiets'
+import { ExpertClubMobileShell } from '../../components/v2/ExpertClubMobileShell'
+import { ExpertClubDietCard } from '../../components/v2/ExpertClubDietCard'
+import { V2Card, V2IconBubble, cx } from '../../components/v2/ExpertClubV2Base'
 
 export function DietsLibraryScreen() {
   const navigate = useNavigate()
   const { diets, isLoading } = useDiets()
   const [search, setSearch] = useState('')
+  const [showFilters, setShowFilters] = useState(false)
   const [filters, setFilters] = useState({
     objective: 'all',
     style: 'all',
@@ -31,102 +32,91 @@ export function DietsLibraryScreen() {
   const setFilter = (key: keyof typeof filters, value: string) => setFilters(prev => ({ ...prev, [key]: value }))
 
   return (
-    <PageShell wide>
-      {/* Search & Header Section */}
-      <section className="mb-10">
-        <SectionHeader
-          eyebrow="Nutrição"
-          title="Dietas Expert"
-          description="Planos alimentares com macros, refeições e substituições para sustentar o treino."
-          tone="sky"
-          className="mb-6"
-        />
+    <ExpertClubMobileShell active="Dieta" title="Nutrição" subtitle="Planos de performance">
+      <div className="flex flex-col gap-6">
         
+        {/* SEARCH BAR */}
         <div className="relative group">
-          <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-            <Search className="w-5 h-5 text-text-muted group-focus-within:text-accent-lime transition-colors" />
-          </div>
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-muted group-focus-within:text-ec-violet transition-colors" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="ec-input w-full rounded-xl py-4 pl-12 pr-4 text-text-primary outline-none transition-all placeholder:text-text-disabled"
-            placeholder="Buscar por nome, alimento ou objetivo..."
+            className="w-full bg-white/5 border border-white/5 rounded-2xl py-4 pl-12 pr-12 text-white font-bold placeholder:text-text-muted outline-none focus:border-ec-violet/50 transition-all"
+            placeholder="Buscar dieta..."
           />
+          <button 
+            onClick={() => setShowFilters(!showFilters)}
+            className={cx(
+              "absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-xl transition-all",
+              showFilters ? "bg-ec-violet text-white" : "bg-white/5 text-text-muted hover:text-white"
+            )}
+          >
+            <SlidersHorizontal size={18} />
+          </button>
         </div>
 
-        <div className="ec-card mt-6 rounded-2xl p-4">
-          <div className="mb-3 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-text-muted">
-            <SlidersHorizontal className="h-4 w-4 text-accent-sky" />
-            Encontrar dieta compatível
-          </div>
-          <FilterRow label="Objetivo" options={[
-            ['all', 'Todos'], ['fat_loss', 'Emagrecimento'], ['hypertrophy', 'Hipertrofia'], ['health', 'Manutenção'],
-          ]} value={filters.objective} onChange={value => setFilter('objective', value)} />
-          <FilterRow label="Estilo" options={[
-            ['all', 'Todos'], ['simple', 'Simples'], ['low_carb', 'Low carb'], ['fasting', 'Jejum'], ['vegetarian', 'Vegetariana'], ['budget', 'Econômica'], ['meal_prep', 'Marmitas'], ['busy', 'Rotina corrida'],
-          ]} value={filters.style} onChange={value => setFilter('style', value)} />
-          <FilterRow label="Calorias" options={[
-            ['all', 'Todas'], ['1200', '1200'], ['1500', '1500'], ['1600', '1600'], ['1800', '1800'], ['2000', '2000'], ['2300', '2300'], ['2700', '2700'], ['3100', '3100'],
-          ]} value={filters.calories} onChange={value => setFilter('calories', value)} />
-          <FilterRow label="Refeições por dia" options={[
-            ['all', 'Todas'], ['2', '2'], ['3', '3'], ['4', '4'], ['5', '5'], ['6', '6'],
-          ]} value={filters.mealsPerDay} onChange={value => setFilter('mealsPerDay', value)} />
-          <FilterRow label="Preferências" options={[
-            ['all', 'Todas'], ['no_whey', 'Sem whey'], ['with_whey', 'Com whey'], ['no_lactose', 'Sem lactose'], ['cheap_foods', 'Alimentos baratos'],
-          ]} value={filters.restriction} onChange={value => setFilter('restriction', value)} />
-        </div>
-      </section>
+        {/* FILTERS AREA */}
+        {showFilters && (
+          <V2Card className="p-4 space-y-4 animate-in slide-in-from-top-4 duration-300">
+            <FilterRow label="Objetivo" options={[
+              ['all', 'Todos'], ['fat_loss', 'Perda Peso'], ['hypertrophy', 'Músculo'], ['health', 'Saúde'],
+            ]} value={filters.objective} onChange={value => setFilter('objective', value)} />
+            
+            <FilterRow label="Estilo" options={[
+              ['all', 'Todos'], ['simple', 'Simples'], ['low_carb', 'Low carb'], ['vegetarian', 'Veggie'],
+            ]} value={filters.style} onChange={value => setFilter('style', value)} />
+          </V2Card>
+        )}
 
-      {/* Loading State */}
-      {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[1, 2, 3].map(i => (
-            <div key={i} className="ec-card h-64 rounded-card animate-pulse" />
-          ))}
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredDiets.map((diet, index) => (
-            <DietCard 
-              key={diet.id} 
-              diet={diet} 
-              isFeatured={index === 0} 
-              onView={(id) => navigate(`/app/diets/${id}`)}
-            />
-          ))}
-        </div>
-      )}
-
-      {/* Promotion Card / CTA */}
-      <div className="mt-12 lg:col-span-2 ec-hero-shell rounded-card p-8 sm:p-10 flex flex-col md:flex-row items-center justify-between gap-8 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-white/20 blur-[100px] rounded-full -mr-32 -mt-32"></div>
-        <div className="relative z-10">
-          <h2 className="font-display text-heading-2 text-text-primary mb-4 uppercase italic">Coaching de macros</h2>
-          <p className="text-text-secondary max-w-md mb-8 font-medium">Ajuste dieta, água e treino em um protocolo coerente com sua rotina.</p>
-          <button className="ec-premium-cta px-8 py-4 rounded-xl font-bold font-display uppercase italic tracking-widest hover:scale-[1.02] transition-transform">Desbloquear acesso</button>
-        </div>
-        <div className="relative z-10 w-full md:w-1/3 flex justify-center">
-          <div className="grid grid-cols-2 gap-4">
-            {[1, 2, 3, 4].map(i => (
-              <div key={i} className="bg-white/[0.045] p-4 rounded-2xl backdrop-blur-sm border border-white/[0.08]">
-                <div className="w-6 h-6 rounded-full bg-accent-lime/20 animate-pulse" />
-              </div>
+        {/* RESULTS GRID */}
+        {isLoading ? (
+          <div className="grid grid-cols-1 gap-4">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="ec-v2-card h-64 bg-white/5 animate-pulse" />
             ))}
           </div>
-        </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-4 mb-8">
+            {filteredDiets.length > 0 ? (
+              filteredDiets.map((diet) => (
+                <ExpertClubDietCard 
+                  key={diet.id} 
+                  diet={diet} 
+                  onClick={(id) => navigate(`/app/diets/${id}`)}
+                />
+              ))
+            ) : (
+              <div className="py-20 text-center">
+                 <V2IconBubble icon={Search} tone="neutral" className="mx-auto mb-4" />
+                 <p className="text-text-muted font-bold">Nenhuma dieta encontrada.</p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
-    </PageShell>
+    </ExpertClubMobileShell>
   )
 }
 
 function FilterRow({ label, options, value, onChange }: { label: string; options: string[][]; value: string; onChange: (value: string) => void }) {
   return (
-    <div className="border-t border-white/5 py-3 first:border-t-0">
-      <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-text-muted">{label}</p>
+    <div className="space-y-2">
+      <p className="text-[10px] font-black uppercase tracking-widest text-text-muted">{label}</p>
       <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
         {options.map(([id, text]) => (
-          <FilterChip key={id} label={text} isSelected={value === id} onClick={() => onChange(id)} />
+          <button
+            key={id}
+            onClick={() => onChange(id)}
+            className={cx(
+              "whitespace-nowrap px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+              value === id 
+                ? "bg-ec-violet text-white shadow-lg shadow-ec-violet/20" 
+                : "bg-white/5 text-text-muted hover:text-white"
+            )}
+          >
+            {text}
+          </button>
         ))}
       </div>
     </div>

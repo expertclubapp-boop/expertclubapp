@@ -1,8 +1,29 @@
 import * as admin from 'firebase-admin';
 
+const args = new Set(process.argv.slice(2));
+const projectIdArg = process.argv.find((arg) => arg.startsWith('--project='));
+const projectId = projectIdArg?.split('=')[1] || process.env.FIREBASE_PROJECT_ID || process.env.GCLOUD_PROJECT;
+const environment = process.env.EXPERT_CLUB_FIREBASE_ENV || process.env.FIREBASE_ENV || 'unconfirmed';
+const confirmQaProject = args.has('--confirm-qa-project') || process.env.EXPERT_CLUB_CONFIRM_QA_PROJECT === 'true';
+
+if (!projectId) {
+  console.error('Missing Firebase project. Run with --project=<projectId> or set FIREBASE_PROJECT_ID/GCLOUD_PROJECT.');
+  process.exit(1);
+}
+
+if (environment === 'production') {
+  console.error('Refusing to write smoke data while EXPERT_CLUB_FIREBASE_ENV/FIREBASE_ENV is production.');
+  process.exit(1);
+}
+
+if (projectId === 'expertcoaching-b91e2' && !confirmQaProject) {
+  console.error('Refusing to write smoke data to expertcoaching-b91e2 without --confirm-qa-project.');
+  process.exit(1);
+}
+
 if (admin.apps.length === 0) {
   admin.initializeApp({
-    projectId: 'expertcoaching-b91e2'
+    projectId
   });
 }
 

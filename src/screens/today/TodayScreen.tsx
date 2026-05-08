@@ -1,286 +1,214 @@
-import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
 import { 
-  Play, 
-  ArrowRight, Flame, CheckCircle2, Trophy, Award, Zap, Star, Video
+  CheckCircle2,
+  Activity,
+  Play,
+  ChevronRight,
+  Utensils,
+  Droplets,
+  CalendarCheck2
 } from 'lucide-react'
-import { Button } from '../../components/ui/Button'
-import {
-  PageShell,
-} from '../../components/ui/Premium'
 import { useAuth } from '../../contexts/AuthContext'
 import { useProfile } from '../../hooks/useProfile'
-import { useProgress } from '../../hooks/useProgress'
-import { useActiveChallenge, useLeaderboard, useUserBadges } from '../../hooks/useChallenges'
-import { useContent } from '../../hooks/useContent'
-
-const fadeUp = {
-  initial: { opacity: 0, y: 16 },
-  animate: { opacity: 1, y: 0 },
-}
+import { useWorkouts } from '../../hooks/useWorkouts'
+import { useDiets } from '../../hooks/useDiets'
+import { useDailyCheckin } from '../../hooks/useDailyCheckin'
+import { useSubscription } from '../../hooks/useSubscription'
+import { ExpertClubMobileShell } from '../../components/v2/ExpertClubMobileShell'
+import { V2Card, V2Avatar, V2ProgressBar, V2Button, V2Badge, cx } from '../../components/v2/ExpertClubV2Base'
 
 export function TodayScreen() {
   const navigate = useNavigate()
   const { firebaseUser } = useAuth()
-  const { profile, isLoading: profileLoading } = useProfile()
-  const { recentSessions, dailyHistory, dietDays, isLoading: progressLoading } = useProgress(firebaseUser?.uid)
-  
-  // Retention Hooks
-  const { challenge, participant, isLoading: challengeLoading } = useActiveChallenge(firebaseUser?.uid)
-  const { leaderboard, isLoading: leaderboardLoading } = useLeaderboard(challenge?.id)
-  const { badges, isLoading: badgesLoading } = useUserBadges(firebaseUser?.uid)
-  const { items: contents, progress: contentProgress, isLoading: contentLoading } = useContent()
-
-  const isLoading = profileLoading || progressLoading || challengeLoading || contentLoading || leaderboardLoading || badgesLoading
-
-  const featuredContent = contents.find(c => c.featured && c.status === 'published') || contents[0]
-  
-  // Today's Date Key
+  const { profile } = useProfile()
+  const { workouts } = useWorkouts()
+  const { diets } = useDiets()
+  const { subscription } = useSubscription()
   const todayKey = new Date().toISOString().split('T')[0]
+  const { checkin } = useDailyCheckin(firebaseUser?.uid, todayKey)
 
-  // Status checks for today
-  const hasCheckedInToday = dailyHistory.some(d => d.dateKey === todayKey)
-  const hasTrainedToday = recentSessions.some(s => s.status === 'completed' && s.startedAt && new Date(s.startedAt as any).toISOString().split('T')[0] === todayKey)
-  const hasDietToday = dietDays.some(d => d.dateKey === todayKey && d.completedItemsCount > 0)
-
-  // Streaks calculation
-  const streakCheckins = useMemo(() => {
-    let streak = 0
-    const today = new Date()
-    for (let i = 0; i < 30; i++) {
-      const d = new Date(today)
-      d.setDate(today.getDate() - i)
-      const key = d.toISOString().split('T')[0]
-      if (dailyHistory.some(h => h.dateKey === key)) streak++
-      else if (i > 0) break // stop at first missed day (allow missing today)
-    }
-    return streak
-  }, [dailyHistory])
-
-  // Next Action Logic
-  const nextAction = useMemo(() => {
-    if (featuredContent && !contentProgress[featuredContent.id]?.completedAt) {
-      return { text: "Aula da Semana", desc: "Novo conteúdo disponível: " + featuredContent.title, action: () => navigate('/app/content') }
-    }
-    if (challenge && !participant) {
-      return { text: "Entrar no Desafio", desc: "Participe do " + challenge.title, action: () => navigate('/app/challenges') }
-    }
-    if (!hasTrainedToday && profile?.selectedWorkoutId) return { text: "Concluir Missão: Treino", desc: "Mantenha sua sequência ativa.", action: () => navigate(`/app/workouts/${profile.selectedWorkoutId}`) }
-    if (!hasDietToday && profile?.selectedDietId) return { text: "Concluir Missão: Dieta", desc: "Alimente seu corpo e suba no ranking.", action: () => navigate('/app/diets/today') }
-    if (!hasCheckedInToday) return { text: "Fazer Check-in Diário", desc: "Marque sua participação na comunidade.", action: () => navigate('/app/checkin/daily') }
-    return { text: "Comunidade Expert", desc: "Veja o que os outros membros estão fazendo.", action: () => navigate('/app/community') }
-  }, [featuredContent, contentProgress, challenge, participant, hasDietToday, hasTrainedToday, hasCheckedInToday, profile, navigate])
-
-  if (isLoading) {
-    return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <div className="w-10 h-10 border-4 border-ec-violet/30 border-t-ec-violet rounded-full animate-spin" />
-      </div>
-    )
-  }
-
-  // Determine user rank
-  const userRankIndex = leaderboard.findIndex(p => p.uid === firebaseUser?.uid)
-  const userRank = userRankIndex >= 0 ? userRankIndex + 1 : null
-  const top3 = leaderboard.slice(0, 3)
+  const user = firebaseUser
+  const selectedWorkout = workouts.find(w => w.id === profile?.selectedWorkoutId) || workouts[0]
+  const selectedDiet = diets.find(d => d.id === profile?.selectedDietId) || diets[0]
+  const firstName = user?.displayName && !/admin/i.test(user.displayName)
+    ? user.displayName.split(' ')[0]
+    : 'Aluno'
+  const completedMissions = [!!checkin, !!selectedWorkout, !!selectedDiet].filter(Boolean).length
+  const dayProgress = Math.round((completedMissions / 4) * 100)
 
   return (
-    <PageShell wide className="space-y-6 pt-4 pb-12">
-      {/* Header Profile & Streak */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white/5 border border-white/5 p-4 rounded-3xl">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full border-2 border-ec-violet overflow-hidden">
-             <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${firebaseUser?.uid}`} alt="Avatar" className="w-full h-full object-cover" />
-          </div>
-          <div>
-            <h2 className="font-display text-xl font-black italic uppercase text-white leading-none">Olá, {firebaseUser?.displayName?.split(' ')[0] || 'Atleta'}!</h2>
-            <p className="text-[10px] text-text-muted font-bold tracking-widest uppercase mt-1">Mais um dia fora do achismo.</p>
-          </div>
-        </div>
-        <div className="flex gap-4">
-          <div className="flex flex-col items-end">
-            <div className="flex items-center gap-2 text-ec-violet">
-              <Flame className="w-5 h-5" />
-              <span className="font-display text-2xl font-black italic leading-none">{streakCheckins}</span>
-            </div>
-            <span className="text-[9px] uppercase tracking-widest font-bold text-text-muted">Sequência Ativa</span>
-          </div>
-          {participant && (
-            <div className="flex flex-col items-end border-l border-white/10 pl-4">
-              <div className="flex items-center gap-2 text-accent-yellow">
-                <Zap className="w-5 h-5" />
-                <span className="font-display text-2xl font-black italic leading-none">{participant.points}</span>
-              </div>
-              <span className="text-[9px] uppercase tracking-widest font-bold text-text-muted">XP Points</span>
-            </div>
-          )}
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* LADO ESQUERDO: Próxima Ação e Desafio */}
-        <div className="lg:col-span-8 flex flex-col gap-6">
+    <ExpertClubMobileShell active="Início" title="Hoje" subtitle={`Bom treino, ${firstName}`}>
+      <div className="flex flex-col gap-6 pb-32">
+        
+        <V2Card className="p-6 relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-ec-violet/10 blur-3xl rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-700" />
           
-          {/* Próxima Ação recomendada */}
-          <motion.div {...fadeUp} className="ec-premium-cta rounded-3xl p-6 cursor-pointer hover:scale-[1.01] transition-transform shadow-[0_8px_30px_rgba(91,75,255,0.2)]" onClick={nextAction.action}>
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-[10px] uppercase tracking-[0.2em] font-black opacity-80 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-white animate-pulse" /> Ação Recomendada
-              </span>
-              <ArrowRight className="w-5 h-5" />
+          <div className="flex items-center justify-between mb-6 relative z-10">
+            <div className="flex items-center gap-3">
+              <V2Avatar uid={user?.uid} name={user?.displayName || ''} size="md" className="border-2 border-ec-violet shadow-lg shadow-ec-violet/20" />
+              <div>
+                <p className="text-[10px] font-black tracking-[0.2em] text-ec-violet uppercase">ALUNO</p>
+                <h2 className="text-xl font-black italic text-white uppercase leading-tight">{firstName}</h2>
+              </div>
             </div>
-            <h3 className="font-display text-3xl font-black italic uppercase leading-none mb-2">{nextAction.text}</h3>
-            <p className="text-sm font-medium opacity-90">{nextAction.desc}</p>
-          </motion.div>
-
-          {/* Desafio do Mês */}
-          {challenge && (
-            <motion.section {...fadeUp} transition={{ delay: 0.1 }} className="ec-card rounded-3xl overflow-hidden relative group cursor-pointer" onClick={() => navigate('/app/challenges')}>
-              <div className="absolute inset-0 bg-gradient-to-r from-bg-primary via-bg-primary/90 to-transparent z-10" />
-              <img 
-                src="https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=800" 
-                alt="Challenge" 
-                className="absolute inset-0 w-full h-full object-cover grayscale opacity-20 group-hover:opacity-40 transition-opacity duration-700"
-              />
-              <div className="relative z-20 p-8 flex flex-col md:flex-row gap-8 items-start md:items-center justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Star className="w-4 h-4 text-accent-yellow" />
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-accent-yellow">Desafio do Mês</span>
-                  </div>
-                  <h3 className="font-display text-h3 text-white uppercase italic font-bold mb-2">{challenge.title}</h3>
-                  <p className="text-sm text-text-muted max-w-md line-clamp-2">{challenge.description}</p>
-                </div>
-                
-                {participant ? (
-                  <div className="bg-black/50 border border-white/10 rounded-2xl p-5 shrink-0 w-full md:w-48 text-center backdrop-blur-sm">
-                    <p className="text-[10px] uppercase font-black tracking-widest text-text-muted mb-2">Seu Progresso</p>
-                    <div className="flex items-end justify-center gap-1 mb-2">
-                      <span className="font-display text-3xl italic font-black text-white leading-none">{participant.completedMissions.length}</span>
-                      <span className="text-sm text-text-muted font-bold pb-1">/ {challenge.missions.length}</span>
-                    </div>
-                    <div className="w-full bg-white/10 h-1.5 rounded-full overflow-hidden">
-                      <div className="bg-ec-violet h-full rounded-full" style={{ width: `${(participant.completedMissions.length / challenge.missions.length) * 100}%` }} />
-                    </div>
-                  </div>
-                ) : (
-                  <Button variant="primary" className="shrink-0 uppercase italic tracking-widest font-black text-xs px-6">Entrar no Desafio</Button>
-                )}
-              </div>
-            </motion.section>
-          )}
-
-          {/* Aula da Semana (Conteúdo Novo) */}
-          {featuredContent && (
-            <motion.section {...fadeUp} transition={{ delay: 0.15 }} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="ec-card p-6 rounded-3xl cursor-pointer hover:border-ec-violet/30 transition-colors" onClick={() => navigate('/app/content')}>
-                <div className="flex items-center gap-2 mb-4">
-                  <Video className="w-4 h-4 text-ec-violet" />
-                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-ec-violet">Aula da Semana</span>
-                </div>
-                <div className="aspect-video bg-surface-2 rounded-xl mb-4 overflow-hidden relative">
-                  {featuredContent.thumbnailUrl ? (
-                    <img src={featuredContent.thumbnailUrl} alt={featuredContent.title} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-black/40"><Play className="w-8 h-8 text-white/50" /></div>
-                  )}
-                  <div className="absolute bottom-2 right-2 bg-black/80 px-2 py-1 rounded text-[10px] font-bold text-white uppercase tracking-widest">{featuredContent.category}</div>
-                </div>
-                <h4 className="font-display text-lg text-white uppercase italic font-bold line-clamp-1">{featuredContent.title}</h4>
-              </div>
-
-              {/* Badges Recentes */}
-              <div className="ec-card p-6 rounded-3xl" onClick={() => navigate('/app/challenges')}>
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center gap-2">
-                    <Award className="w-4 h-4 text-text-muted" />
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-text-muted">Suas Conquistas</span>
-                  </div>
-                  <ArrowRight className="w-4 h-4 text-text-muted" />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  {badges.slice(0, 4).map(badge => (
-                    <div key={badge.id} className="bg-white/5 border border-white/5 rounded-2xl p-4 text-center hover:bg-white/10 transition-colors cursor-pointer">
-                      <div className="text-3xl mb-2">{badge.icon}</div>
-                      <p className="text-[9px] font-black uppercase tracking-widest text-text-primary line-clamp-1">{badge.title}</p>
-                    </div>
-                  ))}
-                  {badges.length === 0 && (
-                    <div className="col-span-2 text-center p-6 bg-white/[0.02] border border-dashed border-white/10 rounded-2xl">
-                      <Award className="w-8 h-8 text-white/10 mx-auto mb-2" />
-                      <p className="text-xs text-text-muted">Complete missões para ganhar badges.</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </motion.section>
-          )}
-
-        </div>
-
-        {/* LADO DIREITO: Ranking & Comunidade */}
-        <div className="lg:col-span-4 flex flex-col gap-6">
-          
-          {/* Ranking da Comunidade */}
-          <motion.section {...fadeUp} transition={{ delay: 0.2 }} className="ec-card p-6 rounded-3xl flex-1 cursor-pointer hover:border-white/10 transition-colors" onClick={() => navigate('/app/challenges')}>
-            <div className="flex items-center justify-between mb-6 border-b border-white/5 pb-4">
-              <h3 className="font-display text-xl text-white uppercase italic font-bold">Ranking</h3>
-              <Trophy className="w-5 h-5 text-accent-yellow" />
+            <div className="text-right">
+              <p className="text-[10px] font-black tracking-[0.2em] text-text-muted uppercase">PLANO</p>
+              <p className="text-sm font-black italic text-white uppercase">{subscription?.status || 'ativo'}</p>
             </div>
-            
-            {leaderboard.length > 0 ? (
-              <div className="space-y-4">
-                {top3.map((p, idx) => (
-                  <div key={p.uid} className={`flex items-center justify-between p-3 rounded-xl border ${p.uid === firebaseUser?.uid ? 'bg-ec-violet/10 border-ec-violet/30' : 'bg-surface-2 border-white/5'}`}>
-                    <div className="flex items-center gap-3">
-                      <span className={`font-display text-lg italic font-black ${idx === 0 ? 'text-accent-yellow' : idx === 1 ? 'text-text-secondary' : 'text-orange-400'}`}>{idx + 1}</span>
-                      <div className="w-8 h-8 rounded-full bg-white/5 overflow-hidden">
-                         <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${p.uid}`} alt="Avatar" className="w-full h-full object-cover" />
-                      </div>
-                      <span className="text-xs font-bold text-white">{p.uid === firebaseUser?.uid ? 'Você' : `Expert #${p.uid.slice(0,4)}`}</span>
-                    </div>
-                    <span className="text-[10px] font-black uppercase tracking-widest text-text-muted">{p.points} XP</span>
-                  </div>
-                ))}
-                
-                {userRank && userRank > 3 && participant && (
-                  <>
-                    <div className="flex justify-center text-white/20 text-xs py-1">...</div>
-                    <div className="flex items-center justify-between p-3 rounded-xl border bg-ec-violet/10 border-ec-violet/30">
-                      <div className="flex items-center gap-3">
-                        <span className="font-display text-lg italic font-black text-ec-violet">{userRank}</span>
-                        <div className="w-8 h-8 rounded-full bg-white/5 overflow-hidden">
-                           <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${firebaseUser?.uid}`} alt="Avatar" className="w-full h-full object-cover" />
-                        </div>
-                        <span className="text-xs font-bold text-white">Você</span>
-                      </div>
-                      <span className="text-[10px] font-black uppercase tracking-widest text-text-muted">{participant.points} XP</span>
-                    </div>
-                  </>
-                )}
-              </div>
-            ) : (
-              <p className="text-sm text-text-muted text-center py-10 italic">Nenhum ranking disponível no momento.</p>
-            )}
-            
-            <Button variant="ghost" className="w-full border-subtle mt-6 text-xs" onClick={(e) => { e.stopPropagation(); navigate('/app/challenges')}}>Ver Ranking Completo</Button>
-          </motion.section>
-
-          {/* Quick Routine Actions */}
-          <div className="grid grid-cols-2 gap-4">
-            <button onClick={() => navigate('/app/workouts')} className="ec-card p-4 rounded-2xl flex flex-col items-center justify-center gap-2 hover:bg-white/[0.03] transition-colors border border-white/5">
-              <CheckCircle2 className={`w-6 h-6 ${hasTrainedToday ? 'text-accent-lime' : 'text-text-muted/30'}`} />
-              <span className="text-[10px] uppercase font-black tracking-widest text-text-primary">Treino</span>
-            </button>
-            <button onClick={() => navigate('/app/diets/today')} className="ec-card p-4 rounded-2xl flex flex-col items-center justify-center gap-2 hover:bg-white/[0.03] transition-colors border border-white/5">
-              <CheckCircle2 className={`w-6 h-6 ${hasDietToday ? 'text-accent-lime' : 'text-text-muted/30'}`} />
-              <span className="text-[10px] uppercase font-black tracking-widest text-text-primary">Dieta</span>
-            </button>
           </div>
 
+          <div className="space-y-2 relative z-10">
+            <div className="flex justify-between text-[9px] font-black uppercase tracking-widest text-text-muted">
+              <span>PROGRESSO DO DIA</span>
+              <span>{dayProgress}%</span>
+            </div>
+            <V2ProgressBar value={dayProgress} tone="violet" className="h-2" />
+          </div>
+        </V2Card>
+
+        <div className="grid grid-cols-3 gap-3">
+          <StatMini icon={CalendarCheck2} value={checkin ? 'OK' : '--'} label="CHECK-IN" tone={checkin ? 'success' : 'violet'} />
+          <StatMini icon={Activity} value={selectedWorkout ? '1' : '--'} label="TREINO" tone="violet" />
+          <StatMini icon={Utensils} value={selectedDiet ? '1' : '--'} label="DIETA" tone="warning" />
         </div>
+
+        <section>
+          <div className="flex justify-between items-end mb-4">
+             <h3 className="text-xs font-black italic text-white uppercase tracking-widest">Missão do Dia</h3>
+             <span className="text-[10px] font-bold text-ec-violet">{completedMissions}/4 CONCLUÍDO</span>
+          </div>
+          
+          <div className="grid grid-cols-1 gap-3">
+            <MissionItem 
+              icon={CheckCircle2} 
+              title="Check-in Diário" 
+              done={!!checkin} 
+              onClick={() => navigate('/app/checkin/daily')} 
+            />
+            <MissionItem 
+              icon={Activity} 
+              title={selectedWorkout ? selectedWorkout.title : 'Escolher treino'}
+              done={!!selectedWorkout}
+              onClick={() => navigate(selectedWorkout ? `/app/workouts/${selectedWorkout.id}` : '/app/workouts')}
+            />
+            <MissionItem
+              icon={Utensils}
+              title={selectedDiet ? selectedDiet.title : 'Escolher dieta'}
+              done={!!selectedDiet}
+              onClick={() => navigate(selectedDiet ? '/app/diets/today' : '/app/diets')}
+            />
+            <MissionItem 
+              icon={Droplets} 
+              title="Meta de Hidratação" 
+              done={false} 
+              onClick={() => navigate('/app/hydration')} 
+            />
+          </div>
+        </section>
+
+        <div className="grid grid-cols-1 gap-4">
+          {selectedWorkout && (
+            <V2Card 
+              className="p-5 flex items-center justify-between group hover:border-ec-violet/30 transition-all cursor-pointer"
+              onClick={() => navigate(`/app/workouts/${selectedWorkout.id}`)}
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-ec-violet group-hover:scale-110 transition-transform">
+                  <Activity size={24} />
+                </div>
+                <div>
+                  <p className="text-[10px] font-black tracking-[0.2em] text-ec-violet uppercase">PRÓXIMO TREINO</p>
+                  <h4 className="text-lg font-black italic text-white uppercase group-hover:text-ec-violet transition-colors line-clamp-1">{selectedWorkout.title}</h4>
+                </div>
+              </div>
+              <V2Button variant="ghost" className="p-2 min-w-0 h-auto">
+                <Play className="text-ec-violet" size={20} fill="currentColor" />
+              </V2Button>
+            </V2Card>
+          )}
+
+          {!selectedWorkout && (
+            <V2Card className="p-5">
+              <p className="text-[10px] font-black tracking-[0.2em] text-ec-violet uppercase">TREINO</p>
+              <h4 className="mt-2 text-lg font-black italic text-white uppercase">Nenhum treino selecionado</h4>
+              <p className="mt-2 text-sm text-text-muted">Abra a biblioteca e escolha um protocolo para começar.</p>
+              <V2Button variant="primary" className="mt-4 w-full" onClick={() => navigate('/app/workouts')}>VER TREINOS</V2Button>
+            </V2Card>
+          )}
+
+          {selectedDiet && (
+            <V2Card 
+              className="p-5 flex items-center justify-between group hover:border-ec-violet/30 transition-all cursor-pointer"
+              onClick={() => navigate('/app/diets/today')}
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-accent-sky group-hover:scale-110 transition-transform">
+                  <Activity size={24} />
+                </div>
+                <div>
+                  <p className="text-[10px] font-black tracking-[0.2em] text-accent-sky uppercase">DIETA DO DIA</p>
+                  <h4 className="text-lg font-black italic text-white uppercase group-hover:text-accent-sky transition-colors line-clamp-1">{selectedDiet.title}</h4>
+                </div>
+              </div>
+              <ChevronRight className="text-text-muted group-hover:text-accent-sky transition-colors" size={20} />
+            </V2Card>
+          )}
+
+          {!selectedDiet && (
+            <V2Card className="p-5">
+              <p className="text-[10px] font-black tracking-[0.2em] text-accent-sky uppercase">DIETA</p>
+              <h4 className="mt-2 text-lg font-black italic text-white uppercase">Nenhuma dieta ativa</h4>
+              <p className="mt-2 text-sm text-text-muted">Escolha uma dieta para liberar o acompanhamento do dia.</p>
+              <V2Button variant="primary" className="mt-4 w-full" onClick={() => navigate('/app/diets')}>VER DIETAS</V2Button>
+            </V2Card>
+          )}
+        </div>
+
       </div>
-    </PageShell>
+    </ExpertClubMobileShell>
+  )
+}
+
+function StatMini({ icon: Icon, value, label, tone }: { icon: any; value: string; label: string; tone: string }) {
+  return (
+    <V2Card className="p-3 flex flex-col items-center justify-center border-white/5">
+      <Icon size={16} className={cx(
+        tone === 'warning' && "text-accent-yellow",
+        tone === 'violet' && "text-ec-violet",
+        tone === 'success' && "text-accent-lime"
+      )} />
+      <span className="text-sm font-black italic text-white mt-1">{value}</span>
+      <span className="text-[8px] font-black uppercase tracking-widest text-text-muted">{label}</span>
+    </V2Card>
+  )
+}
+
+function MissionItem({ icon: Icon, title, done, onClick }: { icon: any; title: string; done: boolean; onClick: () => void }) {
+  return (
+    <div 
+      onClick={onClick}
+      className={cx(
+        "flex items-center justify-between p-4 rounded-2xl border transition-all cursor-pointer",
+        done ? "bg-accent-lime/5 border-accent-lime/20" : "bg-white/5 border-white/5 hover:border-white/10"
+      )}
+    >
+      <div className="flex items-center gap-3">
+        <div className={cx(
+          "w-8 h-8 rounded-xl flex items-center justify-center",
+          done ? "bg-accent-lime text-black" : "bg-white/5 text-text-muted"
+        )}>
+          <Icon size={18} />
+        </div>
+        <span className={cx(
+          "text-xs font-black italic uppercase",
+          done ? "text-accent-lime" : "text-white"
+        )}>{title}</span>
+      </div>
+      {done ? (
+        <V2Badge tone="success" className="text-[8px]">CONCLUÍDO</V2Badge>
+      ) : (
+        <ChevronRight size={16} className="text-text-muted" />
+      )}
+    </div>
   )
 }

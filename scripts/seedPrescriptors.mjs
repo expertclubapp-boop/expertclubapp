@@ -6,12 +6,33 @@ const admin = require('firebase-admin')
 
 const args = new Set(process.argv.slice(2))
 const dryRun = args.has('--dry-run')
+const staging = args.has('--staging')
+const confirmQaProject = args.has('--confirm-qa-project') || process.env.EXPERT_CLUB_CONFIRM_QA_PROJECT === 'true'
 const projectIdArg = process.argv.find((arg) => arg.startsWith('--project='))
 const projectId =
   projectIdArg?.split('=')[1] ||
-  process.env.VITE_FIREBASE_PROJECT_ID ||
+  (staging ? process.env.EXPERT_CLUB_STAGING_PROJECT_ID || 'expertclub-staging' : null) ||
+  process.env.FIREBASE_PROJECT_ID ||
   process.env.GCLOUD_PROJECT ||
-  'expertcoaching-b91e2'
+  process.env.VITE_FIREBASE_PROJECT_ID
+
+const environment = process.env.EXPERT_CLUB_FIREBASE_ENV || process.env.FIREBASE_ENV || (staging ? 'staging' : 'unconfirmed')
+
+if (!projectId) {
+  console.error('Missing Firebase project. Run with --project=<projectId> or set FIREBASE_PROJECT_ID/GCLOUD_PROJECT.')
+  process.exit(1)
+}
+
+if (environment === 'production') {
+  console.error('Refusing to seed prescriptors while EXPERT_CLUB_FIREBASE_ENV/FIREBASE_ENV is production.')
+  process.exit(1)
+}
+
+if (projectId === 'expertcoaching-b91e2' && !confirmQaProject) {
+  console.error('Refusing to write prescriptor seed data to expertcoaching-b91e2 without --confirm-qa-project.')
+  console.error('This project is tied to Vercel Production. Use a separate staging project for prescriptor seeds.')
+  process.exit(1)
+}
 
 if (!admin.apps.length) {
   admin.initializeApp({ projectId })
@@ -19,7 +40,7 @@ if (!admin.apps.length) {
 
 const db = admin.firestore()
 
-const nowIso = () => new Date().toISOString()
+const nowTimestamp = () => admin.firestore.Timestamp.now()
 
 const foodsSeed = [
   // Proteins
@@ -55,7 +76,7 @@ const foodsSeed = [
   { id: 'tomate', name: 'Tomate', category: 'free', basePortion: { amount: 100, unit: 'g' }, macrosPerBasePortion: { calories: 18, protein: 0.8, carbs: 3.9, fat: 0.2 }, tags: ['vegetal'], substitutionGroup: 'vegetal', status: 'active', isSeed: true, source: 'admin-prescriptors-v1' },
   { id: 'mamao', name: 'Mamao', category: 'free', basePortion: { amount: 100, unit: 'g' }, macrosPerBasePortion: { calories: 43, protein: 0.5, carbs: 11, fat: 0.1 }, tags: ['fruta'], substitutionGroup: 'fruta', status: 'active', isSeed: true, source: 'admin-prescriptors-v1' },
   { id: 'maca', name: 'Maca', category: 'free', basePortion: { amount: 100, unit: 'g' }, macrosPerBasePortion: { calories: 52, protein: 0.3, carbs: 14, fat: 0.2 }, tags: ['fruta'], substitutionGroup: 'fruta', status: 'active', isSeed: true, source: 'admin-prescriptors-v1' },
-].map(i => ({ ...i, createdAt: nowIso(), updatedAt: nowIso() }))
+].map(i => ({ ...i, createdAt: nowTimestamp(), updatedAt: nowTimestamp() }))
 
 const exercisesSeed = [
   { id: 'agachamento-livre', name: 'Agachamento Livre', modality: 'bodybuilding', muscleGroups: ['Quadriceps', 'Gluteos'], primaryMuscleGroup: 'Quadriceps', equipment: 'Barra', level: 'intermediate', instructions: 'Mantenha as costas retas', videoUrl: '', tags: ['composto'], substitutionGroup: 'agachamento', status: 'active', isSeed: true, source: 'admin-prescriptors-v1' },
@@ -76,7 +97,7 @@ const exercisesSeed = [
   { id: 'burpee', name: 'Burpee', modality: 'functional', muscleGroups: ['Corpo Todo'], primaryMuscleGroup: 'Cardio', equipment: 'Peso Corporal', level: 'intermediate', instructions: '', videoUrl: '', tags: ['hiit'], substitutionGroup: 'hiit', status: 'active', isSeed: true, source: 'admin-prescriptors-v1' },
   { id: 'kettlebell-swing', name: 'Kettlebell Swing', modality: 'functional', muscleGroups: ['Posterior', 'Gluteos'], primaryMuscleGroup: 'Gluteos', equipment: 'Kettlebell', level: 'intermediate', instructions: '', videoUrl: '', tags: ['potencia'], substitutionGroup: 'potencia', status: 'active', isSeed: true, source: 'admin-prescriptors-v1' },
   { id: 'mobilidade-quadril', name: 'Mobilidade de Quadril', modality: 'home', muscleGroups: ['Quadril'], primaryMuscleGroup: 'Quadril', equipment: 'Peso Corporal', level: 'beginner', instructions: '', videoUrl: '', tags: ['mobilidade'], substitutionGroup: 'mobilidade', status: 'active', isSeed: true, source: 'admin-prescriptors-v1' }
-].map(i => ({ ...i, createdAt: nowIso(), updatedAt: nowIso() }))
+].map(i => ({ ...i, createdAt: nowTimestamp(), updatedAt: nowTimestamp() }))
 
 const dietsSeed = [
   {
@@ -110,7 +131,7 @@ const dietsSeed = [
     id: 'recomposicao-2000', title: 'Recomposicao 2000 kcal', goal: 'recomposition', style: 'simple', calories: 2000, protein: 160, carbs: 200, fat: 66, level: 'intermediate', mealsPerDay: 4,
     tags: ['Equilibrio'], status: 'published', meals: []
   }
-].map(i => ({ ...i, version: 1, createdAt: nowIso(), updatedAt: nowIso() }))
+].map(i => ({ ...i, version: 1, createdAt: nowTimestamp(), updatedAt: nowTimestamp() }))
 
 const workoutsSeed = [
   {
@@ -139,7 +160,7 @@ const workoutsSeed = [
     id: 'treino-casa-3x', title: 'Treino em Casa 3x', goal: 'health', modality: 'home', level: 'beginner', durationMinutes: 30, daysPerWeek: 3,
     tags: ['Sem Equipamento'], status: 'published', focus: ['Condicionamento'], days: []
   }
-].map(i => ({ ...i, version: 1, createdAt: nowIso(), updatedAt: nowIso() }))
+].map(i => ({ ...i, version: 1, createdAt: nowTimestamp(), updatedAt: nowTimestamp() }))
 
 async function main() {
   if (dryRun) {

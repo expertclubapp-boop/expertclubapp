@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Search } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
 
@@ -107,8 +108,24 @@ export function TextArea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement
 }
 
 export function ConfirmButton({ children, message, onConfirm, variant = 'ghost' }: { children: React.ReactNode; message: string; onConfirm: () => void; variant?: 'ghost' | 'destructive' | 'lime' }) {
+  const [isConfirming, setIsConfirming] = useState(false)
+
+  if (isConfirming) {
+    return (
+      <span className="inline-flex items-center gap-2 rounded-xl border border-accent-yellow/30 bg-accent-yellow/10 px-3 py-2">
+        <span className="max-w-[220px] text-xs font-bold text-accent-yellow">{message}</span>
+        <Button variant={variant} className="w-auto px-3 py-2 text-xs" onClick={() => { setIsConfirming(false); onConfirm() }}>
+          Confirmar
+        </Button>
+        <Button variant="ghost" className="w-auto px-3 py-2 text-xs" onClick={() => setIsConfirming(false)}>
+          Cancelar
+        </Button>
+      </span>
+    )
+  }
+
   return (
-    <Button variant={variant} className="w-auto" onClick={() => { if (window.confirm(message)) onConfirm() }}>
+    <Button variant={variant} className="w-auto" onClick={() => setIsConfirming(true)}>
       {children}
     </Button>
   )

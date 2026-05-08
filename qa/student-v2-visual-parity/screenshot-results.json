@@ -1,0 +1,218 @@
+[
+  {
+    "route": "/app/today",
+    "viewport": "390",
+    "finalUrl": "",
+    "status": "error: page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5173/app/today\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "route": "/app/workouts",
+    "viewport": "390",
+    "finalUrl": "",
+    "status": "error: page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5173/app/workouts\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "route": "/app/workouts/iniciante-full-body",
+    "viewport": "390",
+    "finalUrl": "",
+    "status": "error: page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5173/app/workouts/iniciante-full-body\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "route": "/app/workouts/session/scVriKQW1gp9kuoawGMZ",
+    "viewport": "390",
+    "finalUrl": "",
+    "status": "error: page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5173/app/workouts/session/scVriKQW1gp9kuoawGMZ\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "route": "/app/diets",
+    "viewport": "390",
+    "finalUrl": "",
+    "status": "error: page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5173/app/diets\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "route": "/app/diets/today",
+    "viewport": "390",
+    "finalUrl": "",
+    "status": "error: page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5173/app/diets/today\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "route": "/app/checkin/daily",
+    "viewport": "390",
+    "finalUrl": "",
+    "status": "error: page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5173/app/checkin/daily\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "route": "/app/checkin/weekly",
+    "viewport": "390",
+    "finalUrl": "",
+    "status": "error: page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5173/app/checkin/weekly\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "route": "/app/content",
+    "viewport": "390",
+    "finalUrl": "",
+    "status": "error: page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5173/app/content\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "route": "/app/challenges",
+    "viewport": "390",
+    "finalUrl": "",
+    "status": "error: page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5173/app/challenges\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "route": "/app/profile",
+    "viewport": "390",
+    "finalUrl": "",
+    "status": "error: page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5173/app/profile\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "route": "/app/billing",
+    "viewport": "390",
+    "finalUrl": "",
+    "status": "error: page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5173/app/billing\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "route": "/app/today",
+    "viewport": "430",
+    "finalUrl": "",
+    "status": "error: page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5173/app/today\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "route": "/app/workouts",
+    "viewport": "430",
+    "finalUrl": "",
+    "status": "error: page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5173/app/workouts\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "route": "/app/workouts/iniciante-full-body",
+    "viewport": "430",
+    "finalUrl": "",
+    "status": "error: page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5173/app/workouts/iniciante-full-body\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "route": "/app/workouts/session/scVriKQW1gp9kuoawGMZ",
+    "viewport": "430",
+    "finalUrl": "",
+    "status": "error: page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5173/app/workouts/session/scVriKQW1gp9kuoawGMZ\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "route": "/app/diets",
+    "viewport": "430",
+    "finalUrl": "",
+    "status": "error: page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5173/app/diets\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "route": "/app/diets/today",
+    "viewport": "430",
+    "finalUrl": "",
+    "status": "error: page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5173/app/diets/today\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "route": "/app/checkin/daily",
+    "viewport": "430",
+    "finalUrl": "",
+    "status": "error: page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5173/app/checkin/daily\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "route": "/app/checkin/weekly",
+    "viewport": "430",
+    "finalUrl": "",
+    "status": "error: page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5173/app/checkin/weekly\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "route": "/app/content",
+    "viewport": "430",
+    "finalUrl": "",
+    "status": "error: page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5173/app/content\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "route": "/app/challenges",
+    "viewport": "430",
+    "finalUrl": "",
+    "status": "error: page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5173/app/challenges\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "route": "/app/profile",
+    "viewport": "430",
+    "finalUrl": "",
+    "status": "error: page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5173/app/profile\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "route": "/app/billing",
+    "viewport": "430",
+    "finalUrl": "",
+    "status": "error: page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5173/app/billing\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "route": "/app/today",
+    "viewport": "1440",
+    "finalUrl": "",
+    "status": "error: page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5173/app/today\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "route": "/app/workouts",
+    "viewport": "1440",
+    "finalUrl": "",
+    "status": "error: page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5173/app/workouts\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "route": "/app/workouts/iniciante-full-body",
+    "viewport": "1440",
+    "finalUrl": "",
+    "status": "error: page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5173/app/workouts/iniciante-full-body\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "route": "/app/workouts/session/scVriKQW1gp9kuoawGMZ",
+    "viewport": "1440",
+    "finalUrl": "",
+    "status": "error: page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5173/app/workouts/session/scVriKQW1gp9kuoawGMZ\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "route": "/app/diets",
+    "viewport": "1440",
+    "finalUrl": "",
+    "status": "error: page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5173/app/diets\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "route": "/app/diets/today",
+    "viewport": "1440",
+    "finalUrl": "",
+    "status": "error: page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5173/app/diets/today\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "route": "/app/checkin/daily",
+    "viewport": "1440",
+    "finalUrl": "",
+    "status": "error: page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5173/app/checkin/daily\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "route": "/app/checkin/weekly",
+    "viewport": "1440",
+    "finalUrl": "",
+    "status": "error: page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5173/app/checkin/weekly\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "route": "/app/content",
+    "viewport": "1440",
+    "finalUrl": "",
+    "status": "error: page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5173/app/content\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "route": "/app/challenges",
+    "viewport": "1440",
+    "finalUrl": "",
+    "status": "error: page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5173/app/challenges\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "route": "/app/profile",
+    "viewport": "1440",
+    "finalUrl": "",
+    "status": "error: page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5173/app/profile\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "route": "/app/billing",
+    "viewport": "1440",
+    "finalUrl": "",
+    "status": "error: page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5173/app/billing\", waiting until \"networkidle\"\u001b[22m\n"
+  }
+]
