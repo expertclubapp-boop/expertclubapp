@@ -32,6 +32,15 @@ function MetricCard({ label, value }: { label: string; value: string }) {
   )
 }
 
+function MetricsWarnings({ warnings }: { warnings?: string[] }) {
+  if (!warnings?.length) return null
+  return (
+    <div className="rounded-2xl border border-accent-yellow/25 bg-accent-yellow/8 p-4 text-sm text-accent-yellow">
+      Métricas parciais: {warnings.join(' ')}
+    </div>
+  )
+}
+
 // ═══════════════════════════════════════════════
 // WORKSPACES — Honest: schema is single-tenant
 // ═══════════════════════════════════════════════
@@ -112,6 +121,7 @@ export function AdminWorkspacesScreen() {
       <AdminState isLoading={isLoading} error={error} empty={!metrics}>
         {metrics && (
           <div className="space-y-5">
+            <MetricsWarnings warnings={metrics.queryWarnings} />
             <p className="text-[10px] font-black uppercase tracking-widest text-text-muted">
               Estado operacional atual (colecoes globais)
             </p>
@@ -180,6 +190,7 @@ export function AdminFinanceOverviewScreen() {
       <AdminState isLoading={isLoading} error={error} empty={!metrics}>
         {metrics && (
           <div className="space-y-6">
+            <MetricsWarnings warnings={metrics.queryWarnings} />
             <section className="grid gap-4 md:grid-cols-4">
               <MetricCard label="MRR estimado" value={formatCurrency(metrics.estimatedMrr)} />
               <MetricCard label="Comissao pendente" value={formatCurrency(metrics.pendingCommissions)} />

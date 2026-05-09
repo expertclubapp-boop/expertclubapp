@@ -26,6 +26,38 @@ Antes de escala ou producao real, validar novamente:
 | workoutSessions | startedAt | >= sevenDaysAgo | startedAt desc | adminLaunchService | Sim | Sim | Criado e validado |
 | dietDays | createdAt | >= sevenDaysAgo | createdAt desc | adminLaunchService | Sim | Sim | Criado e validado |
 | dailyCheckins | createdAt | >= sevenDaysAgo | createdAt desc | adminLaunchService | Sim | Sim | Criado e validado |
+| bodyCheckins | createdAt | >= monthAgo | createdAt desc | adminMetricsService | Definido em `firestore.indexes.json`; deploy pendente | Nao | Necessario para hardening de metricas |
+
+## AdminMetricsService Query Hardening
+
+Status: implementado no codigo para QA interno controlado; indice novo de `bodyCheckins.createdAt` ainda nao foi deployado nesta PR.
+
+| Servico | Query | Collection/Group | Filtro | OrderBy | Limit | Risco tratado |
+|---|---|---|---|---|---|---|
+| adminMetricsService | users.member.limited | users | role == member | - | 500 | Evita ler todos os usuarios globais. |
+| adminMetricsService | subscriptions.status.limited | subscriptions | status in estados acompanhados | - | 1000 | Evita scan total de assinaturas. |
+| adminMetricsService | affiliateAccounts.limited | affiliateAccounts | - | - | 100 | Recorte para ranking de afiliadas. |
+| adminMetricsService | commissionLedger.status.limited | commissionLedger | status in pending/approved/paid | - | 1000 | Evita scan total do ledger. |
+| adminMetricsService | dailyCheckins.7d | dailyCheckins | createdAt >= 7d | createdAt desc | 500 | Remove collectionGroup global ilimitado. |
+| adminMetricsService | bodyCheckins.30d | bodyCheckins | createdAt >= 30d | createdAt desc | 500 | Remove collectionGroup global ilimitado; requer indice novo. |
+| adminMetricsService | workoutSessions.7d | workoutSessions | startedAt >= 7d | startedAt desc | 500 | Usa indice ja validado e evita scan global. |
+| adminMetricsService | dietDays.30d | dietDays | createdAt >= 30d | createdAt desc | 500 | Usa indice ja validado e evita media all-time ilimitada. |
+| adminMetricsService | hydrationDays.sample | hydrationDays | - | - | 300 | Mantem recorte limitado sem exigir indice novo. |
+| adminLaunchService | checkoutSessions.range.limited | checkoutSessions | createdAt >= range | createdAt desc | 500 | Recorta eventos por periodo. |
+| adminLaunchService | billingEvents.range.limited | billingEvents | createdAt >= range | createdAt desc | 500 | Recorta eventos por periodo. |
+| adminLaunchService | users.member.limited | users | role == member | - | 1000 | Evita scan total de usuarios. |
+| adminLaunchService | profiles.limited | profiles | - | - | 1000 | Recorte honesto para alertas de onboarding/dieta/treino. |
+| adminLaunchService | affiliateAccounts.limited | affiliateAccounts | - | - | 100 | Recorte para tabela de afiliadas. |
+| adminLaunchService | commissionLedger.status.limited | commissionLedger | status in approved/paid | - | 1000 | Evita scan total de comissoes. |
+| adminLaunchService | workoutSessions.7d | workoutSessions | startedAt >= 7d | startedAt desc | 500 | Ja filtrado, agora tambem limitado. |
+| adminLaunchService | dietDays.7d | dietDays | createdAt >= 7d | createdAt desc | 500 | Ja filtrado, agora tambem limitado. |
+| adminLaunchService | dailyCheckins.7d | dailyCheckins | createdAt >= 7d | createdAt desc | 500 | Ja filtrado, agora tambem limitado. |
+
+## Tratamento de erro
+
+- `permission-denied` continua subindo como erro real e nao e convertido para zero.
+- Metricas secundarias de atividade usam `Promise.allSettled`; falhas nao-permissao viram alerta informativo e recorte vazio, sem derrubar todo o dashboard.
+- Metricas criticas de receita, usuarios, assinaturas, afiliadas e comissoes continuam falhando de forma explicita.
 
 ## Implementacao
 
@@ -34,6 +66,7 @@ Arquivos:
 - `firestore.indexes.json`
 - `firebase.json`
 - `src/services/adminLaunchService.ts`
+- `src/services/adminMetricsService.ts`
 
 Os indices foram configurados como single-field collection group indexes via `fieldOverrides`, porque o Firebase recusou os mesmos campos como indices compostos com a mensagem:
 
@@ -47,9 +80,10 @@ Arquivo: `src/services/adminLaunchService.ts`
 
 | Metrica | Collection Group | Estado atual |
 |---|---|---|
-| workoutSessions7d | workoutSessions | `where('startedAt', '>=', Timestamp)` + `orderBy('startedAt', 'desc')` |
-| dietDays7d | dietDays | `where('createdAt', '>=', Timestamp)` + `orderBy('createdAt', 'desc')` |
-| dailyCheckins7d | dailyCheckins | `where('createdAt', '>=', Timestamp)` + `orderBy('createdAt', 'desc')` |
+| workoutSessions7d | workoutSessions | `where('startedAt', '>=', Timestamp)` + `orderBy('startedAt', 'desc')` + `limit(500)` |
+| dietDays7d | dietDays | `where('createdAt', '>=', Timestamp)` + `orderBy('createdAt', 'desc')` + `limit(500)` |
+| dailyCheckins7d | dailyCheckins | `where('createdAt', '>=', Timestamp)` + `orderBy('createdAt', 'desc')` + `limit(500)` |
+| bodyCheckins30d | bodyCheckins | `where('createdAt', '>=', Timestamp)` + `orderBy('createdAt', 'desc')` + `limit(500)`; indice definido, deploy pendente |
 
 ## Deploy
 
@@ -65,6 +99,8 @@ Resultado: PASS.
 
 Observacao: o primeiro teste de browser pegou os indices ainda propagando. O dashboard exibiu erro `COLLECTION_GROUP_DESC index ... not ready yet` para `workoutSessions.startedAt` e depois `dailyCheckins.createdAt`. Apos aguardar a propagacao e tentar novamente, o dashboard carregou sem erro operacional.
 
+Nesta PR, nao foi executado deploy de indices. O indice novo `bodyCheckins.createdAt` foi apenas definido em `firestore.indexes.json` e deve ser aplicado/validado antes de depender do recorte de `adminMetricsService` em ambiente remoto com volume.
+
 ## Browser validation
 
 | Rota | Usuario | Screenshot | Permission denied? | Erro de indice? | Status |
@@ -77,11 +113,11 @@ Arquivo: `src/services/adminMetricsService.ts`
 
 | Collection Group | Uso atual | Observacao |
 |---|---|---|
-| dailyCheckins | leitura global admin | Sem filtro server-side hoje |
-| bodyCheckins | leitura global admin | Sem filtro server-side hoje |
-| workoutSessions | leitura global admin | Sem filtro server-side hoje |
-| dietDays | leitura global admin | Sem filtro server-side hoje |
-| hydrationDays | leitura global admin | Sem filtro server-side hoje |
+| dailyCheckins | adminMetricsService | `createdAt >= weekAgo` + `orderBy('createdAt', 'desc')` + `limit(500)` |
+| bodyCheckins | adminMetricsService | `createdAt >= monthAgo` + `orderBy('createdAt', 'desc')` + `limit(500)` |
+| workoutSessions | adminMetricsService | `startedAt >= weekAgo` + `orderBy('startedAt', 'desc')` + `limit(500)` |
+| dietDays | adminMetricsService | `createdAt >= monthAgo` + `orderBy('createdAt', 'desc')` + `limit(500)` |
+| hydrationDays | adminMetricsService | `limit(300)` sem order/filtro para nao exigir indice novo |
 
 Arquivo: `src/services/communityFeedService.ts`
 

@@ -106,6 +106,7 @@ Pasta: `qa/student-v2-parity/`
 - Rules collectionGroup testadas
 - Indices Firestore do Launch Dashboard criados e filtros server-side restaurados
 - Normalizacao de datas preparada: novos writes/seeds usam Timestamp e backfill dry-run existe
+- AdminMetricsService Query Hardening: dashboards admin usam recortes com filtro/limit; collectionGroup globais ilimitados removidos dos services auditados
 - Aluno billing sem permission denied
 - Challenge join sem `photoURL: undefined`
 - Overflow horizontal em /app/challenges no viewport 390
@@ -137,6 +138,7 @@ Screenshot de validacao: `qa/date-normalization/admin-dashboard-date-normalizati
 | workoutSessions | startedAt | PASS; single-field collection group index criado e validado no browser |
 | dietDays | createdAt | PASS; single-field collection group index criado e validado no browser |
 | dailyCheckins | createdAt | PASS; single-field collection group index criado e validado no browser |
+| bodyCheckins | createdAt | Definido em `firestore.indexes.json`; deploy/validacao pendente se a rota usar este recorte no ambiente remoto |
 
 Screenshot de validacao: `qa/firestore-indexes/admin-dashboard-index-validation-final.png`
 
@@ -145,3 +147,4 @@ Screenshot de validacao: `qa/firestore-indexes/admin-dashboard-index-validation-
 - Bypass QA local nao prova permissao Firestore.
 - Nao publicar rules em producao sem confirmacao formal de ambiente.
 - Nao declarar Beta externo, Production Ready ou "100% V2" em sentido publico/produto completo.
+- Nao tratar recortes de dashboard como metricas all-time exatas em escala; migrar para agregados server-side antes de volume real.

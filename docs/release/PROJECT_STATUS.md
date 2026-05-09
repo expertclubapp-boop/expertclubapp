@@ -41,6 +41,9 @@ Status: concluido para QA interno controlado.
 - `/admin/dashboard` validado com admin real apos propagacao dos indices.
 - Screenshot: `qa/firestore-indexes/admin-dashboard-index-validation-final.png`.
 - Antes de escala real, revalidar volume, custo, latencia e estrategia final de ambientes.
+- AdminMetricsService Query Hardening aplicado: `adminMetricsService.ts` e `adminLaunchService.ts` usam filtros/limits para evitar scans globais perigosos.
+- Novo indice single-field collection group definido para `bodyCheckins.createdAt`; deploy nao executado nesta PR e deve ser aplicado/validado antes de depender desse recorte no ambiente remoto.
+- Metricas secundarias de atividade usam fallback parcial sem mascarar `permission-denied`; metricas criticas continuam falhando explicitamente.
 
 ### 4. Normalizacao de datas
 
