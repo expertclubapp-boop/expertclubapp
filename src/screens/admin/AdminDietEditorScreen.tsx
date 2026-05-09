@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { Plus, Trash2, Search, Copy, ArrowUp, ArrowDown, Calculator, Utensils, ExternalLink } from 'lucide-react'
 import { PageShell } from '../../components/ui/Premium'
 import { Button } from '../../components/ui/Button'
+import { toastError } from '../../components/ui/Toast'
 import { AdminToolbar, Field, TextInput, TextArea } from './AdminShared'
 import { dietService } from '../../services/dietService'
 import { foodService } from '../../services/foodService'
@@ -79,12 +80,12 @@ export function AdminDietEditorScreen() {
   }, [diet.meals])
 
   async function save(statusToSave: Diet['status'] = diet.status) {
-    if (!diet.title || !diet.goal) return alert('Título e Objetivo são obrigatórios.')
-    if (statusToSave === 'published' && diet.meals.length === 0) return alert('Não é possível publicar sem refeições.')
+    if (!diet.title || !diet.goal) return toastError('Título e objetivo são obrigatórios.')
+    if (statusToSave === 'published' && diet.meals.length === 0) return toastError('Não é possível publicar sem refeições.')
     
     // Add simple validation rule: published requires at least 1 food
     if (statusToSave === 'published' && !diet.meals.some(m => m.items.length > 0)) {
-      return alert('Não é possível publicar uma dieta sem alimentos.')
+      return toastError('Não é possível publicar uma dieta sem alimentos.')
     }
 
     try {
@@ -101,7 +102,7 @@ export function AdminDietEditorScreen() {
       }
       navigate('/admin/diets')
     } catch (error) {
-      alert('Erro ao salvar dieta.')
+      toastError('Erro ao salvar dieta.')
       console.error(error)
     } finally {
       setIsLoading(false)
@@ -116,7 +117,7 @@ export function AdminDietEditorScreen() {
       const newId = await dietService.create(copy)
       navigate(`/admin/diets/${newId}`)
     } catch (err) {
-      alert('Erro ao duplicar dieta')
+      toastError('Erro ao duplicar dieta.')
     } finally {
       setIsLoading(false)
     }
@@ -161,7 +162,7 @@ export function AdminDietEditorScreen() {
       setShowCaloricVariation(false)
       navigate(`/admin/diets/${newId}`)
     } catch (err) {
-      alert('Erro ao criar variação')
+      toastError('Erro ao criar variação.')
     } finally {
       setIsLoading(false)
     }

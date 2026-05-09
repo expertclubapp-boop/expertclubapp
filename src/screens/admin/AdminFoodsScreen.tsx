@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Plus, Search, Archive, Edit2, Copy } from 'lucide-react'
 import { PageShell } from '../../components/ui/Premium'
 import { Button } from '../../components/ui/Button'
+import { toastError } from '../../components/ui/Toast'
 import { AdminState, AdminToolbar, ConfirmButton } from './AdminShared'
 import { foodService } from '../../services/foodService'
 import type { Food } from '../../types/domain'
@@ -41,7 +42,6 @@ export function AdminFoodsScreen() {
   }), [items, search, categoryFilter, statusFilter])
 
   async function duplicateFood(item: Food) {
-    if (!window.confirm('Duplicar este alimento?')) return
     try {
       const clone = { ...item, name: `${item.name} (cópia)`, status: 'inactive' as const }
       delete (clone as any).id
@@ -50,7 +50,7 @@ export function AdminFoodsScreen() {
       const newId = await foodService.createFood(clone)
       navigate(`/admin/foods/${newId}`)
     } catch (err) {
-      alert('Erro ao duplicar.')
+      toastError('Erro ao duplicar alimento.')
     }
   }
 
@@ -59,7 +59,7 @@ export function AdminFoodsScreen() {
       await foodService.updateFood(id, { status: current === 'active' ? 'inactive' : 'active' })
       loadFoods()
     } catch (err) {
-      alert('Erro ao alterar status.')
+      toastError('Erro ao alterar status.')
     }
   }
 

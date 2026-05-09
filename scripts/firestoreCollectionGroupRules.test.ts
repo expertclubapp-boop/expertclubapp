@@ -6,6 +6,7 @@ import {
   initializeTestEnvironment,
 } from '@firebase/rules-unit-testing'
 import {
+  collection,
   collectionGroup,
   doc,
   getDoc,
@@ -15,7 +16,7 @@ import {
   where,
 } from 'firebase/firestore'
 
-type Role = 'Admin' | 'Mentor' | 'Aluno'
+type Role = 'Admin' | 'Mentor' | 'Aluno' | 'Affiliate'
 type Result = {
   role: Role
   query: string
@@ -65,10 +66,15 @@ try {
       setDoc(doc(db, 'users/adminUid'), { uid: 'adminUid', email: 'admin@example.com', role: 'admin' }),
       setDoc(doc(db, 'users/mentorUid'), { uid: 'mentorUid', email: 'mentor@example.com', role: 'mentor' }),
       setDoc(doc(db, 'users/otherMentorUid'), { uid: 'otherMentorUid', email: 'other@example.com', role: 'mentor' }),
+      setDoc(doc(db, 'users/affiliateUid'), { uid: 'affiliateUid', email: 'affiliate@example.com', role: 'affiliate' }),
       setDoc(doc(db, 'users/studentA'), { uid: 'studentA', email: 'a@example.com', role: 'member', mentorId: 'mentorUid' }),
       setDoc(doc(db, 'users/studentB'), { uid: 'studentB', email: 'b@example.com', role: 'member', mentorId: 'otherMentorUid' }),
       setDoc(doc(db, 'subscriptions/studentA'), { uid: 'studentA', status: 'active' }),
       setDoc(doc(db, 'subscriptions/studentB'), { uid: 'studentB', status: 'active' }),
+      setDoc(doc(db, 'subscriptions/affiliateUid'), { uid: 'affiliateUid', status: 'active' }),
+      setDoc(doc(db, 'affiliateAccounts/affiliateAccountA'), { uid: 'affiliateUid', status: 'active' }),
+      setDoc(doc(db, 'affiliateDashboards/affiliateAccountA'), { affiliateId: 'affiliateAccountA', totalReferrals: 0 }),
+      setDoc(doc(db, 'foods/activeFood'), { status: 'active', name: 'Arroz' }),
     ])
 
     for (const name of collections) {
@@ -83,6 +89,19 @@ try {
   const adminDb = testEnv.authenticatedContext('adminUid').firestore()
   const mentorDb = testEnv.authenticatedContext('mentorUid').firestore()
   const studentDb = testEnv.authenticatedContext('studentA').firestore()
+  const affiliateDb = testEnv.authenticatedContext('affiliateUid').firestore()
+
+  await expectPass('Affiliate', 'doc affiliateDashboards/affiliateAccountA', 'affiliate pode ler apenas o dashboard do proprio affiliateAccount ativo', () =>
+    getDoc(doc(affiliateDb, 'affiliateDashboards/affiliateAccountA')),
+  )
+
+  await expectPass('Affiliate', 'affiliateAccounts where uid == affiliateUid', 'affiliate pode localizar apenas a propria conta por uid', () =>
+    getDocs(query(collection(affiliateDb, 'affiliateAccounts'), where('uid', '==', 'affiliateUid'))),
+  )
+
+  await expectDeny('Affiliate', 'doc foods/activeFood', 'affiliate nao herda acesso premium de aluno mesmo com subscription ativa', () =>
+    getDoc(doc(affiliateDb, 'foods/activeFood')),
+  )
 
   for (const name of collections) {
     await expectPass('Admin', `collectionGroup('${name}') global`, 'admin pode ler global', () =>

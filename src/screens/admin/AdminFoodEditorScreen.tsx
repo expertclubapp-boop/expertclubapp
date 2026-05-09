@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { PageShell } from '../../components/ui/Premium'
 import { Button } from '../../components/ui/Button'
+import { toastError } from '../../components/ui/Toast'
 import { AdminToolbar, Field, TextInput, StatusSelect } from './AdminShared'
 import { foodService } from '../../services/foodService'
 import { sanitizeTags } from '../../services/adminCrudService'
@@ -44,7 +45,7 @@ export function AdminFoodEditorScreen() {
       }
       navigate('/admin/foods')
     } catch (error) {
-      alert('Erro ao salvar alimento.')
+      toastError('Erro ao salvar alimento.')
       console.error(error)
     } finally {
       setIsLoading(false)

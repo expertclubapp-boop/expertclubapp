@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Button } from '../../components/ui/Button'
+import { toastSuccess } from '../../components/ui/Toast'
 import type { ReferralCode } from '../../types/domain'
 
 export function AffiliatePortalScreen() {
@@ -50,7 +51,7 @@ export function AffiliatePortalScreen() {
   const handleCopy = () => {
     const link = `https://expertclub.com.br/?ref=${code?.toUpperCase()}&hero=B&utm_source=affiliate&utm_campaign=stories`
     navigator.clipboard.writeText(link)
-    alert('Link copiado!')
+    toastSuccess('Link copiado.')
   }
 
   if (isLoading) {

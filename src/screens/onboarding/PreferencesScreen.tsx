@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { ArrowRight, MapPin, AlertCircle, Building2, Home, Trees } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
+import { toastError } from '../../components/ui/Toast'
 import { FormInput } from '../../components/ui/FormInput'
 import { Badge } from '../../components/ui/Badge'
 import { useAuth } from '../../contexts/AuthContext'
@@ -123,7 +124,7 @@ export function PreferencesScreen() {
       navigate('/app/today')
     } catch (error) {
       console.error("Error saving onboarding:", error)
-      alert("Falha ao salvar seu perfil. Verifique sua conexão.")
+      toastError("Falha ao salvar seu perfil. Verifique sua conexão.")
     } finally {
       setIsLoading(false)
     }

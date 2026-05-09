@@ -123,13 +123,6 @@ export function SubscriptionLockScreen() {
     navigate('/app/billing/plans')
   }
 
-  const handleSupport = () => {
-    window.open(
-      'https://wa.me/5511999999999?text=Preciso de ajuda com minha assinatura do Expert Club',
-      '_blank'
-    )
-  }
-
   if (isLoading) {
     return (
       <div className="min-h-screen bg-bg-primary flex items-center justify-center">
@@ -225,11 +218,15 @@ export function SubscriptionLockScreen() {
             </Button>
             <Button
               variant="ghost"
-              onClick={handleSupport}
+              disabled
+              aria-describedby="support-unconfigured"
               icon={<WhatsAppIcon />}
             >
               Falar com suporte
             </Button>
+            <p id="support-unconfigured" className="text-center text-xs text-text-muted">
+              Canal de suporte ainda não configurado.
+            </p>
             <Button
               variant="ghost"
               className="text-text-muted hover:text-white border-transparent"

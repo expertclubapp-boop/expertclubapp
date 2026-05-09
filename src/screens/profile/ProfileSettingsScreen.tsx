@@ -222,7 +222,7 @@ export function ProfileSettingsScreen() {
           )}
           <SettingsRow icon={<HelpCircle className="w-4 h-4" />} label="Central de Ajuda" />
           <SettingsDivider />
-          <SettingsRow icon={<Headphones className="w-4 h-4" />} label="Falar com Suporte" value="WhatsApp" />
+          <SettingsRow icon={<Headphones className="w-4 h-4" />} label="Falar com Suporte" value="Não configurado" />
           <SettingsDivider />
           <SettingsRow icon={<CreditCard className="w-4 h-4" />} label="Gerenciar Assinatura" value="Ativa" onClick={() => navigate('/app/billing')} />
           <SettingsDivider />

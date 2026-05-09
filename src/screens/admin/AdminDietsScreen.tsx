@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Plus, Search, Archive, Edit2, Copy } from 'lucide-react'
 import { PageShell } from '../../components/ui/Premium'
 import { Button } from '../../components/ui/Button'
+import { toastError } from '../../components/ui/Toast'
 import { AdminState, AdminToolbar, ConfirmButton } from './AdminShared'
 import { dietService } from '../../services/dietService'
 import type { Diet } from '../../types/domain'
@@ -41,7 +42,6 @@ export function AdminDietsScreen() {
   }), [items, search, goalFilter, statusFilter])
 
   async function duplicateDiet(item: Diet) {
-    if (!window.confirm('Duplicar esta dieta?')) return
     try {
       const clone = { ...item, title: `${item.title} (cópia)`, status: 'draft' as const, version: 1 }
       delete (clone as any).id
@@ -51,7 +51,7 @@ export function AdminDietsScreen() {
       const newId = await dietService.create(clone)
       navigate(`/admin/diets/${newId}`)
     } catch (err) {
-      alert('Erro ao duplicar.')
+      toastError('Erro ao duplicar dieta.')
     }
   }
 
@@ -60,7 +60,7 @@ export function AdminDietsScreen() {
       await dietService.update(id, { status: 'archived' })
       loadDiets()
     } catch (err) {
-      alert('Erro ao arquivar dieta.')
+      toastError('Erro ao arquivar dieta.')
     }
   }
 

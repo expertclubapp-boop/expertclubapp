@@ -49,13 +49,6 @@ export function PublicLandingScreen() {
   const scrollTo = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
-  const talkToConsultant = () => {
-    window.open(
-      'https://wa.me/5511999999999?text=Quero%20falar%20com%20um%20consultor%20sobre%20o%20Expert%20Club',
-      '_blank',
-      'noopener,noreferrer',
-    )
-  }
 
   return (
     <div className="ec-reference ec-landing-ref">
@@ -164,7 +157,7 @@ export function PublicLandingScreen() {
           </div>
           <div className="ec-landing-final-actions">
             <Button icon={<ArrowRight size={17} />} onClick={goToSignup}>Começar agora</Button>
-            <Button variant="ghost" icon={<MessageCircle size={17} />} onClick={talkToConsultant}>Falar com um consultor</Button>
+            <Button variant="ghost" icon={<MessageCircle size={17} />} disabled>Canal de suporte ainda não configurado.</Button>
             <div>
               <span><CheckCircle2 /> 7 dias grátis</span>
               <span><CheckCircle2 /> Cancele quando quiser</span>
