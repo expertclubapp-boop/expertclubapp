@@ -196,18 +196,27 @@ export function DietDayScreen() {
              <p className="text-sm text-text-muted mb-6">Substitua <span className="text-white font-bold">{substitutionTarget.food.foodName}</span> por uma opção equivalente em macronutrientes.</p>
              
              <div className="space-y-3 mb-8">
-                {['Opção A (Equivalente)', 'Opção B (Equivalente)'].map(opt => (
-                  <button 
-                    key={opt}
-                    onClick={() => {
-                      substituteFood(substitutionTarget.mealId, substitutionTarget.food.foodId, { foodName: opt } as any)
-                      setSubstitutionTarget(null)
-                    }}
-                    className="w-full p-4 rounded-2xl bg-white/5 border border-white/5 text-left font-bold text-white hover:border-ec-violet transition-all"
-                  >
-                    {opt}
-                  </button>
-                ))}
+                {(substitutionTarget.food.alternatives || []).length > 0 ? (
+                  substitutionTarget.food.alternatives.map((alternative: any) => (
+                    <button
+                      key={alternative.id || alternative.foodId || alternative.name}
+                      onClick={() => {
+                        substituteFood(substitutionTarget.mealId, substitutionTarget.food.foodId, alternative)
+                        setSubstitutionTarget(null)
+                      }}
+                      className="w-full p-4 rounded-2xl bg-white/5 border border-white/5 text-left font-bold text-white hover:border-ec-violet transition-all"
+                    >
+                      {alternative.name || alternative.foodName}
+                    </button>
+                  ))
+                ) : (
+                  <div className="rounded-2xl border border-white/5 bg-white/[0.03] p-4">
+                    <p className="text-sm font-bold text-white">Nenhuma substituição configurada</p>
+                    <p className="mt-1 text-xs leading-relaxed text-text-muted">
+                      Este alimento ainda não tem opções equivalentes aprovadas no plano.
+                    </p>
+                  </div>
+                )}
              </div>
              
              <V2Button variant="secondary" className="w-full" onClick={() => setSubstitutionTarget(null)}>CANCELAR</V2Button>

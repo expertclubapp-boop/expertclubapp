@@ -178,10 +178,10 @@ export function BillingDashboardScreen() {
                 </div>
                 <div>
                   <h4 className="text-white font-bold">Dúvidas sobre sua cobrança?</h4>
-                  <p className="text-text-muted text-xs">Fale agora com nosso suporte financeiro via WhatsApp.</p>
+                  <p className="text-text-muted text-xs">Canal de suporte financeiro ainda não configurado.</p>
                 </div>
               </div>
-              <Button variant="ghost" className="w-full md:w-auto px-10 border-accent-sky/30 text-accent-sky hover:bg-accent-sky/10">
+              <Button variant="ghost" disabled className="w-full md:w-auto px-10 border-accent-sky/30 text-accent-sky hover:bg-accent-sky/10">
                  Falar com Suporte
               </Button>
             </section>

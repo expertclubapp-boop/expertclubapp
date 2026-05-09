@@ -18,6 +18,7 @@ import { communityFeedService } from '../../services/communityFeedService'
 import { useAuth } from '../../contexts/AuthContext'
 import { Button } from '../../components/ui/Button'
 import { PageShell } from '../../components/ui/Premium'
+import { toastError, toastInfo, toastSuccess } from '../../components/ui/Toast'
 import type { CommunityPost, CommunityComment } from '../../types/domain'
 
 const POST_COOLDOWN_MS = 30_000
@@ -35,7 +36,7 @@ export function CommunityScreen() {
     
     const now = Date.now()
     if (now - lastPostAtRef.current < POST_COOLDOWN_MS) {
-      alert('Aguarde alguns segundos antes de publicar novamente.')
+      toastInfo('Aguarde alguns segundos antes de publicar novamente.')
       return
     }
     
@@ -68,9 +69,8 @@ export function CommunityScreen() {
   }
 
   const handleReport = async (postId: string) => {
-    if (!window.confirm('Deseja reportar esta publicação? Nossa equipe irá avaliar.')) return
     await communityFeedService.reportPost(postId)
-    alert('Publicação reportada. Obrigado pela colaboração.')
+    toastSuccess('Publicação reportada. Obrigado pela colaboração.')
   }
 
   if (isLoading) {
@@ -209,15 +209,15 @@ export function CommunityScreen() {
             <MessageCircle className="w-8 h-8 text-ec-violet mx-auto mb-3" />
             <h3 className="font-display text-lg text-white uppercase italic font-bold mb-2">WhatsApp VIP</h3>
             <p className="text-xs text-text-muted mb-5">Deseja ser notificado mais rápido? Entre no grupo de avisos oficiais.</p>
-            <Button variant="primary" className="w-full text-xs font-black uppercase italic tracking-widest shadow-[0_4px_14px_rgba(91,75,255,0.3)]">Entrar no Grupo</Button>
+            <Button variant="primary" disabled className="w-full text-xs font-black uppercase italic tracking-widest shadow-[0_4px_14px_rgba(91,75,255,0.3)]">Canal ainda não configurado</Button>
           </div>
           
           <section className="text-center pt-4">
             <p className="text-[10px] text-text-muted uppercase font-bold tracking-widest mb-3">Problemas?</p>
-            <a href="#" className="inline-flex items-center gap-2 text-xs font-bold text-text-primary hover:text-ec-violet transition-colors">
+            <button type="button" disabled className="inline-flex cursor-not-allowed items-center gap-2 text-xs font-bold text-text-muted" title="Canal de suporte ainda não configurado.">
               <LifeBuoy className="w-4 h-4" />
               Falar com o Suporte
-            </a>
+            </button>
           </section>
         </div>
       </div>
@@ -286,16 +286,20 @@ function PostCard({ post, onLike, onReport, currentUserId, currentUserName, relo
   }
 
   const handleDeleteComment = async (commentId: string) => {
-    if (!window.confirm('Excluir seu comentário?')) return
     await communityFeedService.deleteOwnComment(post.id, commentId)
+    toastSuccess('Comentário excluído.')
     loadComments()
     reload()
   }
 
   const handleReportComment = async (commentId: string) => {
-    if (!window.confirm('Reportar este comentário?')) return
-    await communityFeedService.reportComment(post.id, commentId)
-    alert('Comentário reportado.')
+    try {
+      await communityFeedService.reportComment(post.id, commentId)
+      toastSuccess('Comentário reportado.')
+    } catch (e) {
+      console.error(e)
+      toastError('Erro ao reportar comentário.')
+    }
   }
 
   return (

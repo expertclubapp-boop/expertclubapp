@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Plus, Search, Archive, Edit2, Copy } from 'lucide-react'
 import { PageShell } from '../../components/ui/Premium'
 import { Button } from '../../components/ui/Button'
+import { toastError } from '../../components/ui/Toast'
 import { AdminState, AdminToolbar, ConfirmButton } from './AdminShared'
 import { exerciseService } from '../../services/exerciseService'
 import type { Exercise } from '../../types/domain'
@@ -41,7 +42,6 @@ export function AdminExercisesScreen() {
   }), [items, search, modalityFilter, statusFilter])
 
   async function duplicateExercise(item: Exercise) {
-    if (!window.confirm('Duplicar este exercício?')) return
     try {
       const clone = { ...item, name: `${item.name} (cópia)`, status: 'inactive' as const }
       delete (clone as any).id
@@ -50,7 +50,7 @@ export function AdminExercisesScreen() {
       const newId = await exerciseService.createExercise(clone)
       navigate(`/admin/exercises/${newId}`)
     } catch (err) {
-      alert('Erro ao duplicar.')
+      toastError('Erro ao duplicar exercício.')
     }
   }
 
@@ -59,7 +59,7 @@ export function AdminExercisesScreen() {
       await exerciseService.updateExercise(id, { status: current === 'active' ? 'inactive' : 'active' })
       loadExercises()
     } catch (err) {
-      alert('Erro ao alterar status.')
+      toastError('Erro ao alterar status.')
     }
   }
 

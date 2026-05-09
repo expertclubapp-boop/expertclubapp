@@ -148,6 +148,5 @@ export const notificationService = {
     }
     
     await Promise.all(batches.map(batch => batch.commit()));
-    console.log(`Successfully broadcasted notification to ${usersSnap.docs.length} users.`);
   }
 }

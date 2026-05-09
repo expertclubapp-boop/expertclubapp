@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Plus, Search, Archive, Edit2, Copy } from 'lucide-react'
 import { PageShell } from '../../components/ui/Premium'
 import { Button } from '../../components/ui/Button'
+import { toastError } from '../../components/ui/Toast'
 import { AdminState, AdminToolbar, ConfirmButton } from './AdminShared'
 import { workoutService } from '../../services/workoutService'
 import type { Workout } from '../../types/domain'
@@ -43,7 +44,6 @@ export function AdminWorkoutsScreen() {
   }), [items, search, goalFilter, modalityFilter, statusFilter])
 
   async function duplicateWorkout(item: Workout) {
-    if (!window.confirm('Duplicar este treino?')) return
     try {
       const clone = { ...item, title: `${item.title} (cópia)`, status: 'draft' as const, version: 1 }
       delete (clone as any).id
@@ -53,7 +53,7 @@ export function AdminWorkoutsScreen() {
       const newId = await workoutService.create(clone)
       navigate(`/admin/workouts/${newId}`)
     } catch (err) {
-      alert('Erro ao duplicar.')
+      toastError('Erro ao duplicar treino.')
     }
   }
 
@@ -62,7 +62,7 @@ export function AdminWorkoutsScreen() {
       await workoutService.update(id, { status: 'archived' })
       loadWorkouts()
     } catch (err) {
-      alert('Erro ao arquivar treino.')
+      toastError('Erro ao arquivar treino.')
     }
   }
 

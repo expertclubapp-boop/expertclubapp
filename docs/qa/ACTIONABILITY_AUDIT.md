@@ -52,6 +52,14 @@ Toda acao deve ser funcional, disabled com motivo ou removida. Acoes ativas sem 
 | `/app/content` | Download de material | Botao ativo sem fluxo real. | Disabled com motivo. | Corrigido |
 | `/app/content` | Cards mock | `cursor-pointer` sugeria clique. | Cursor removido nos mocks. | Corrigido |
 | `/app/billing/plans` | Checkout com erro | `alert()` nativo. | Mensagem inline no topo. | Corrigido |
+| `/app/billing/lock` | Suporte via WhatsApp | Placeholder `5511999999999`. | CTA disabled com motivo: canal de suporte ainda nao configurado. | Corrigido |
+| `/` landing | Consultor via WhatsApp | Placeholder `5511999999999`. | CTA disabled com motivo: canal de suporte ainda nao configurado. | Corrigido |
+| `/app/community` | Suporte com `href="#"` | Link falso sem destino real. | Button disabled com motivo; nenhum `href="#"` restante. | Corrigido |
+| `/app/community` | Alert/confirm nativos | `alert()`/`window.confirm()` em postar/reportar/comentarios. | Toasts do app e acoes diretas sem dialog nativo. | Corrigido |
+| `/affiliate/dashboard` e `/affiliate/:code` | Copiar link | `alert()` nativo. | Toast de sucesso. | Corrigido |
+| Catalogo admin legado | Alerts/confirms em dietas, treinos, alimentos e exercicios | `alert()`/`window.confirm()` nativos restantes. | Toasts do app; duplicar executa acao direta; arquivar segue `ConfirmButton` inline. | Corrigido |
+| `/onboarding/preferences` | Erro ao salvar | `alert()` nativo. | Toast de erro. | Corrigido |
+| `/app/diets/today` | Substituicoes de alimento | Mock hardcoded `Opção A/B`. | Empty state honesto quando nao ha alternativas aprovadas; usa alternativas reais quando existirem. | Corrigido |
 
 ## Acoes funcionais conectadas
 
@@ -97,22 +105,13 @@ Toda acao deve ser funcional, disabled com motivo ou removida. Acoes ativas sem 
 
 | Arquivo | Ocorrencia | Rota impactada | Decisao |
 |---|---|---|---|
-| `src/screens/admin/AdminDietEditorScreen.tsx` | `alert()` / `confirm()` | Rotas antigas de dieta fora do fluxo validado principal | Pendente; substituir por estado inline em passada dedicada de catalogo legado. |
-| `src/screens/admin/AdminDietsScreen.tsx` | `alert()` / `confirm()` | Rotas antigas de dieta fora do fluxo validado principal | Pendente; substituir por estado inline em passada dedicada de catalogo legado. |
-| `src/screens/admin/AdminWorkoutEditorScreen.tsx` | `alert()` / `confirm()` | Rotas antigas de treino fora do fluxo validado principal | Pendente; substituir por estado inline em passada dedicada de catalogo legado. |
-| `src/screens/admin/AdminWorkoutsScreen.tsx` | `alert()` / `confirm()` | Rotas antigas de treino fora do fluxo validado principal | Pendente; substituir por estado inline em passada dedicada de catalogo legado. |
-| `src/screens/admin/AdminExerciseEditorScreen.tsx` / `AdminExercisesScreen.tsx` | `alert()` / `confirm()` | Catalogo antigo de exercicios | Pendente; fora da matriz de screenshots desta passada. |
-| `src/screens/admin/AdminFoodEditorScreen.tsx` / `AdminFoodsScreen.tsx` | `alert()` / `confirm()` | Catalogo antigo de alimentos | Pendente; fora da matriz de screenshots desta passada. |
-| `src/screens/affiliate/*` | `alert()` | Portal/area de afiliado | Pendente; fora da matriz admin/mentor/student principal. |
-| `src/screens/community/CommunityScreen.tsx` | `alert()` / `confirm()` | Comunidade do aluno | Pendente; fora das rotas solicitadas para screenshot nesta passada. |
-| `src/screens/onboarding/PreferencesScreen.tsx` | `alert()` | Onboarding/preferences | Pendente; fora da matriz desta passada. |
-| `src/utils/referral.ts` | `console.log` | Util dev/marketing | Revisar depois; nao e implementacao de botao em rota principal. |
+| Scripts operacionais em `scripts/` e scripts avulsos de `functions/` | `console.log` | CLI local, seeds, smoke e backfills | Mantido fora do bundle de producao; nao e rota real de produto. |
 
 ## Veredito tecnico desta auditoria
 
-Parcial: actionability ainda pendente.
+Critical cleanup validado para QA interno controlado.
 
-Motivo: as rotas principais admin/mentor/student da matriz foram corrigidas e documentadas, e o shell mobile do aluno foi recuperado com sessao real de treino validada. Ainda existem ocorrencias legadas em arquivos roteados fora do recorte operacional principal. Nao declarar UI/UX hardening global completo enquanto essas ocorrencias existirem.
+Motivo: os itens pequenos com risco real desta passada foram tratados sem ampliar escopo: placeholder de WhatsApp removido/desabilitado, `href="#"` removido, alerts/confirms nativos restantes das rotas ativas substituidos, mock `Opção A/B` removido da experiencia real e `console.log` retirado do app/functions de producao.
 
 ## Atualizacao - Student V2 visual parity
 

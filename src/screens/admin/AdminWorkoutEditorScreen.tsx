@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { Plus, Trash2, Search, Copy, ArrowUp, ArrowDown, Dumbbell, ExternalLink } from 'lucide-react'
 import { PageShell } from '../../components/ui/Premium'
 import { Button } from '../../components/ui/Button'
+import { toastError } from '../../components/ui/Toast'
 import { AdminToolbar, Field, TextInput, TextArea } from './AdminShared'
 import { workoutService } from '../../services/workoutService'
 import { exerciseService } from '../../services/exerciseService'
@@ -60,9 +61,9 @@ export function AdminWorkoutEditorScreen() {
   }, [workout.days])
 
   async function save(statusToSave: Workout['status'] = workout.status) {
-    if (!workout.title || !workout.goal) return alert('Título e Objetivo são obrigatórios.')
-    if (statusToSave === 'published' && workout.days.length === 0) return alert('Não é possível publicar sem dias de treinamento.')
-    if (statusToSave === 'published' && !workout.days.some(d => d.exercises.length > 0)) return alert('Não é possível publicar sem exercícios cadastrados.')
+    if (!workout.title || !workout.goal) return toastError('Título e objetivo são obrigatórios.')
+    if (statusToSave === 'published' && workout.days.length === 0) return toastError('Não é possível publicar sem dias de treinamento.')
+    if (statusToSave === 'published' && !workout.days.some(d => d.exercises.length > 0)) return toastError('Não é possível publicar sem exercícios cadastrados.')
 
     try {
       setIsLoading(true)
@@ -78,7 +79,7 @@ export function AdminWorkoutEditorScreen() {
       }
       navigate('/admin/workouts')
     } catch (error) {
-      alert('Erro ao salvar treino.')
+      toastError('Erro ao salvar treino.')
       console.error(error)
     } finally {
       setIsLoading(false)
@@ -93,7 +94,7 @@ export function AdminWorkoutEditorScreen() {
       const newId = await workoutService.create(copy)
       navigate(`/admin/workouts/${newId}`)
     } catch (err) {
-      alert('Erro ao duplicar treino')
+      toastError('Erro ao duplicar treino.')
     } finally {
       setIsLoading(false)
     }

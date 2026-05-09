@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { PageShell } from '../../components/ui/Premium'
 import { Button } from '../../components/ui/Button'
+import { toastError } from '../../components/ui/Toast'
 import { AdminToolbar, Field, TextInput, StatusSelect, TextArea } from './AdminShared'
 import { exerciseService } from '../../services/exerciseService'
 import { sanitizeTags } from '../../services/adminCrudService'
@@ -45,7 +46,7 @@ export function AdminExerciseEditorScreen() {
       }
       navigate('/admin/exercises')
     } catch (error) {
-      alert('Erro ao salvar exercício.')
+      toastError('Erro ao salvar exercício.')
       console.error(error)
     } finally {
       setIsLoading(false)

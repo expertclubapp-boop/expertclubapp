@@ -50,7 +50,7 @@ service cloud.firestore {
     }
 
     function canUseStudentApp() {
-      return (isMember() || isAffiliate()) && hasActiveSubscription();
+      return isMember() && hasActiveSubscription();
     }
 
     function ownsWrittenDoc(uid) {
@@ -172,7 +172,9 @@ service cloud.firestore {
 
     match /affiliateAccounts/{affiliateId} {
       allow get: if isAdmin() || isMentor() || (isAffiliate() && resource.data.uid == request.auth.uid);
-      allow list: if isAdmin() || isMentor();
+      allow list: if isAdmin()
+        || isMentor()
+        || (isAffiliate() && resource.data.uid == request.auth.uid);
       allow write: if isAdmin();
     }
 
