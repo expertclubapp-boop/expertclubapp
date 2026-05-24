@@ -51,7 +51,7 @@ export function AffiliatePortalScreen() {
   const handleCopy = () => {
     const link = `https://expertclub.com.br/?ref=${code?.toUpperCase()}&hero=B&utm_source=affiliate&utm_campaign=stories`
     navigator.clipboard.writeText(link)
-    toastSuccess('Link copiado com sucesso.')
+    toastSuccess('Link copiado.')
   }
 
   if (isLoading) {
@@ -171,20 +171,8 @@ export function AffiliatePortalScreen() {
   )
 }
 
-function PortalStat({
-  label,
-  value,
-  sub,
-  icon: Icon,
-  color,
-}: {
-  label: string
-  value: string
-  sub?: string
-  icon: React.ComponentType<{ className?: string }>
-  color: 'purple' | 'lime' | 'sky'
-}) {
-  const colors: Record<'purple' | 'lime' | 'sky', string> = {
+function PortalStat({ label, value, sub, icon: Icon, color }: { label: string, value: string, sub?: string, icon: any, color: string }) {
+  const colors: any = {
     purple: 'text-accent-purple',
     lime: 'text-accent-lime',
     sky: 'text-accent-sky',

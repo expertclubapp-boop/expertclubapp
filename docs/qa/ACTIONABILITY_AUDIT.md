@@ -64,6 +64,13 @@ Toda acao deve ser funcional, disabled com motivo ou removida. Acoes ativas sem 
 | `/admin/diets/*` | Ações de catálogo e editor | `alert()` / `confirm()` nativos. | `ConfirmButton` para duplicação/arquivamento e `toastError` para erros. | Corrigido |
 | `/admin/exercises/*` | Ações de catálogo e editor | `alert()` / `confirm()` nativos. | `ConfirmButton` para duplicação/arquivamento e `toastError` para erros. | Corrigido |
 | `/admin/foods/*` | Ações de catálogo e editor | `alert()` / `confirm()` nativos. | `ConfirmButton` para duplicação/arquivamento e `toastError` para erros. | Corrigido |
+| `/app/billing/lock` | Suporte via WhatsApp | Placeholder `5511999999999`. | CTA disabled com motivo: canal de suporte ainda nao configurado. | Corrigido |
+| `/` landing | Consultor via WhatsApp | Placeholder `5511999999999`. | CTA disabled com motivo: canal de suporte ainda nao configurado. | Corrigido |
+| `/app/community` | Suporte com `href="#"` | Link falso sem destino real. | Button disabled com motivo; nenhum `href="#"` restante. | Corrigido |
+| `/app/community` | Alert/confirm nativos | `alert()`/`window.confirm()` em postar/reportar/comentarios. | Toasts do app e acoes diretas sem dialog nativo. | Corrigido |
+| `/affiliate/dashboard` e `/affiliate/:code` | Copiar link | `alert()` nativo. | Toast de sucesso. | Corrigido |
+| `/onboarding/preferences` | Erro ao salvar | `alert()` nativo. | Toast de erro. | Corrigido |
+| `/app/diets/today` | Substituicoes de alimento | Mock hardcoded `Opção A/B`. | Empty state honesto quando nao ha alternativas aprovadas; usa alternativas reais quando existirem. | Corrigido |
 
 ## Acoes funcionais conectadas
 
@@ -109,20 +116,13 @@ Toda acao deve ser funcional, disabled com motivo ou removida. Acoes ativas sem 
 
 | Arquivo | Ocorrencia | Rota impactada | Decisao |
 |---|---|---|---|
-| `src/screens/admin/AdminDietEditorScreen.tsx` | `alert()` / `confirm()` | Rotas de dieta | Corrigido com toasts e ConfirmButton |
-| `src/screens/admin/AdminDietsScreen.tsx` | `alert()` / `confirm()` | Rotas de dieta | Corrigido com toasts e ConfirmButton |
-| `src/screens/admin/AdminWorkoutEditorScreen.tsx` | `alert()` / `confirm()` | Rotas de treino | Corrigido com toasts e ConfirmButton |
-| `src/screens/admin/AdminWorkoutsScreen.tsx` | `alert()` / `confirm()` | Rotas de treino | Corrigido com toasts e ConfirmButton |
-| `src/screens/admin/AdminExerciseEditorScreen.tsx` / `AdminExercisesScreen.tsx` | `alert()` / `confirm()` | Catalogo de exercicios | Corrigido com toasts e ConfirmButton |
-| `src/screens/admin/AdminFoodEditorScreen.tsx` / `AdminFoodsScreen.tsx` | `alert()` / `confirm()` | Catalogo de alimentos | Corrigido com toasts e ConfirmButton |
-| `src/screens/affiliate/*` | `alert()` | Portal/area de afiliado | Pendente (Legacy alert em link copy) |
-| `src/screens/onboarding/PreferencesScreen.tsx` | `alert()` | Onboarding/preferences | Pendente (Legacy alert em save error) |
+| Scripts operacionais em `scripts/` e scripts avulsos de `functions/` | `console.log` | CLI local, seeds, smoke e backfills | Mantido fora do bundle de producao; nao e rota real de produto. |
 
 ## Veredito tecnico desta auditoria
 
-**Admin catalog native UX cleanup validado para QA interno controlado.**
+Critical cleanup validado para QA interno controlado.
 
-Actionability das rotas principais Admin/Mentor/Aluno **hardened** para QA interno controlado.
+Motivo: os itens pequenos com risco real desta passada foram tratados sem ampliar escopo: placeholder de WhatsApp removido/desabilitado, `href="#"` removido, alerts/confirms nativos restantes das rotas ativas substituidos, mock `Opção A/B` removido da experiencia real e `console.log` retirado do app/functions de producao.
 
 ## Atualizacao - Admin Catalog Native UX Cleanup (2026-05-10)
 

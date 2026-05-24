@@ -1,9 +1,9 @@
 import { useState, useEffect, useMemo } from 'react'
-import { toastError } from '../../components/ui/Toast'
 import { useNavigate } from 'react-router-dom'
 import { Plus, Search, Archive, Edit2, Copy } from 'lucide-react'
 import { PageShell } from '../../components/ui/Premium'
 import { Button } from '../../components/ui/Button'
+import { toastError } from '../../components/ui/Toast'
 import { AdminState, AdminToolbar, ConfirmButton } from './AdminShared'
 import { workoutService } from '../../services/workoutService'
 import type { Workout } from '../../types/domain'
@@ -53,7 +53,7 @@ export function AdminWorkoutsScreen() {
       const newId = await workoutService.create(clone)
       navigate(`/admin/workouts/${newId}`)
     } catch (err) {
-      toastError('Erro ao duplicar.')
+      toastError('Erro ao duplicar treino.')
     }
   }
 
@@ -154,9 +154,7 @@ export function AdminWorkoutsScreen() {
                     </td>
                     <td className="p-4 flex justify-end gap-2">
                       <button className="rounded-lg border border-white/10 bg-white/5 p-2 text-white hover:bg-white/10" onClick={() => navigate(`/admin/workouts/${item.id}`)}><Edit2 className="h-4 w-4" /></button>
-                      <ConfirmButton message="Duplicar treino?" onConfirm={() => duplicateWorkout(item)}>
-                        <Copy className="h-4 w-4" />
-                      </ConfirmButton>
+                      <button className="rounded-lg border border-white/10 bg-white/5 p-2 text-white hover:bg-white/10" onClick={() => duplicateWorkout(item)}><Copy className="h-4 w-4" /></button>
                       {item.status !== 'archived' && (
                         <ConfirmButton variant="destructive" message="Arquivar treino?" onConfirm={async () => archiveWorkout(item.id)}>
                           <Archive className="h-4 w-4" />

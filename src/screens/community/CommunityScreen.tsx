@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import { 
   MessageCircle, 
   Gavel, 
@@ -10,18 +10,15 @@ import {
   Flag,
   Send,
   Trash2,
-  Loader2,
-  ExternalLink,
-  X
+  Loader2
 } from 'lucide-react'
-import { toastSuccess, toastError } from '../../components/ui/Toast'
-import { communityService, type CommunitySettings } from '../../services/communityService'
 import { NotificationsDrawer } from '../../components/ui/NotificationsDrawer'
 import { useCommunityFeed } from '../../hooks/useCommunityFeed'
 import { communityFeedService } from '../../services/communityFeedService'
 import { useAuth } from '../../contexts/AuthContext'
 import { Button } from '../../components/ui/Button'
 import { PageShell } from '../../components/ui/Premium'
+import { toastError, toastInfo, toastSuccess } from '../../components/ui/Toast'
 import type { CommunityPost, CommunityComment } from '../../types/domain'
 
 const POST_COOLDOWN_MS = 30_000
@@ -31,13 +28,7 @@ export function CommunityScreen() {
   const { firebaseUser } = useAuth()
   const [newPostContent, setNewPostContent] = useState('')
   const [isPosting, setIsPosting] = useState(false)
-  const [settings, setSettings] = useState<CommunitySettings | null>(null)
-  const [postToReport, setPostToReport] = useState<string | null>(null)
   const lastPostAtRef = useRef(0)
-
-  useEffect(() => {
-    communityService.getSettings().then(setSettings)
-  }, [])
 
   const handlePost = async () => {
     const trimmedContent = newPostContent.trim()
@@ -45,7 +36,7 @@ export function CommunityScreen() {
     
     const now = Date.now()
     if (now - lastPostAtRef.current < POST_COOLDOWN_MS) {
-      toastError('Aguarde alguns segundos antes de publicar novamente.')
+      toastInfo('Aguarde alguns segundos antes de publicar novamente.')
       return
     }
     
@@ -78,13 +69,8 @@ export function CommunityScreen() {
   }
 
   const handleReport = async (postId: string) => {
-    try {
-      await communityFeedService.reportPost(postId)
-      toastSuccess('Publicação reportada. Obrigado pela colaboração.')
-      setPostToReport(null)
-    } catch (e) {
-      toastError('Erro ao reportar publicação.')
-    }
+    await communityFeedService.reportPost(postId)
+    toastSuccess('Publicação reportada. Obrigado pela colaboração.')
   }
 
   if (isLoading) {
@@ -136,11 +122,7 @@ export function CommunityScreen() {
                    <span className="text-[10px] text-text-muted/50 font-bold">{newPostContent.length}/1000</span>
                 </div>
                 <div className="flex items-center justify-between border-t border-white/5 pt-4 mt-2">
-                  <button 
-                    disabled 
-                    title="Upload de fotos ainda não configurado para esta comunidade"
-                    className="flex items-center gap-2 text-text-muted/40 transition-colors text-xs font-bold uppercase tracking-widest cursor-not-allowed"
-                  >
+                  <button className="flex items-center gap-2 text-text-muted hover:text-ec-violet transition-colors text-xs font-bold uppercase tracking-widest">
                     <ImageIcon className="w-4 h-4" />
                     <span>Anexar Foto</span>
                   </button>
@@ -166,18 +148,7 @@ export function CommunityScreen() {
                 <span className="text-[10px] font-black uppercase tracking-[0.2em]">Fixados pelo Expert</span>
               </div>
               {pinnedPosts.map(post => (
-                <PostCard 
-                  key={post.id} 
-                  post={post} 
-                  onLike={() => handleLike(post.id)} 
-                  onReport={() => setPostToReport(post.id)}
-                  onConfirmReport={() => handleReport(post.id)}
-                  confirmingReport={postToReport === post.id}
-                  onCancelReport={() => setPostToReport(null)}
-                  currentUserId={firebaseUser?.uid} 
-                  currentUserName={firebaseUser?.displayName || 'Atleta'} 
-                  reload={reload} 
-                />
+                <PostCard key={post.id} post={post} onLike={() => handleLike(post.id)} onReport={() => handleReport(post.id)} currentUserId={firebaseUser?.uid} currentUserName={firebaseUser?.displayName || 'Atleta'} reload={reload} />
               ))}
             </div>
           )}
@@ -191,18 +162,7 @@ export function CommunityScreen() {
               <div className="text-center py-10 text-text-muted text-sm italic">Nenhuma publicação encontrada. Seja o primeiro a postar!</div>
             ) : (
               regularPosts.map(post => (
-                <PostCard 
-                  key={post.id} 
-                  post={post} 
-                  onLike={() => handleLike(post.id)} 
-                  onReport={() => setPostToReport(post.id)}
-                  onConfirmReport={() => handleReport(post.id)}
-                  confirmingReport={postToReport === post.id}
-                  onCancelReport={() => setPostToReport(null)}
-                  currentUserId={firebaseUser?.uid} 
-                  currentUserName={firebaseUser?.displayName || 'Atleta'} 
-                  reload={reload} 
-                />
+                <PostCard key={post.id} post={post} onLike={() => handleLike(post.id)} onReport={() => handleReport(post.id)} currentUserId={firebaseUser?.uid} currentUserName={firebaseUser?.displayName || 'Atleta'} reload={reload} />
               ))
             )}
 
@@ -249,49 +209,15 @@ export function CommunityScreen() {
             <MessageCircle className="w-8 h-8 text-ec-violet mx-auto mb-3" />
             <h3 className="font-display text-lg text-white uppercase italic font-bold mb-2">WhatsApp VIP</h3>
             <p className="text-xs text-text-muted mb-5">Deseja ser notificado mais rápido? Entre no grupo de avisos oficiais.</p>
-            {settings?.whatsappGroupUrl ? (
-              <Button 
-                variant="primary" 
-                className="w-full text-xs font-black uppercase italic tracking-widest shadow-[0_4px_14px_rgba(91,75,255,0.3)]"
-                onClick={() => window.open(settings.whatsappGroupUrl, '_blank')}
-              >
-                Entrar no Grupo <ExternalLink className="w-3.5 h-3.5 ml-2" />
-              </Button>
-            ) : (
-              <div title="Grupo VIP ainda não configurado para este clube">
-                <Button 
-                  disabled 
-                  variant="primary" 
-                  className="w-full text-xs font-black uppercase italic tracking-widest opacity-50 cursor-not-allowed"
-                >
-                  Grupo não configurado
-                </Button>
-              </div>
-            )}
+            <Button variant="primary" disabled className="w-full text-xs font-black uppercase italic tracking-widest shadow-[0_4px_14px_rgba(91,75,255,0.3)]">Canal ainda não configurado</Button>
           </div>
           
           <section className="text-center pt-4">
             <p className="text-[10px] text-text-muted uppercase font-bold tracking-widest mb-3">Problemas?</p>
-            {settings?.supportUrl ? (
-              <a 
-                href={settings.supportUrl} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-xs font-bold text-text-primary hover:text-ec-violet transition-colors"
-              >
-                <LifeBuoy className="w-4 h-4" />
-                Falar com o Suporte
-              </a>
-            ) : (
-              <button 
-                disabled 
-                className="inline-flex items-center gap-2 text-xs font-bold text-text-muted/50 cursor-not-allowed"
-                title="Canal de suporte ainda não configurado"
-              >
-                <LifeBuoy className="w-4 h-4" />
-                Suporte indisponível
-              </button>
-            )}
+            <button type="button" disabled className="inline-flex cursor-not-allowed items-center gap-2 text-xs font-bold text-text-muted" title="Canal de suporte ainda não configurado.">
+              <LifeBuoy className="w-4 h-4" />
+              Falar com o Suporte
+            </button>
           </section>
         </div>
       </div>
@@ -307,32 +233,17 @@ interface PostCardProps {
   post: CommunityPost
   onLike: () => void
   onReport: () => void
-  onConfirmReport?: () => void
-  confirmingReport?: boolean
-  onCancelReport?: () => void
   currentUserId?: string
   currentUserName: string
   reload: () => void
 }
 
-function PostCard({ 
-  post, 
-  onLike, 
-  onReport, 
-  onConfirmReport,
-  confirmingReport,
-  onCancelReport,
-  currentUserId, 
-  currentUserName, 
-  reload 
-}: PostCardProps) {
+function PostCard({ post, onLike, onReport, currentUserId, currentUserName, reload }: PostCardProps) {
   const [showComments, setShowComments] = useState(false)
   const [comments, setComments] = useState<CommunityComment[]>([])
   const [newComment, setNewComment] = useState('')
   const [isLoadingComments, setIsLoadingComments] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [commentToDelete, setCommentToDelete] = useState<string | null>(null)
-  const [commentToReport, setCommentToReport] = useState<string | null>(null)
 
   const isLiked = post.likedBy?.includes(currentUserId || '')
   const timeAgo = Math.floor((new Date().getTime() - new Date(post.createdAt).getTime()) / 60000)
@@ -375,23 +286,18 @@ function PostCard({
   }
 
   const handleDeleteComment = async (commentId: string) => {
-    try {
-      await communityFeedService.deleteOwnComment(post.id, commentId)
-      toastSuccess('Comentário excluído.')
-      setCommentToDelete(null)
-      loadComments()
-      reload()
-    } catch (e) {
-      toastError('Erro ao excluir comentário.')
-    }
+    await communityFeedService.deleteOwnComment(post.id, commentId)
+    toastSuccess('Comentário excluído.')
+    loadComments()
+    reload()
   }
 
   const handleReportComment = async (commentId: string) => {
     try {
       await communityFeedService.reportComment(post.id, commentId)
       toastSuccess('Comentário reportado.')
-      setCommentToReport(null)
     } catch (e) {
+      console.error(e)
       toastError('Erro ao reportar comentário.')
     }
   }
@@ -414,35 +320,9 @@ function PostCard({
             </div>
           </div>
           {/* Report button */}
-          <div className="relative">
-            <button 
-              onClick={onReport} 
-              className={`p-2 rounded-lg transition-all ${confirmingReport ? 'text-accent-red bg-accent-red/10' : 'text-text-muted/30 hover:text-accent-red hover:bg-accent-red/5'}`} 
-              title="Reportar"
-            >
-              <Flag className="w-4 h-4" />
-            </button>
-            
-            {confirmingReport && (
-              <div className="absolute top-full right-0 mt-2 z-20 w-48 ec-glass border border-accent-red/20 rounded-2xl p-4 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
-                <p className="text-[10px] font-bold text-white uppercase mb-3">Reportar publicação?</p>
-                <div className="flex gap-2">
-                  <button 
-                    onClick={onConfirmReport} 
-                    className="flex-1 bg-accent-red text-white text-[9px] font-black uppercase py-2 rounded-lg"
-                  >
-                    Confirmar
-                  </button>
-                  <button 
-                    onClick={onCancelReport} 
-                    className="flex-1 bg-white/5 text-text-muted text-[9px] font-black uppercase py-2 rounded-lg"
-                  >
-                    Não
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
+          <button onClick={onReport} className="p-2 rounded-lg text-text-muted/30 hover:text-accent-red hover:bg-accent-red/5 transition-all" title="Reportar">
+            <Flag className="w-4 h-4" />
+          </button>
         </div>
         
         <p className="text-sm text-text-secondary font-body-md leading-relaxed whitespace-pre-wrap mb-4">{post.content}</p>
@@ -492,34 +372,16 @@ function PostCard({
                         </div>
                         <p className="text-xs text-text-muted leading-relaxed whitespace-pre-wrap">{c.content}</p>
                       </div>
-                      <div className="flex items-center gap-1 opacity-0 group-hover/comment:opacity-100 transition-opacity shrink-0 relative">
+                      <div className="flex items-center gap-1 opacity-0 group-hover/comment:opacity-100 transition-opacity shrink-0">
                         {c.authorId === currentUserId && (
-                          <div className="flex items-center gap-1">
-                            {commentToDelete === c.id ? (
-                              <div className="flex items-center gap-1 bg-accent-red/10 rounded-lg p-1 animate-in slide-in-from-right-2">
-                                <button onClick={() => handleDeleteComment(c.id)} className="text-[8px] font-black uppercase text-accent-red px-1">Confirmar</button>
-                                <button onClick={() => setCommentToDelete(null)} className="text-text-muted/50"><X className="w-3 h-3" /></button>
-                              </div>
-                            ) : (
-                              <button onClick={() => setCommentToDelete(c.id)} className="p-1 rounded text-text-muted/30 hover:text-accent-red transition-colors" title="Excluir">
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            )}
-                          </div>
+                          <button onClick={() => handleDeleteComment(c.id)} className="p-1 rounded text-text-muted/30 hover:text-accent-red transition-colors" title="Excluir">
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
                         )}
                         {c.authorId !== currentUserId && (
-                          <div className="flex items-center gap-1">
-                            {commentToReport === c.id ? (
-                              <div className="flex items-center gap-1 bg-accent-yellow/10 rounded-lg p-1 animate-in slide-in-from-right-2">
-                                <button onClick={() => handleReportComment(c.id)} className="text-[8px] font-black uppercase text-accent-yellow px-1">Reportar?</button>
-                                <button onClick={() => setCommentToReport(null)} className="text-text-muted/50"><X className="w-3 h-3" /></button>
-                              </div>
-                            ) : (
-                              <button onClick={() => setCommentToReport(c.id)} className="p-1 rounded text-text-muted/30 hover:text-accent-red transition-colors" title="Reportar">
-                                <Flag className="w-3.5 h-3.5" />
-                              </button>
-                            )}
-                          </div>
+                          <button onClick={() => handleReportComment(c.id)} className="p-1 rounded text-text-muted/30 hover:text-accent-red transition-colors" title="Reportar">
+                            <Flag className="w-3.5 h-3.5" />
+                          </button>
                         )}
                       </div>
                     </div>

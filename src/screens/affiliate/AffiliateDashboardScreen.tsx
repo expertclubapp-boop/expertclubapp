@@ -39,7 +39,7 @@ export function AffiliateDashboardScreen() {
   const copyLink = async () => {
     if (!publicLink) return
     await navigator.clipboard.writeText(publicLink)
-    toastSuccess('Link copiado com sucesso.')
+    toastSuccess('Link copiado.')
   }
 
   if (isLoading) {

@@ -30,6 +30,34 @@ Continuam não permitidos:
 
 ## O que aconteceu nesta rodada
 
+### 0. Security + Actionability Critical Cleanup
+
+Status: concluido para QA interno controlado.
+
+- Decisao registrada: affiliate nao e aluno premium e nao bypassa subscription gate da area de aluno.
+- `firestore.rules` restringe `canUseStudentApp()` a `member` com assinatura ativa.
+- Affiliate mantem acesso somente a propria area/dados agregados permitidos: propria `affiliateAccount` e proprio `affiliateDashboard`.
+- Placeholder WhatsApp `5511999999999` removido/desabilitado; CTA informa que o canal de suporte ainda nao esta configurado.
+- `href="#"` removido de rota ativa.
+- `console.log` removido do app/functions de producao; scripts locais permanecem como CLI.
+- Mock hardcoded `Opção A/B` removido da substituicao alimentar real; tela mostra empty state honesto quando nao ha alternativa aprovada.
+- Alerts/confirms nativos restantes em rotas ativas substituidos por toasts ou confirmacao inline.
+
+Veredito: Critical cleanup validado para QA interno controlado.
+
+### 1. Ambiente Firebase formalizado
+
+- `docs/firebase/FIREBASE_ENVIRONMENT_DECISION_RECORD.md` preenchido com decisao do owner.
+- `expertcoaching-b91e2` tratado como ambiente unico de pre-lancamento / QA controlado enquanto nao houver usuarios reais.
+- Confirmado que `VITE_FIREBASE_PROJECT_ID` em Vercel Production aponta para `expertcoaching-b91e2`.
+- Antes de usuarios reais, pagamento real ou dados reais de clientes, escolher estrategia final de ambientes.
+- Separacao staging/production segue como gate antes de usuario real/pagamento real/dado real, nao como P0 imediato de pre-lancamento/QA interno.
+- Seguir `docs/firebase/FIREBASE_STAGING_QA_SETUP.md` se a decisao for separar staging/QA.
+- `VITE_ENABLE_DEV_SEED` removida/restringida de Production.
+- Bloquear deploy publico/escala sem decisao final de ambientes.
+
+### 2. Student Evolution Report V1
+
 1. a plataforma ganhou o primeiro relatório real de evolução do aluno, calculado sob demanda com dados de corpo, treino, dieta, água e check-ins;
 2. `/app/evolution` agora exibe filtros de `15` e `30` dias, consistência, resumo automático e próximos passos sem gráfico fake;
 3. `/app/today` agora mostra preview de evolução com CTA real para o relatório;
