@@ -62,10 +62,15 @@ export function AppRoute({ children }: AppRouteProps) {
     return <RouteLoader />
   }
 
-  if (role === 'member' && !hasActiveSubscriptionStatus(getSubscriptionStatus(user, subscription))) {
+  const hasActiveSub = hasActiveSubscriptionStatus(getSubscriptionStatus(user, subscription))
+
+  if (role === 'member' && !hasActiveSub) {
     if (!BILLING_FALLBACK_PATHS.has(location.pathname)) {
       return <Navigate to="/app/billing/lock" replace />
     }
+    // On billing pages with no active subscription: render immediately.
+    // Must not fall through — the onboarding/anamnesis checks would loop with OnboardingRoute.
+    return <>{children}</>
   }
 
   if (role === 'member' && !isOnboardingCompleted(user, profile)) {
