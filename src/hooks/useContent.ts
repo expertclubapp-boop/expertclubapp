@@ -38,14 +38,15 @@ export function useContent(category?: string) {
 
   const saveProgress = async (contentId: string, status: 'started' | 'completed') => {
     if (!user) return
+    const now = new Date().toISOString()
     const p: ContentProgress = {
       uid: user.uid,
       contentId,
       status,
-      updatedAt: new Date().toISOString()
+      updatedAt: now
     }
-    if (status === 'started') p.startedAt = new Date().toISOString()
-    if (status === 'completed') p.completedAt = new Date().toISOString()
+    if (status === 'started') p.startedAt = now
+    if (status === 'completed') p.completedAt = now
     await contentService.saveProgress(user.uid, p)
     setProgress(prev => ({ ...prev, [contentId]: p }))
   }

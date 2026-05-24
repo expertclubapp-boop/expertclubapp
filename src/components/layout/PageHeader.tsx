@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { Flame } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useProgress } from '../../hooks/useProgress'
+import { safeDateKey } from '../../lib/firebase/date'
 import { ExpertLogo } from '../ui/ExpertLogo'
 import { NotificationsDrawer } from '../ui/NotificationsDrawer'
 
@@ -32,7 +33,7 @@ export function PageHeader({ showGreeting = true, className = '' }: PageHeaderPr
     for (let i = 0; i < 30; i += 1) {
       const date = new Date(today)
       date.setDate(today.getDate() - i)
-      const dateKey = date.toISOString().split('T')[0]
+      const dateKey = safeDateKey(date)
 
       if (dailyHistory.some((entry) => entry.dateKey === dateKey)) {
         streak += 1
@@ -68,7 +69,7 @@ export function PageHeader({ showGreeting = true, className = '' }: PageHeaderPr
           </div>
           {showGreeting && (
             <div className="min-w-0">
-              <p className="truncate text-[10px] font-black uppercase tracking-[0.16em] text-white/58">
+              <p className="truncate text-xs font-black uppercase tracking-[0.16em] text-white/80">
                 {greeting}, {user.displayName} · {dateStr}
               </p>
               <div className="mt-1 flex items-center gap-1.5">
@@ -88,7 +89,7 @@ export function PageHeader({ showGreeting = true, className = '' }: PageHeaderPr
           <NotificationsDrawer uid={user?.uid} />
           <button
             onClick={() => logout()}
-            className="flex h-11 px-4 items-center justify-center rounded-full border border-accent-red/20 bg-accent-red/5 text-accent-red transition-all hover:bg-accent-red/10 active:scale-95 text-[10px] font-black uppercase tracking-widest"
+            className="flex h-11 items-center justify-center rounded-full border border-accent-red/20 bg-accent-red/5 px-4 text-xs font-black uppercase tracking-widest text-accent-red transition-all hover:bg-accent-red/10 active:scale-95"
             aria-label="Sair"
           >
             Sair

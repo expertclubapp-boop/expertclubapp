@@ -1,4 +1,4 @@
-import { collection, doc, getDoc, getDocs, query, where } from 'firebase/firestore'
+import { collection, doc, getDoc, getDocs, query, where, limit, orderBy } from 'firebase/firestore'
 import { db } from '../lib/firebase/firebase'
 import { COLLECTIONS, SUB_COLLECTIONS } from '../lib/firebase/paths'
 import type {
@@ -58,6 +58,7 @@ export interface MentorOverviewData {
   estimatedMrr: number
   activeAffiliates: number
   attentionStudents: MentorStudentRow[]
+  isPartial?: boolean
 }
 
 export interface MentorFinanceData {
@@ -69,6 +70,7 @@ export interface MentorFinanceData {
   pendingCommissions: number
   paidCommissions: number
   planMix: Array<{ planName: string; students: number; revenue: number }>
+  isPartial?: boolean
 }
 
 export interface MentorReportsData {
@@ -77,6 +79,7 @@ export interface MentorReportsData {
   dormantStudents: number
   highAdherenceStudents: number
   rows: Array<MentorStudentRow & { lastSeenAt: string | null }>
+  isPartial?: boolean
 }
 
 export interface MentorInfluencerRow {
@@ -100,6 +103,18 @@ interface MentorDataset {
   bodyCheckins: BodyCheckin[]
   workoutSessions: WorkoutSession[]
   dietDays: DietDay[]
+  isPartial?: boolean
+}
+
+const DASHBOARD_LIMITS = {
+  MAX_STUDENTS: 100,
+  MAX_ADMIN_USERS: 500,
+  MAX_WORKOUTS_PER_STUDENT: 20,
+  MAX_DIETS_PER_STUDENT: 30,
+  MAX_DAILY_CHECKINS_PER_STUDENT: 30,
+  MAX_WEEKLY_CHECKINS_PER_STUDENT: 12,
+  MAX_BODY_CHECKINS_PER_STUDENT: 12,
+  MAX_COMMISSIONS_PER_STUDENT: 50,
 }
 
 export interface MentorViewer {
@@ -166,10 +181,15 @@ function daysSince(value: string | null): number | null {
 
 async function listScopedUsers(viewer: MentorViewer): Promise<User[]> {
   if (viewer.role === 'admin') {
-    const usersSnap = await getDocs(collection(db, COLLECTIONS.USERS))
+    const usersSnap = await getDocs(
+      query(
+        collection(db, COLLECTIONS.USERS),
+        where('role', '==', 'member'),
+        limit(DASHBOARD_LIMITS.MAX_ADMIN_USERS)
+      )
+    )
     return usersSnap.docs
       .map((userDoc) => ({ uid: userDoc.id, ...userDoc.data() }) as User)
-      .filter((user) => user.role === 'member')
   }
 
   const usersSnap = await getDocs(
@@ -177,6 +197,7 @@ async function listScopedUsers(viewer: MentorViewer): Promise<User[]> {
       collection(db, COLLECTIONS.USERS),
       where('role', '==', 'member'),
       where('mentorId', '==', viewer.uid),
+      limit(DASHBOARD_LIMITS.MAX_STUDENTS)
     ),
   )
 
@@ -189,10 +210,17 @@ async function getExistingDoc<T>(collectionName: string, id: string): Promise<T 
   return { id: snapshot.id, ...snapshot.data() } as T
 }
 
-async function listUserSubcollection<T>(uid: string, subcollectionName: string): Promise<T[]> {
-  const snapshot = await getDocs(
-    query(collection(db, COLLECTIONS.USERS, uid, subcollectionName), where('uid', '==', uid)),
+async function listUserSubcollection<T>(uid: string, subcollectionName: string, limitCount: number, orderField?: string): Promise<T[]> {
+  let q = query(
+    collection(db, COLLECTIONS.USERS, uid, subcollectionName),
+    limit(limitCount)
   )
+
+  if (orderField) {
+    q = query(q, orderBy(orderField, 'desc'))
+  }
+
+  const snapshot = await getDocs(q)
   return snapshot.docs.map((subDoc) => ({ id: subDoc.id, ...subDoc.data() }) as T)
 }
 
@@ -225,14 +253,20 @@ async function loadMentorDataset(viewer: MentorViewer): Promise<MentorDataset> {
     commissionsByStudent,
   ] = await Promise.all([
     Promise.all(studentIds.map((uid) => getExistingDoc<Subscription>(COLLECTIONS.SUBSCRIPTIONS, uid))),
-    Promise.all(studentIds.map((uid) => listUserSubcollection<DailyCheckin>(uid, SUB_COLLECTIONS.DAILY_CHECKINS))),
-    Promise.all(studentIds.map((uid) => listUserSubcollection<WeeklyCheckin>(uid, SUB_COLLECTIONS.WEEKLY_CHECKINS))),
-    Promise.all(studentIds.map((uid) => listUserSubcollection<BodyCheckin>(uid, SUB_COLLECTIONS.BODY_CHECKINS))),
-    Promise.all(studentIds.map((uid) => listUserSubcollection<WorkoutSession>(uid, SUB_COLLECTIONS.WORKOUT_SESSIONS))),
-    Promise.all(studentIds.map((uid) => listUserSubcollection<DietDay>(uid, SUB_COLLECTIONS.DIET_DAYS))),
+    Promise.all(studentIds.map((uid) => listUserSubcollection<DailyCheckin>(uid, SUB_COLLECTIONS.DAILY_CHECKINS, DASHBOARD_LIMITS.MAX_DAILY_CHECKINS_PER_STUDENT, 'dateKey'))),
+    Promise.all(studentIds.map((uid) => listUserSubcollection<WeeklyCheckin>(uid, SUB_COLLECTIONS.WEEKLY_CHECKINS, DASHBOARD_LIMITS.MAX_WEEKLY_CHECKINS_PER_STUDENT, 'weekKey'))),
+    Promise.all(studentIds.map((uid) => listUserSubcollection<BodyCheckin>(uid, SUB_COLLECTIONS.BODY_CHECKINS, DASHBOARD_LIMITS.MAX_BODY_CHECKINS_PER_STUDENT, 'date'))),
+    Promise.all(studentIds.map((uid) => listUserSubcollection<WorkoutSession>(uid, SUB_COLLECTIONS.WORKOUT_SESSIONS, DASHBOARD_LIMITS.MAX_WORKOUTS_PER_STUDENT, 'startedAt'))),
+    Promise.all(studentIds.map((uid) => listUserSubcollection<DietDay>(uid, SUB_COLLECTIONS.DIET_DAYS, DASHBOARD_LIMITS.MAX_DIETS_PER_STUDENT, 'dateKey'))),
     Promise.all(
       studentIds.map((uid) =>
-        getDocs(query(collection(db, COLLECTIONS.COMMISSION_LEDGER), where('uid', '==', uid))).then((snapshot) =>
+        getDocs(
+          query(
+            collection(db, COLLECTIONS.COMMISSION_LEDGER), 
+            where('uid', '==', uid),
+            limit(DASHBOARD_LIMITS.MAX_COMMISSIONS_PER_STUDENT)
+          )
+        ).then((snapshot) =>
           snapshot.docs.map((commissionDoc) => ({ id: commissionDoc.id, ...commissionDoc.data() }) as CommissionEntry),
         ),
       ),
@@ -251,6 +285,7 @@ async function loadMentorDataset(viewer: MentorViewer): Promise<MentorDataset> {
     subscriptions: subscriptions.filter(Boolean) as Subscription[],
     affiliates,
     commissions,
+    isPartial: users.length >= DASHBOARD_LIMITS.MAX_STUDENTS || users.length >= DASHBOARD_LIMITS.MAX_ADMIN_USERS,
     dailyCheckins: dailyCheckins.flat(),
     weeklyCheckins: weeklyCheckins.flat(),
     bodyCheckins: bodyCheckins.flat(),
@@ -331,39 +366,47 @@ export const mentorDashboardService = {
       estimatedMrr: activeSubscriptions.reduce((sum, subscription) => sum + (subscription.price || 0), 0),
       activeAffiliates: dataset.affiliates.filter((affiliate) => affiliate.status === 'active').length,
       attentionStudents: students.filter((student) => (student.pendingCheckinDays ?? 999) >= 3).slice(0, 6),
+      isPartial: dataset.isPartial,
     }
   },
 
-  async listStudents(viewer: MentorViewer): Promise<MentorStudentRow[]> {
-    return buildStudentRows(await loadMentorDataset(viewer))
+  async listStudents(viewer: MentorViewer): Promise<{ rows: MentorStudentRow[]; isPartial?: boolean }> {
+    const dataset = await loadMentorDataset(viewer)
+    return {
+      rows: buildStudentRows(dataset),
+      isPartial: dataset.isPartial,
+    }
   },
 
-  async listCheckins(viewer: MentorViewer): Promise<MentorCheckinRow[]> {
+  async listCheckins(viewer: MentorViewer): Promise<{ rows: MentorCheckinRow[]; isPartial?: boolean }> {
     const dataset = await loadMentorDataset(viewer)
     const students = buildStudentRows(dataset)
     const latestWeekly = getLatestByUid(dataset.weeklyCheckins, (entry) => entry.weekKey)
     const latestBody = getLatestByUid(dataset.bodyCheckins, (entry) => entry.date)
     const latestDaily = getLatestByUid(dataset.dailyCheckins, (entry) => entry.dateKey)
 
-    return students.map((student) => {
-      const daily = latestDaily[student.uid]
-      const weekly = latestWeekly[student.uid]
-      const body = latestBody[student.uid]
-      const pendingDays = student.pendingCheckinDays
+    return {
+      rows: students.map((student) => {
+        const daily = latestDaily[student.uid]
+        const weekly = latestWeekly[student.uid]
+        const body = latestBody[student.uid]
+        const pendingDays = student.pendingCheckinDays
 
-      return {
-        uid: student.uid,
-        displayName: student.displayName,
-        email: student.email,
-        lastDailyCheckinAt: student.lastDailyCheckinAt,
-        lastWeeklyCheckinAt: normalizeDate(weekly?.weekKey),
-        lastBodyCheckinAt: normalizeDate(body?.date),
-        averageSleep: daily?.sleep ?? null,
-        averageMood: daily?.mood ?? null,
-        pendingCheckinDays: pendingDays,
-        needsAttention: (pendingDays ?? 999) >= 3 || !weekly,
-      }
-    })
+        return {
+          uid: student.uid,
+          displayName: student.displayName,
+          email: student.email,
+          lastDailyCheckinAt: student.lastDailyCheckinAt,
+          lastWeeklyCheckinAt: normalizeDate(weekly?.weekKey),
+          lastBodyCheckinAt: normalizeDate(body?.date),
+          averageSleep: daily?.sleep ?? null,
+          averageMood: daily?.mood ?? null,
+          pendingCheckinDays: pendingDays,
+          needsAttention: (pendingDays ?? 999) >= 3 || !weekly,
+        }
+      }),
+      isPartial: dataset.isPartial,
+    }
   },
 
   async getAgenda(viewer: MentorViewer): Promise<MentorAgendaItem[]> {
@@ -444,6 +487,7 @@ export const mentorDashboardService = {
         .filter((entry) => entry.status === 'paid')
         .reduce((sum, entry) => sum + entry.commissionAmount, 0),
       planMix: Object.values(planMix).sort((left, right) => right.revenue - left.revenue),
+      isPartial: dataset.isPartial,
     }
   },
 
@@ -472,26 +516,30 @@ export const mentorDashboardService = {
       }).length,
       highAdherenceStudents: rows.filter((row) => (row.adherencePercent ?? 0) >= 80).length,
       rows: rows.sort((left, right) => toDateValue(right.lastSeenAt) - toDateValue(left.lastSeenAt)),
+      isPartial: dataset.isPartial,
     }
   },
 
-  async listInfluencers(viewer: MentorViewer): Promise<MentorInfluencerRow[]> {
+  async listInfluencers(viewer: MentorViewer): Promise<{ rows: MentorInfluencerRow[]; isPartial?: boolean }> {
     const dataset = await loadMentorDataset(viewer)
     const referredByAffiliate = dataset.commissions.reduce<Record<string, number>>((acc, entry) => {
       acc[entry.affiliateId] = (acc[entry.affiliateId] || 0) + 1
       return acc
     }, {})
 
-    return dataset.affiliates
-      .map((affiliate) => ({
-        id: affiliate.id,
-        name: affiliate.name,
-        email: affiliate.email,
-        status: affiliate.status,
-        pendingCommission: affiliate.pendingCommission || 0,
-        totalCommissionPaid: affiliate.totalCommissionPaid || 0,
-        referredStudents: referredByAffiliate[affiliate.id] || 0,
-      }))
-      .sort((left, right) => right.referredStudents - left.referredStudents || left.name.localeCompare(right.name))
+    return {
+      rows: dataset.affiliates
+        .map((affiliate) => ({
+          id: affiliate.id,
+          name: affiliate.name,
+          email: affiliate.email,
+          status: affiliate.status,
+          pendingCommission: affiliate.pendingCommission || 0,
+          totalCommissionPaid: affiliate.totalCommissionPaid || 0,
+          referredStudents: referredByAffiliate[affiliate.id] || 0,
+        }))
+        .sort((left, right) => right.referredStudents - left.referredStudents || left.name.localeCompare(right.name)),
+      isPartial: dataset.isPartial,
+    }
   },
 }

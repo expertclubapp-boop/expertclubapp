@@ -65,13 +65,13 @@ export function useMentorOverview() {
 export function useMentorStudents() {
   const { user } = useAuth()
   const loader = user ? () => mentorDashboardService.listStudents({ uid: user.uid, role: user.role === 'mentor' ? 'mentor' : 'admin' }) : null
-  return useAsyncResource<MentorStudentRow[]>(loader, [user?.uid, user?.role])
+  return useAsyncResource<{ rows: MentorStudentRow[]; isPartial?: boolean }>(loader, [user?.uid, user?.role])
 }
 
 export function useMentorCheckins() {
   const { user } = useAuth()
   const loader = user ? () => mentorDashboardService.listCheckins({ uid: user.uid, role: user.role === 'mentor' ? 'mentor' : 'admin' }) : null
-  return useAsyncResource<MentorCheckinRow[]>(loader, [user?.uid, user?.role])
+  return useAsyncResource<{ rows: MentorCheckinRow[]; isPartial?: boolean }>(loader, [user?.uid, user?.role])
 }
 
 export function useMentorAgenda() {
@@ -95,5 +95,5 @@ export function useMentorReports() {
 export function useMentorInfluencers() {
   const { user } = useAuth()
   const loader = user ? () => mentorDashboardService.listInfluencers({ uid: user.uid, role: user.role === 'mentor' ? 'mentor' : 'admin' }) : null
-  return useAsyncResource<MentorInfluencerRow[]>(loader, [user?.uid, user?.role])
+  return useAsyncResource<{ rows: MentorInfluencerRow[]; isPartial?: boolean }>(loader, [user?.uid, user?.role])
 }

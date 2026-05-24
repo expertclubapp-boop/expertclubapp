@@ -1,18 +1,34 @@
-# Expert Club — Status Oficial
+# Expert Club - Project Status
+
+Atualizado em 2026-05-15
 
 ## Status atual
 
-O Expert Club esta aprovado para QA interno controlado.
+Student Evolution Report V1 validado para QA interno controlado.
 
-Ainda nao esta aprovado para:
+Continuam válidos:
+
+- Role Model + Navigation + Logout P0
+- Admin Student 360º
+- Admin Check-ins Review Flow
+- Admin Prescription Operations
+- Prescriptor Flow Integrity
+- Prescription Assignments Read Path no ambiente remoto
+- Student Workout Execution Premium
+- Student Onboarding + Preferences
+- Template Metadata + Recommendation Engine V1
+- Low Ticket Dashboard + Daily Engagement
+- Automated Check-in Insights V1
+- Student Evolution Report V1
+- Student Visual Legibility Hotfix
+
+Continuam não permitidos:
 
 - Beta externo
 - Production Ready
-- Escala com muitos usuarios
-- Deploy sensivel sem ambiente formalizado
-- Ambiente final para usuarios reais sem nova decisao
+- pronto para escala
 
-## Gates obrigatorios antes de avancar
+## O que aconteceu nesta rodada
 
 ### 0. Security + Actionability Critical Cleanup
 
@@ -40,79 +56,40 @@ Veredito: Critical cleanup validado para QA interno controlado.
 - `VITE_ENABLE_DEV_SEED` removida/restringida de Production.
 - Bloquear deploy publico/escala sem decisao final de ambientes.
 
-### 2. Rollback operacional completo
+### 2. Student Evolution Report V1
 
-Status: concluido para QA interno controlado.
+1. a plataforma ganhou o primeiro relatório real de evolução do aluno, calculado sob demanda com dados de corpo, treino, dieta, água e check-ins;
+2. `/app/evolution` agora exibe filtros de `15` e `30` dias, consistência, resumo automático e próximos passos sem gráfico fake;
+3. `/app/today` agora mostra preview de evolução com CTA real para o relatório;
+4. `Admin Student 360` passou a combinar risco de abandono com consistência e métricas do relatório;
+5. o backfill dry-run continuou limpo, sem reabrir dívida de datas.
 
-- Hosting oficial: Vercel
-- Aprovador: Ruben
-- Frontend rollback: Vercel Deployments
-- Firestore Rules rollback: restaurar `firestore.rules` + `npm run test:rules` + deploy controlado
-- Plano: `docs/release/ROLLBACK_PLAN.md`
+## Resultado funcional
 
-### 3. Firestore indexes
+- perfil, recomendações, check-ins, dieta, treino, hidratação e Student 360 seguiram íntegros;
+- o produto low ticket agora consegue transformar atividade recente em evolução visível sem depender de resposta manual;
+- não apareceu documento novo pendente no backfill dry-run;
+- release externo continua bloqueado.
 
-- Indices necessarios para o Launch Dashboard criados em `expertcoaching-b91e2`.
-- Filtros server-side restaurados em `src/services/adminLaunchService.ts`.
-- `/admin/dashboard` validado com admin real apos propagacao dos indices.
-- Screenshot: `qa/firestore-indexes/admin-dashboard-index-validation-final.png`.
-- Antes de escala real, revalidar volume, custo, latencia e estrategia final de ambientes.
+## Validações
 
-### 4. Normalizacao de datas
+| Comando | Resultado |
+|---|---|
+| `npm run typecheck` | PASS |
+| `npm run build` | PASS |
+| `npm run smoke:roles` | PASS |
+| `npm run test:rules` | PASS |
+| `npm run smoke:setup:dry` | PASS |
+| `npm run backfill:date-fields -- --dry-run` | PASS (`wouldUpdate: 0`, `invalid: 0`) |
 
-Status: preparada para QA interno controlado; aguardando backfill apply se for necessario limpar dados legados.
+## Observações
 
-- Padrao oficial: Firestore Timestamp para campos usados em query, ordenacao, metricas e dashboards.
-- Helper central: `src/lib/firebase/date.ts`.
-- Documento: `docs/firebase/FIRESTORE_DATE_FIELDS.md`.
-- Backfill dry-run: `npm run backfill:date-fields -- --dry-run`.
-- Backfill apply exige confirmacao explicita e nao deve ser rodado sem aprovacao.
-- Dry-run em 2026-05-07: 52 documentos escaneados, 41 documentos seriam atualizados, 0 escritos.
-- Browser QA: `/admin/dashboard` validado em `qa/date-normalization/admin-dashboard-date-normalization-1440.png`.
+- a nova camada de evolução não adicionou `as any` nem `toISOString` operacional nos arquivos novos;
+- ainda existem dívidas legadas de `as any` e `toISOString` em telas admin antigas fora deste fluxo;
+- não houve deploy nesta rodada;
+- não houve backfill apply;
+- release externo continua bloqueado.
 
-### 5. Student mobile recovery
+## Veredito permitido
 
-Status: validado para QA interno controlado.
-
-- Shell mobile do aluno recuperado.
-- Desktop preview centralizado em canvas mobile de 430px.
-- `/app/today` nao exibe mais `Overview`, `Admin` ou identidade administrativa.
-- Bottom nav unica, fixa e legivel.
-- Screenshots gerados em `qa/student-mobile-recovery/`.
-- `/app/checkin/daily` validado sem erro de console apos deploy de indices e fallback estreito para propagacao.
-- `/app/workouts/session/:id` validado com sessao real: iniciar treino, registrar serie, navegar exercicios e concluir treino.
-- `/app/diets/today`, `/app/content` e `/app/challenges` receberam pass 2 de actionability e consistencia mobile.
-- Documento: `docs/qa/STUDENT_MOBILE_RECOVERY_REPORT.md`.
-- Paridade visual V2: validada em `docs/qa/STUDENT_V2_VISUAL_PARITY_REPORT.md`.
-- Screenshots completos: `qa/student-v2-visual-parity/` com 12 rotas em 390x844, 430x932 e 1440x900.
-
-Pendencias antes de usuarios reais:
-
-- Validar `/app/diets/today` com dieta contendo refeicoes reais, nao apenas empty state de plano sem refeicoes.
-- Continuar refinamento editorial de `/app/content` e `/app/challenges` se o escopo de produto crescer.
-
-## Status dos indices Firestore
-
-| Collection Group | Campo | Status |
-|---|---|---|
-| workoutSessions | startedAt | Criado e validado para QA interno controlado |
-| dietDays | createdAt | Criado e validado para QA interno controlado |
-| dailyCheckins | createdAt | Criado e validado para QA interno controlado |
-
-## Regra de decisao
-
-Qualquer avanco alem de QA interno controlado sem respeitar estes gates e narrativa, nao gate tecnico.
-
-## Regra antes de usuarios reais
-
-Antes de entrar usuario real, pagamento real ou dado real de cliente, reabrir a decisao de ambientes e escolher uma estrategia final para dev/staging/production.
-
-## Pendencia antes de escala
-
-Executar backfill apply de datas, se a base ainda tiver documentos legados com ISO string, e validar as metricas no ambiente que receber usuarios reais.
-
-Motivo:
-
-- o codigo novo escreve Timestamp;
-- documentos legados podem continuar com ISO string ate o backfill apply;
-- queries server-side por Timestamp nao devem depender de dados mistos em escala.
+- Student Evolution Report V1 validado para QA interno controlado

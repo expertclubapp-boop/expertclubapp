@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { doc, onSnapshot } from 'firebase/firestore'
 import { db } from '../lib/firebase/firebase'
+import { safeDateKey } from '../lib/firebase/date'
 import { COLLECTIONS, SUB_COLLECTIONS, getSubCollectionPath } from '../lib/firebase/paths'
 import { useAuth } from '../contexts/AuthContext'
 
@@ -16,7 +17,7 @@ export function useHydrationToday() {
       return
     }
 
-    const dateKey = new Date().toISOString().split('T')[0]
+    const dateKey = safeDateKey()
     const path = getSubCollectionPath(COLLECTIONS.USERS, firebaseUser.uid, SUB_COLLECTIONS.HYDRATION_DAYS)
     const docRef = doc(db, path, dateKey)
     

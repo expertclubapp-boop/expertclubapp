@@ -44,6 +44,12 @@ export function AdminDashboardScreen() {
         <Metric icon={<BarChart3 />} label="Aderência média" value={metrics.averageDietAdherence === null ? 'Sem dados' : `${metrics.averageDietAdherence}%`} />
       </div>
 
+      {metrics.queryWarnings.length > 0 && (
+        <div className="mt-6 rounded-2xl border border-accent-yellow/25 bg-accent-yellow/8 p-4 text-sm text-accent-yellow">
+          Métricas parciais: {metrics.queryWarnings.join(' ')}
+        </div>
+      )}
+
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
         <section className="ec-card rounded-3xl p-6">
           <h2 className="font-display text-xl font-bold uppercase italic text-white">Status das assinaturas</h2>

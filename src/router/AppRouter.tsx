@@ -2,6 +2,7 @@ import { lazy } from 'react'
 import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom'
 import { AppShell } from '../components/layout/AppShell'
 import { useAuth } from '../contexts/AuthContext'
+import { useProfile } from '../hooks/useProfile'
 import { useSubscription } from '../hooks/useSubscription'
 import { AdminLayout, MentorLayout } from './Layouts'
 import { AdminRoute } from './AdminRoute'
@@ -15,9 +16,8 @@ import { getDefaultRouteForUser, getUserRole } from './utils'
 const LoginScreen = lazy(() => import('../screens/auth/LoginScreen').then((m) => ({ default: m.LoginScreen })))
 const SignupScreen = lazy(() => import('../screens/auth/SignupScreen').then((m) => ({ default: m.SignupScreen })))
 const ResetPasswordScreen = lazy(() => import('../screens/auth/ResetPasswordScreen').then((m) => ({ default: m.ResetPasswordScreen })))
-const GoalScreen = lazy(() => import('../screens/onboarding/GoalScreen').then((m) => ({ default: m.GoalScreen })))
-const ProfileScreen = lazy(() => import('../screens/onboarding/ProfileScreen').then((m) => ({ default: m.ProfileScreen })))
-const PreferencesScreen = lazy(() => import('../screens/onboarding/PreferencesScreen').then((m) => ({ default: m.PreferencesScreen })))
+const StudentOnboardingScreen = lazy(() => import('../screens/onboarding/StudentOnboardingScreen').then((m) => ({ default: m.StudentOnboardingScreen })))
+const RecommendationsScreen = lazy(() => import('../screens/recommendations/RecommendationsScreen').then((m) => ({ default: m.RecommendationsScreen })))
 const TodayScreen = lazy(() => import('../screens/today/TodayScreen').then((m) => ({ default: m.TodayScreen })))
 const DietsLibraryScreen = lazy(() => import('../screens/diets/DietsLibraryScreen').then((m) => ({ default: m.DietsLibraryScreen })))
 const DietDetailScreen = lazy(() => import('../screens/diets/DietDetailScreen').then((m) => ({ default: m.DietDetailScreen })))
@@ -37,6 +37,11 @@ const CommunityScreen = lazy(() => import('../screens/community/CommunityScreen'
 const HydrationScreen = lazy(() => import('../screens/hydration/HydrationScreen').then((m) => ({ default: m.HydrationScreen })))
 const PlansScreen = lazy(() => import('../screens/billing/PlansScreen').then((m) => ({ default: m.PlansScreen })))
 const BillingDashboardScreen = lazy(() => import('../screens/billing/BillingDashboardScreen').then((m) => ({ default: m.BillingDashboardScreen })))
+const MeuPlanoScreen = lazy(() => import('../screens/billing/MeuPlanoScreen').then((m) => ({ default: m.MeuPlanoScreen })))
+const MentoringAnamnesisScreen = lazy(() => import('../screens/onboarding/MentoringAnamnesisScreen').then((m) => ({ default: m.MentoringAnamnesisScreen })))
+const FeedbackFormScreen = lazy(() => import('../screens/feedback/FeedbackFormScreen').then((m) => ({ default: m.FeedbackFormScreen })))
+const FeedbackHistoryScreen = lazy(() => import('../screens/feedback/FeedbackHistoryScreen').then((m) => ({ default: m.FeedbackHistoryScreen })))
+const MentorStudentProfileScreen = lazy(() => import('../screens/mentor/MentorStudentProfileScreen').then((m) => ({ default: m.MentorStudentProfileScreen })))
 const PaymentSuccessScreen = lazy(() => import('../screens/billing/PaymentSuccessScreen').then((m) => ({ default: m.PaymentSuccessScreen })))
 const PaymentFailureScreen = lazy(() => import('../screens/billing/PaymentFailureScreen').then((m) => ({ default: m.PaymentFailureScreen })))
 const PaymentPendingScreen = lazy(() => import('../screens/billing/PaymentPendingScreen').then((m) => ({ default: m.PaymentPendingScreen })))
@@ -46,16 +51,19 @@ const AdminAffiliateDetailScreen = lazy(() => import('../screens/admin/AdminAffi
 const AdminCommissionsScreen = lazy(() => import('../screens/admin/AdminCommissionsScreen').then((m) => ({ default: m.AdminCommissionsScreen })))
 const AdminUsersScreen = lazy(() => import('../screens/admin/AdminUsersScreen').then((m) => ({ default: m.AdminUsersScreen })))
 const AdminUserDetailScreen = lazy(() => import('../screens/admin/AdminUserDetailScreen').then((m) => ({ default: m.AdminUserDetailScreen })))
+const AdminCheckinsScreen = lazy(() => import('../screens/admin/AdminCheckinsScreen').then((m) => ({ default: m.AdminCheckinsScreen })))
+const AdminCheckinReviewScreen = lazy(() => import('../screens/admin/AdminCheckinReviewScreen').then((m) => ({ default: m.AdminCheckinReviewScreen })))
 const AdminBadgeEditorScreen = lazy(() => import('../screens/admin/AdminCatalogScreens').then((m) => ({ default: m.AdminBadgeEditorScreen })))
 const AdminBadgesScreen = lazy(() => import('../screens/admin/AdminCatalogScreens').then((m) => ({ default: m.AdminBadgesScreen })))
 const AdminChallengesScreen = lazy(() => import('../screens/admin/AdminCatalogScreens').then((m) => ({ default: m.AdminChallengesScreen })))
 const AdminChallengeEditorScreen = lazy(() => import('../screens/admin/AdminCatalogScreens').then((m) => ({ default: m.AdminChallengeEditorScreen })))
 const AdminContentEditorScreen = lazy(() => import('../screens/admin/AdminCatalogScreens').then((m) => ({ default: m.AdminContentEditorScreen })))
 const AdminContentScreen = lazy(() => import('../screens/admin/AdminCatalogScreens').then((m) => ({ default: m.AdminContentScreen })))
-const AdminDietEditorScreen = lazy(() => import('../screens/admin/AdminCatalogScreens').then((m) => ({ default: m.AdminDietEditorScreen })))
+const AdminDietEditorScreen = lazy(() => import('../screens/admin/AdminDietEditorScreen').then((m) => ({ default: m.AdminDietEditorScreen })))
 const AdminDietsScreen = lazy(() => import('../screens/admin/AdminCatalogScreens').then((m) => ({ default: m.AdminDietsScreen })))
 const AdminPlansScreen = lazy(() => import('../screens/admin/AdminCatalogScreens').then((m) => ({ default: m.AdminPlansScreen })))
-const AdminWorkoutEditorScreen = lazy(() => import('../screens/admin/AdminCatalogScreens').then((m) => ({ default: m.AdminWorkoutEditorScreen })))
+const AdminWorkoutEditorScreen = lazy(() => import('../screens/admin/AdminWorkoutEditorScreen').then((m) => ({ default: m.AdminWorkoutEditorScreen })))
+const AdminPresetsScreen = lazy(() => import('../screens/admin/AdminPresetsScreen').then((m) => ({ default: m.AdminPresetsScreen })))
 const AdminWorkoutsScreen = lazy(() => import('../screens/admin/AdminCatalogScreens').then((m) => ({ default: m.AdminWorkoutsScreen })))
 const AdminFoodsScreen = lazy(() => import('../screens/admin/AdminFoodsScreen').then((m) => ({ default: m.AdminFoodsScreen })))
 const AdminFoodEditorScreen = lazy(() => import('../screens/admin/AdminFoodEditorScreen').then((m) => ({ default: m.AdminFoodEditorScreen })))
@@ -66,17 +74,31 @@ const AdminCommunityScreen = lazy(() => import('../screens/admin/AdminOperations
 const AdminPayoutsScreen = lazy(() => import('../screens/admin/AdminOperationsScreens').then((m) => ({ default: m.AdminPayoutsScreen })))
 const AdminSettingsScreen = lazy(() => import('../screens/admin/AdminOperationsScreens').then((m) => ({ default: m.AdminSettingsScreen })))
 const AdminLaunchDashboardScreen = lazy(() => import('../screens/admin/AdminLaunchDashboardScreen').then((m) => ({ default: m.AdminLaunchDashboardScreen })))
+const AdminDashboardScreen = lazy(() => import('../screens/admin/AdminDashboardScreen').then((m) => ({ default: m.AdminDashboardScreen })))
 const AdminWorkspacesScreen = lazy(() => import('../screens/admin/AdminBackofficeScreens').then((m) => ({ default: m.AdminWorkspacesScreen })))
 const AdminFinanceOverviewScreen = lazy(() => import('../screens/admin/AdminBackofficeScreens').then((m) => ({ default: m.AdminFinanceOverviewScreen })))
 const AdminSupportOverviewScreen = lazy(() => import('../screens/admin/AdminBackofficeScreens').then((m) => ({ default: m.AdminSupportOverviewScreen })))
 const AffiliatePortalScreen = lazy(() => import('../screens/affiliate/AffiliatePortalScreen').then((m) => ({ default: m.AffiliatePortalScreen })))
 const AffiliateDashboardScreen = lazy(() => import('../screens/affiliate/AffiliateDashboardScreen').then((m) => ({ default: m.AffiliateDashboardScreen })))
 const WhoAmIScreen = lazy(() => import('../screens/dev/WhoAmIScreen').then((m) => ({ default: m.WhoAmIScreen })))
+const CheckoutPage = lazy(() => import('../screens/checkout/CheckoutPage').then((m) => ({ default: m.CheckoutPage })))
+const AdminProductsScreen = lazy(() => import('../screens/admin/AdminProductsScreen').then((m) => ({ default: m.AdminProductsScreen })))
 const PublicLandingScreen = lazy(() => import('../screens/landing/PublicLandingScreen').then((m) => ({ default: m.PublicLandingScreen })))
 const DesignSystemScreen = lazy(() => import('../screens/design-system/DesignSystemScreen').then((m) => ({ default: m.DesignSystemScreen })))
 const UxBlueprintScreen = lazy(() => import('../screens/design-system/UxBlueprintScreen').then((m) => ({ default: m.UxBlueprintScreen })))
+const StudentReferralScreen = lazy(() => import('../screens/referral/StudentReferralScreen').then((m) => ({ default: m.StudentReferralScreen })))
+const StudentWalletScreen = lazy(() => import('../screens/referral/StudentWalletScreen').then((m) => ({ default: m.StudentWalletScreen })))
+const StudentStoreScreen = lazy(() => import('../screens/referral/StudentStoreScreen').then((m) => ({ default: m.StudentStoreScreen })))
+const InfluencerDashboardScreen = lazy(() => import('../screens/affiliate/InfluencerDashboardScreen').then((m) => ({ default: m.InfluencerDashboardScreen })))
+const InfluencerWalletScreen = lazy(() => import('../screens/affiliate/InfluencerWalletScreen').then((m) => ({ default: m.InfluencerWalletScreen })))
+const AdminInfluencersScreen = lazy(() => import('../screens/admin/AdminInfluencersScreen').then((m) => ({ default: m.AdminInfluencersScreen })))
+const AdminPayoutsV2Screen = lazy(() => import('../screens/admin/AdminPayoutsV2Screen').then((m) => ({ default: m.AdminPayoutsV2Screen })))
+const AdminStoreScreen = lazy(() => import('../screens/admin/AdminStoreScreen').then((m) => ({ default: m.AdminStoreScreen })))
+const AdminEconomyControlScreen = lazy(() => import('../screens/admin/AdminEconomyControlScreen').then((m) => ({ default: m.AdminEconomyControlScreen })))
+const AdminAuditDashboard = lazy(() => import('../screens/admin/AdminAuditDashboard').then((m) => ({ default: m.AdminAuditDashboard })))
 const StudentDashboardScreen = lazy(() => import('../screens/student/StudentDashboardScreen').then((m) => ({ default: m.StudentDashboardScreen })))
 const MentorDashboardScreen = lazy(() => import('../screens/mentor/MentorDashboardScreen').then((m) => ({ default: m.MentorDashboardScreen })))
+const MentorOnboardingScreen = lazy(() => import('../screens/mentor/MentorOnboardingScreen').then((m) => ({ default: m.MentorOnboardingScreen })))
 const MentorOverviewScreen = lazy(() => import('../screens/mentor/MentorWorkspaceScreens').then((m) => ({ default: m.MentorOverviewScreen })))
 const MentorCheckinsScreen = lazy(() => import('../screens/mentor/MentorWorkspaceScreens').then((m) => ({ default: m.MentorCheckinsScreen })))
 const MentorAgendaScreen = lazy(() => import('../screens/mentor/MentorWorkspaceScreens').then((m) => ({ default: m.MentorAgendaScreen })))
@@ -94,13 +116,14 @@ function RootRoute() {
 
 function AppIndexRedirect() {
   const { user } = useAuth()
+  const { profile } = useProfile()
   const { subscription } = useSubscription()
 
   if (!user) return <Navigate to="/login" replace />
   if (getUserRole(user) === 'admin') return <Navigate to="/admin/dashboard" replace />
   if (getUserRole(user) === 'mentor') return <Navigate to="/mentor/overview" replace />
 
-  return <Navigate to={getDefaultRouteForUser(user, null, subscription)} replace />
+  return <Navigate to={getDefaultRouteForUser(user, profile, subscription)} replace />
 }
 
 export const router = createBrowserRouter([
@@ -148,9 +171,10 @@ export const router = createBrowserRouter([
     path: '/onboarding',
     element: <OnboardingRoute />,
     children: [
-      { path: 'goal', element: <GoalScreen /> },
-      { path: 'profile', element: <ProfileScreen /> },
-      { path: 'preferences', element: <PreferencesScreen /> },
+      { index: true, element: <StudentOnboardingScreen /> },
+      { path: 'goal', element: <Navigate to="/onboarding" replace /> },
+      { path: 'profile', element: <Navigate to="/onboarding" replace /> },
+      { path: 'preferences', element: <Navigate to="/onboarding" replace /> },
     ],
   },
   {
@@ -162,12 +186,28 @@ export const router = createBrowserRouter([
     ),
     children: [
       {
+        path: 'anamnese-mentoria',
+        element: <MentoringAnamnesisScreen />,
+      },
+      {
+        path: 'feedback/:requestId',
+        element: <FeedbackFormScreen />,
+      },
+      {
+        path: 'feedback/history',
+        element: <FeedbackHistoryScreen />,
+      },
+      {
         path: 'billing/plans',
         element: <PlansScreen />,
       },
       {
         path: 'billing/lock',
         element: <SubscriptionLockScreen />,
+      },
+      {
+        path: 'onboarding',
+        element: <Navigate to="/onboarding" replace />,
       },
       {
         path: 'workouts/session/:sessionId',
@@ -191,6 +231,10 @@ export const router = createBrowserRouter([
           {
             path: 'today',
             element: <TodayScreen />,
+          },
+          {
+            path: 'recommendations',
+            element: <RecommendationsScreen />,
           },
           {
             path: 'workouts',
@@ -229,6 +273,10 @@ export const router = createBrowserRouter([
             element: <EvolutionCheckinScreen />,
           },
           {
+            path: 'ranking',
+            element: <Navigate to="/app/challenges" replace />,
+          },
+          {
             path: 'challenges',
             element: <ChallengesScreen />,
           },
@@ -260,9 +308,33 @@ export const router = createBrowserRouter([
             path: 'billing',
             element: <BillingDashboardScreen />,
           },
+          {
+            path: 'meu-plano',
+            element: <MeuPlanoScreen />,
+          },
+          {
+            path: 'indicar',
+            element: <StudentReferralScreen />,
+          },
+          {
+            path: 'carteira',
+            element: <StudentWalletScreen />,
+          },
+          {
+            path: 'loja',
+            element: <StudentStoreScreen />,
+          },
         ],
       },
     ],
+  },
+  {
+    path: '/mentor/onboarding',
+    element: (
+      <MentorRoute>
+        <MentorOnboardingScreen />
+      </MentorRoute>
+    ),
   },
   {
     path: '/mentor',
@@ -291,6 +363,10 @@ export const router = createBrowserRouter([
       {
         path: 'students',
         element: <Navigate to="/mentor/alunos" replace />,
+      },
+      {
+        path: 'students/:studentId',
+        element: <MentorStudentProfileScreen />,
       },
       {
         path: 'checkins',
@@ -380,6 +456,8 @@ export const router = createBrowserRouter([
       },
       { path: 'users', element: <AdminUsersScreen /> },
       { path: 'users/:uid', element: <AdminUserDetailScreen /> },
+      { path: 'checkins', element: <AdminCheckinsScreen /> },
+      { path: 'checkins/:studentId/:type/:checkinId', element: <AdminCheckinReviewScreen /> },
       { path: 'diets', element: <AdminDietsScreen /> },
       { path: 'diets/new', element: <AdminDietEditorScreen /> },
       { path: 'diets/:dietId', element: <AdminDietEditorScreen /> },
@@ -389,6 +467,7 @@ export const router = createBrowserRouter([
       { path: 'workouts', element: <AdminWorkoutsScreen /> },
       { path: 'workouts/new', element: <AdminWorkoutEditorScreen /> },
       { path: 'workouts/:workoutId', element: <AdminWorkoutEditorScreen /> },
+      { path: 'presets', element: <AdminPresetsScreen /> },
       { path: 'exercises', element: <AdminExercisesScreen /> },
       { path: 'exercises/new', element: <AdminExerciseEditorScreen /> },
       { path: 'exercises/:exerciseId', element: <AdminExerciseEditorScreen /> },
@@ -402,6 +481,7 @@ export const router = createBrowserRouter([
       { path: 'badges/new', element: <AdminBadgeEditorScreen /> },
       { path: 'badges/:badgeId', element: <AdminBadgeEditorScreen /> },
       { path: 'plans', element: <AdminPlansScreen /> },
+      { path: 'produtos', element: <AdminProductsScreen /> },
       { path: 'community', element: <AdminCommunityScreen /> },
       {
         path: 'affiliates',
@@ -416,6 +496,26 @@ export const router = createBrowserRouter([
         element: <AdminCommissionsScreen />,
       },
       {
+        path: 'influencers-v2',
+        element: <AdminInfluencersScreen />,
+      },
+      {
+        path: 'payouts-v2',
+        element: <AdminPayoutsV2Screen />,
+      },
+      {
+        path: 'store',
+        element: <AdminStoreScreen />,
+      },
+      {
+        path: 'economia',
+        element: <AdminEconomyControlScreen />,
+      },
+      {
+        path: 'auditoria',
+        element: <AdminAuditDashboard />,
+      },
+      {
         path: 'financeiro',
         element: <AdminFinanceOverviewScreen />,
       },
@@ -425,13 +525,14 @@ export const router = createBrowserRouter([
       },
       {
         path: 'metrics',
-        element: <AdminLaunchDashboardScreen />,
+        element: <AdminDashboardScreen />,
       },
       { path: 'payouts', element: <AdminPayoutsScreen /> },
       { path: 'audit-logs', element: <AdminAuditLogsScreen /> },
       { path: 'settings', element: <AdminSettingsScreen /> },
     ],
   },
+  { path: '/checkout/:planId', element: <CheckoutPage /> },
   { path: '/billing/success', element: <PaymentSuccessScreen /> },
   { path: '/billing/failure', element: <PaymentFailureScreen /> },
   { path: '/billing/pending', element: <PaymentPendingScreen /> },
@@ -444,5 +545,21 @@ export const router = createBrowserRouter([
     ),
   },
   { path: '/affiliate/:code', element: <AffiliatePortalScreen /> },
+  {
+    path: '/influencer/dashboard',
+    element: (
+      <AffiliateRoute>
+        <InfluencerDashboardScreen />
+      </AffiliateRoute>
+    ),
+  },
+  {
+    path: '/influencer/carteira',
+    element: (
+      <AffiliateRoute>
+        <InfluencerWalletScreen />
+      </AffiliateRoute>
+    ),
+  },
   { path: '/dev/whoami', element: <WhoAmIScreen /> },
 ])

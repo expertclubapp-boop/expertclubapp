@@ -12,10 +12,16 @@ import {
   Plus
 } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
+import { track } from '../../lib/analytics'
 import { useAuth } from '../../contexts/AuthContext'
 import { checkinService } from '../../services/checkinService'
 import { useWeeklyCheckin } from '../../hooks/useWeeklyCheckin'
 import type { WeeklyCheckin } from '../../types/domain'
+
+type AdminFeedbackCheckin = {
+  adminFeedback?: string
+  reviewStatus?: 'reviewed' | 'changes_requested'
+}
 
 export function WeeklyCheckinScreen() {
   const navigate = useNavigate()
@@ -28,6 +34,7 @@ export function WeeklyCheckinScreen() {
   const weekKey = `${now.getFullYear()}-W${weekNumber.toString().padStart(2, '0')}`
 
   const { checkin: existingCheckin, isLoading } = useWeeklyCheckin(firebaseUser?.uid, weekKey)
+  const reviewMeta = existingCheckin as (WeeklyCheckin & AdminFeedbackCheckin) | null
 
   const [weight, setWeight] = useState('')
   const [waist, setWaist] = useState('')
@@ -84,10 +91,11 @@ export function WeeklyCheckinScreen() {
         weeklyWin,
         notes,
         photoUrls: [],
-        createdAt: existingCheckin?.createdAt || new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        createdAt: existingCheckin?.createdAt,
+        updatedAt: existingCheckin?.updatedAt
       }
       await checkinService.saveWeeklyCheckin(firebaseUser.uid, checkinData)
+      track('weekly_checkin_submitted', { week_key: checkinData.weekKey })
       setShowSuccess(true)
       setTimeout(() => navigate('/app/evolution'), 3000)
     } catch (error) {
@@ -114,7 +122,7 @@ export function WeeklyCheckinScreen() {
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div className="flex-1 text-center">
-            <p className="text-[10px] text-text-muted uppercase tracking-widest mt-1">Semana {weekKey.split('-W')[1]} · {weekKey.split('-W')[0]}</p>
+            <p className="mt-1 text-xs uppercase tracking-widest text-text-secondary">Semana {weekKey.split('-W')[1]} · {weekKey.split('-W')[0]}</p>
             <h1 className="font-display font-bold text-lg leading-none">Check-in Semanal</h1>
           </div>
           <div className="text-right w-10">
@@ -134,8 +142,20 @@ export function WeeklyCheckinScreen() {
               <div key={i} className={`h-2 flex-1 rounded-full ${i < 4 ? 'bg-accent-lime' : i === 4 ? 'bg-accent-lime shadow-[0_0_8px_rgba(183,255,60,0.5)]' : 'bg-white/10'}`} />
             ))}
           </div>
-          <p className="text-[10px] text-text-muted uppercase mt-2 font-bold tracking-wider">Semana 5 de 12 · 4 semanas completadas</p>
+          <p className="mt-2 text-xs font-bold uppercase tracking-wider text-text-secondary">Semana 5 de 12 · 4 semanas completadas</p>
         </section>
+
+        {reviewMeta?.adminFeedback && (
+          <div className="mb-8 p-6 rounded-3xl border border-ec-violet/30 bg-ec-violet/5">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-xs font-black uppercase tracking-widest text-ec-violet">Feedback do Administrador</span>
+              <span className={`rounded-full border px-2.5 py-1 text-xs font-bold ${(reviewMeta?.reviewStatus === 'reviewed' ? 'bg-accent-lime/10 border-accent-lime/20 text-accent-lime' : 'bg-accent-red/10 border-accent-red/20 text-accent-red')}`}>
+                {reviewMeta?.reviewStatus === 'reviewed' ? 'Revisado' : 'Ajuste Solicitado'}
+              </span>
+            </div>
+            <p className="text-sm text-white italic">"{reviewMeta.adminFeedback}"</p>
+          </div>
+        )}
 
         {/* Medidas */}
         <div className="ec-card rounded-2xl p-6 space-y-6">
@@ -181,7 +201,7 @@ export function WeeklyCheckinScreen() {
           <ScaleSelector label="Dias batendo água" max={7} value={waterDays} onChange={setWaterDays} />
           
           <div className="space-y-3">
-            <label className="text-[10px] font-bold text-text-muted uppercase tracking-widest">Sessões de cardio</label>
+            <label className="text-xs font-bold uppercase tracking-widest text-text-secondary">Sessões de cardio</label>
             <div className="flex gap-2">
                <button 
                  onClick={() => setCardio(true)}
@@ -211,7 +231,7 @@ export function WeeklyCheckinScreen() {
           </div>
           
           <div className="space-y-3">
-            <label className="text-[10px] font-bold text-text-muted uppercase tracking-widest">Principal dificuldade</label>
+            <label className="text-xs font-bold uppercase tracking-widest text-text-secondary">Principal dificuldade</label>
             <div className="flex flex-wrap gap-2">
               {['Final de semana', 'Fome noturna', 'Falta de tempo', 'Constância', 'Sono ruim', 'Estagnação', 'Viagem', 'Nenhuma'].map(d => (
                 <button 
@@ -224,7 +244,7 @@ export function WeeklyCheckinScreen() {
           </div>
 
           <div className="space-y-3">
-            <label className="text-[10px] font-bold text-text-muted uppercase tracking-widest">Maior vitória da semana</label>
+            <label className="text-xs font-bold uppercase tracking-widest text-text-secondary">Maior vitória da semana</label>
             <textarea 
               value={weeklyWin}
               onChange={(e) => setWeeklyWin(e.target.value)}
@@ -235,7 +255,7 @@ export function WeeklyCheckinScreen() {
           </div>
 
           <div className="space-y-3">
-            <label className="text-[10px] font-bold text-text-muted uppercase tracking-widest">Observações livres</label>
+            <label className="text-xs font-bold uppercase tracking-widest text-text-secondary">Observações livres</label>
             <textarea 
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
@@ -257,7 +277,7 @@ export function WeeklyCheckinScreen() {
           >
             Salvar Check-in Semanal
           </Button>
-          <p className="text-center text-[10px] text-text-muted uppercase font-bold tracking-widest">+20 XP · Missão semanal concluída</p>
+          <p className="text-center text-xs font-bold uppercase tracking-widest text-text-secondary">+20 XP · Missão semanal concluída</p>
         </div>
 
         {/* Success State Overlay */}
@@ -283,10 +303,10 @@ export function WeeklyCheckinScreen() {
   )
 }
 
-function MetricInput({ label, unit, value, onChange, placeholder }: any) {
+function MetricInput({ label, unit, value, onChange, placeholder }: { label: string; unit: string; value: string; onChange: (value: string) => void; placeholder: string }) {
   return (
     <div className="space-y-2">
-      <label className="text-[10px] font-bold text-text-muted uppercase tracking-widest">{label} <span className="opacity-50 lowercase">{unit}</span></label>
+      <label className="text-xs font-bold uppercase tracking-widest text-text-secondary">{label} <span className="opacity-70 lowercase">{unit}</span></label>
       <input 
         type="number" 
         value={value} 
@@ -298,19 +318,19 @@ function MetricInput({ label, unit, value, onChange, placeholder }: any) {
   )
 }
 
-function PhotoSlot({ label, isAdd }: any) {
+function PhotoSlot({ label, isAdd }: { label: string; isAdd?: boolean }) {
   return (
     <div className={`w-20 h-20 rounded-xl border flex flex-col items-center justify-center gap-1 cursor-pointer transition-all ${isAdd ? 'border-dashed border-subtle bg-white/5 hover:border-accent-lime' : 'border-dashed border-subtle bg-white/5 hover:border-accent-lime'}`}>
       {isAdd ? <Plus className="w-6 h-6 text-text-muted" /> : <Camera className="w-6 h-6 text-text-muted" />}
-      <span className="text-[8px] font-bold uppercase text-text-muted">{label}</span>
+      <span className="text-xs font-bold uppercase text-text-secondary">{label}</span>
     </div>
   )
 }
 
-function ScaleSelector({ label, max, value, onChange }: any) {
+function ScaleSelector({ label, max, value, onChange }: { label: string; max: number; value: number; onChange: (value: number) => void }) {
   return (
     <div className="space-y-3">
-      <label className="text-[10px] font-bold text-text-muted uppercase tracking-widest">{label}</label>
+      <label className="text-xs font-bold uppercase tracking-widest text-text-secondary">{label}</label>
       <div className="flex gap-1.5">
         {Array.from({ length: max + 1 }).map((_, i) => (
           <button 
@@ -324,14 +344,26 @@ function ScaleSelector({ label, max, value, onChange }: any) {
   )
 }
 
-function SliderInput({ label, value, onChange, color, labels = ['Péssimo', 'Ótimo'] }: any) {
+function SliderInput({
+  label,
+  value,
+  onChange,
+  color,
+  labels = ['Péssimo', 'Ótimo'],
+}: {
+  label: string
+  value: number
+  onChange: (value: number) => void
+  color: 'lime' | 'sky'
+  labels?: [string, string]
+}) {
   const accentColor = color === 'lime' ? 'accent-accent-lime' : 'accent-accent-sky'
   const textColor = color === 'lime' ? 'text-accent-lime' : 'text-accent-sky'
   
   return (
     <div className="space-y-2">
       <div className="flex justify-between items-center">
-        <label className="text-[10px] font-bold text-text-muted uppercase tracking-widest">{label}</label>
+        <label className="text-xs font-bold uppercase tracking-widest text-text-secondary">{label}</label>
         <span className={`font-display font-bold ${textColor}`}>{value}</span>
       </div>
       <input 
@@ -342,7 +374,7 @@ function SliderInput({ label, value, onChange, color, labels = ['Péssimo', 'Ót
         onChange={(e) => onChange(Number(e.target.value))}
         className={`w-full h-1.5 bg-bg-primary rounded-lg appearance-none cursor-pointer ${accentColor}`}
       />
-      <div className="flex justify-between text-[8px] text-text-muted uppercase font-bold tracking-widest">
+      <div className="flex justify-between text-xs font-bold uppercase tracking-widest text-text-secondary">
         <span>{labels[0]}</span>
         <span>{labels[1]}</span>
       </div>

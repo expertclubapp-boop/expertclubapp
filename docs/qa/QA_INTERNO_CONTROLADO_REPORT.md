@@ -1,147 +1,89 @@
-# Expert Club — QA Interno Controlado
+# QA Interno Controlado Report
 
-## Veredito
+Data da rodada: 2026-05-15
 
-Aluno V2 completo para QA interno.
+## Status desta frente
 
-Nao e Beta externo.
-Nao e Production Ready.
-Nao e liberacao publica sem ressalvas.
+- Student Visual Legibility Hotfix validado para QA interno controlado
+- Unsafe Data Integrity Sweep validado para QA interno controlado
+- Automated Check-in Insights V1 validado para QA interno controlado
+- Student Evolution Report V1 validado para QA interno controlado
+
+## Resumo
+
+- a frente de prescrição, recomendação e execução já estava íntegra;
+- o dashboard low ticket e a legibilidade crítica do aluno continuam validados;
+- a camada de insights automáticos agora transforma dados reais em resumo semanal, risco de abandono e feedback simples;
+- o aluno agora também enxerga um relatório de evolução consolidado com consistência, treino, dieta, água e check-ins;
+- a rodada atual fechou os writes reais que ainda podiam gravar datas operacionais como string no Firestore;
+- `as any` perigoso em write path ficou zerado;
+- o backfill dry-run continuou limpo;
+- ainda existem dívidas legadas fora do miolo de write, mas não bloqueiam esta validação controlada;
+- release externo continua bloqueado.
 
 ## Validações
 
-| Comando | Status |
+| Comando | Resultado |
 |---|---|
-| npm run qa:seed-users | PASS |
-| npm run typecheck | PASS |
-| npm run build | PASS |
-| npm run smoke:roles | PASS |
-| npm run test:rules | PASS |
-
-## Ambiente Firebase
-
-| Ambiente | Project ID | Uso | Status |
-|---|---|---|---|
-| pre-launch/QA | expertcoaching-b91e2 | QA interno, Vercel Production tecnica pre-lancamento, seeds/smoke/rules controlados | Confirmado pelo owner enquanto nao houver usuarios reais |
-| staging/QA separado | Nao criado | Futuro ambiente de QA apos entrada de usuarios reais | Pendente |
-| production real | Nao formalizado | Ambiente para usuarios reais apos lancamento | Pendente |
+| `npm run typecheck` | PASS |
+| `npm run build` | PASS |
+| `npm run smoke:roles` | PASS |
+| `npm run test:rules` | PASS |
+| `npm run smoke:setup:dry` | PASS |
+| `npm run backfill:date-fields -- --dry-run` | PASS (`wouldUpdate: 0`, `invalid: 0`) |
 
 ## Browser QA
 
-| Rota | Usuario | Status |
-|---|---|---|
-| /admin/dashboard | admin@expertclub.test | PASS |
-| /admin/users | admin@expertclub.test | PASS |
-| /admin/users/:id | admin@expertclub.test | PASS |
-| /admin/subscriptions | admin@expertclub.test | PASS |
-| /admin/affiliates | admin@expertclub.test | PASS |
-| /admin/content | admin@expertclub.test | PASS |
-| /admin/financeiro | admin@expertclub.test | PASS |
-| /admin/workspaces | admin@expertclub.test | PASS |
-| /admin/support | admin@expertclub.test | PASS |
-| /mentor/overview | mentor@expertclub.test | PASS |
-| /mentor/alunos | mentor@expertclub.test | PASS; student2 nao visivel |
-| /mentor/checkins | mentor@expertclub.test | PASS |
-| /mentor/financeiro | mentor@expertclub.test | PASS |
-| /mentor/influencers | mentor@expertclub.test | PASS |
-| /mentor/treinos/prescritor | mentor@expertclub.test | PASS |
-| /mentor/dietas/prescritor | mentor@expertclub.test | PASS |
-| /app/today | student@expertclub.test | PASS |
-| /app/workouts | student@expertclub.test | PASS |
-| /app/workouts/:id | student@expertclub.test | PASS |
-| /app/workouts/session/:id | student@expertclub.test | PASS |
-| /app/diets | student@expertclub.test | PASS |
-| /app/diets/today | student@expertclub.test | PASS |
-| /app/checkin/daily | student@expertclub.test | PASS |
-| /app/checkin/weekly | student@expertclub.test | PASS |
-| /app/content | student@expertclub.test | PASS |
-| /app/challenges | student@expertclub.test | PASS |
-| /app/profile | student@expertclub.test | PASS |
-| /app/billing | student@expertclub.test | PASS |
+- `/app/today` mostrou treino, dieta, água, check-in diário e aderência semanal: PASS
+- `/app/workouts`, `/app/workouts/session/:id`, `/app/diets/today` e `/app/recommendations` ficaram legíveis e funcionais em mobile: PASS
+- edição de preferências, marcação de dieta, registro de água e check-in diário seguiram sem regressão aparente: PASS
+- `/admin/users/:id?tab=treino` abriu em contexto admin e manteve regressão controlada: PASS
+- Student 360 dieta permaneceu coberto pela validação funcional anterior no mesmo ambiente: PASS
+- `/app/today` mostrou `Resumo da sua semana` para aluno com dados reais: PASS
+- `/app/today` mostrou `Dados insuficientes para análise` para aluno com poucos dados: PASS
+- `/admin/users/:id?tab=evolution` mostrou `Risco de abandono` e reasons em PT-BR: PASS
+- `/app/evolution` mostrou relatório de `15` e `30` dias com dados reais: PASS
+- `/app/today` mostrou CTA `Ver relatório de evolução`: PASS
+- `/admin/users/:id?tab=evolucao` abriu o painel de evolução sem erro: PASS
 
-## Student V2 screenshots
+## Evidências
 
-Pasta: `qa/student-v2-parity/`
-
-| Rota | Viewports | Status |
-|---|---|---|
-| /app/today | 390x844, 430x932 | PASS |
-| /app/workouts | 390x844, 430x932 | PASS |
-| /app/workouts/:id | 390x844, 430x932 | PASS |
-| /app/workouts/session/:id | 390x844, 430x932 | PASS |
-| /app/diets | 390x844, 430x932 | PASS |
-| /app/diets/today | 390x844, 430x932 | PASS |
-| /app/checkin/daily | 390x844, 430x932 | PASS |
-| /app/checkin/weekly | 390x844, 430x932 | PASS |
-| /app/content | 390x844, 430x932 | PASS |
-| /app/challenges | 390x844, 430x932 | PASS; overflow 390 corrigido |
-| /app/profile | 390x844, 430x932 | PASS para QA interno |
-| /app/billing | 390x844, 430x932 | PASS para QA interno |
-
-## QA funcional do aluno pos-visual
-
-| Fluxo | Resultado |
-|---|---|
-| /app/today: abrir proximo treino | PASS |
-| /app/workouts: abrir treino | PASS |
-| /app/workouts/:id: iniciar sessao | PASS |
-| /app/workouts/session/:id: registrar serie | PASS |
-| /app/diets: abrir dieta | PASS |
-| /app/diets/today: renderizar/marcar item se existir | PASS |
-| /app/checkin/daily: salvar check-in | PASS |
-| /app/checkin/weekly: salvar check-in | PASS |
-| /app/content: abrir conteudo | PASS |
-| /app/content: marcar progresso | PASS |
-| /app/challenges: entrar/ver desafio | PASS |
-| /app/profile: salvar alteracao | PASS |
-| /app/billing: renderizar sem permission denied | PASS |
-
-## Bloqueios resolvidos
-
-- Auth real
-- Claims reais
-- Permission denied no admin dashboard
-- Sidebar duplicada
-- Canvas centralizado
-- Rules collectionGroup testadas
-- Indices Firestore do Launch Dashboard criados e filtros server-side restaurados
-- Normalizacao de datas preparada: novos writes/seeds usam Timestamp e backfill dry-run existe
-- Aluno billing sem permission denied
-- Challenge join sem `photoURL: undefined`
-- Overflow horizontal em /app/challenges no viewport 390
-
-## Pendencias importantes
-
-- Reabrir decisao de ambientes antes de usuario real, pagamento real ou dado real de cliente
-- Executar backfill de datas com aprovacao explicita se for necessario limpar documentos legados ISO antes de escala
-- Expandir screenshots para o restante do produto antes de Beta externo
-
-## Datas Firestore
-
-| Item | Status |
-|---|---|
-| Padrao oficial Timestamp documentado | PASS |
-| `adminLaunchService` com cursores Timestamp | PASS |
-| Seeds/smoke de QA escrevendo Timestamp nos campos relevantes | PASS |
-| Backfill dry-run de datas | PASS |
-| Backfill apply | Pendente; exige aprovacao explicita |
-
-Dry-run em 2026-05-07: 52 documentos escaneados, 41 documentos seriam atualizados, 0 escritos, 0 campos invalidos.
-
-Screenshot de validacao: `qa/date-normalization/admin-dashboard-date-normalization-1440.png`
-
-## Firestore indexes
-
-| Collection Group | Campo | Status |
-|---|---|---|
-| workoutSessions | startedAt | PASS; single-field collection group index criado e validado no browser |
-| dietDays | createdAt | PASS; single-field collection group index criado e validado no browser |
-| dailyCheckins | createdAt | PASS; single-field collection group index criado e validado no browser |
-
-Screenshot de validacao: `qa/firestore-indexes/admin-dashboard-index-validation-final.png`
+- `qa/low-ticket-dashboard/student-dashboard-main-390.png`
+- `qa/low-ticket-dashboard/student-dashboard-main-430.png`
+- `qa/low-ticket-dashboard/student-dashboard-main-1440-preview.png`
+- `qa/low-ticket-dashboard/student-dashboard-water-updated.png`
+- `qa/low-ticket-dashboard/student-dashboard-daily-checkin-pending.png`
+- `qa/low-ticket-dashboard/student-dashboard-daily-checkin-completed.png`
+- `qa/low-ticket-dashboard/student-dashboard-evolution-countdown.png`
+- `qa/low-ticket-dashboard/student-dashboard-recommendations-refresh.png`
+- `qa/low-ticket-dashboard/student-dashboard-no-plan-state.png`
+- `qa/student-visual-legibility-hotfix/student-today-legibility-fixed-390.png`
+- `qa/student-visual-legibility-hotfix/student-workouts-legibility-fixed-390.png`
+- `qa/student-visual-legibility-hotfix/student-workout-session-legibility-fixed-390.png`
+- `qa/student-visual-legibility-hotfix/student-diet-legibility-fixed-390.png`
+- `qa/student-visual-legibility-hotfix/student-recommendations-legibility-fixed-390.png`
+- `qa/automated-checkin-insights/student-today-insights-summary.png`
+- `qa/automated-checkin-insights/student-today-insufficient-data.png`
+- `qa/automated-checkin-insights/admin-student-insights-panel.png`
+- `qa/automated-checkin-insights/admin-student-churn-risk.png`
+- `qa/student-evolution-report/student-evolution-report-15d.png`
+- `qa/student-evolution-report/student-evolution-report-30d.png`
+- `qa/student-evolution-report/student-evolution-insufficient-data.png`
+- `qa/student-evolution-report/student-today-evolution-preview.png`
+- `qa/student-evolution-report/admin-student-evolution-report.png`
+- `qa/legacy-debt-sweep/affiliate-public-page-no-dead-links.png`
+- `qa/legacy-debt-sweep/admin-student-360-regression-check.png`
 
 ## Guardrails
 
-- Bypass QA local nao prova permissao Firestore.
-- Nao publicar rules em producao sem confirmacao formal de ambiente.
-- Nao declarar Beta externo, Production Ready ou "100% V2" em sentido publico/produto completo.
+- não houve deploy
+- não houve backfill apply
+- não houve seed destrutivo amplo
+- release externo continua bloqueado
+
+## Veredito
+
+- Student Visual Legibility Hotfix validado para QA interno controlado
+- Unsafe Data Integrity Sweep validado para QA interno controlado
+- Automated Check-in Insights V1 validado para QA interno controlado
+- Student Evolution Report V1 validado para QA interno controlado

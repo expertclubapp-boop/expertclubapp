@@ -17,6 +17,7 @@ import {
   signInWithEmail,
   signInWithGoogle,
 } from '../lib/firebase/auth'
+import { identifyUser, resetAnalyticsUser, track } from '../lib/analytics'
 import { COLLECTIONS } from '../lib/firebase/paths'
 import type { User } from '../types/domain'
 
@@ -95,6 +96,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             ...docSnap.data(),
           } as User
           setUser(userData)
+          identifyUser(userData.uid, {
+            email: userData.email,
+            role: userData.role,
+            displayName: userData.displayName,
+          })
         } else {
           setUser(null)
         }
@@ -116,6 +122,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(true)
     try {
       await signInWithGoogle()
+      track('user_signed_in', { method: 'google' })
     } catch (error) {
       setIsLoading(false)
       throw error
@@ -126,6 +133,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(true)
     try {
       await signInWithEmail(email, password)
+      track('user_signed_in', { method: 'email' })
     } catch (error) {
       setIsLoading(false)
       throw error
@@ -136,6 +144,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(true)
     try {
       await createAccountWithEmail(email, password, displayName)
+      track('user_signed_up', { method: 'email' })
     } catch (error) {
       setIsLoading(false)
       throw error
@@ -148,6 +157,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     try {
+      track('user_signed_out')
+      resetAnalyticsUser()
       await firebaseLogout()
     } catch (error) {
       throw error

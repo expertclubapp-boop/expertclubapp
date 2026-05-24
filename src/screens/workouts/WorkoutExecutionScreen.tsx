@@ -1,21 +1,127 @@
-import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
+import { useState, useEffect, useMemo, useRef, useCallback, type ReactNode } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  Check, Timer, ArrowLeft, ArrowRight, X,
-  SkipForward, Plus, Pause, PlayCircle, AlertTriangle,
-  Trophy, Share2, TrendingUp, Dumbbell, Zap, Clock, RefreshCw
+  Check,
+  Timer,
+  ArrowLeft,
+  ArrowRight,
+  X,
+  SkipForward,
+  Plus,
+  Pause,
+  PlayCircle,
+  AlertTriangle,
+  Trophy,
+  Share2,
+  TrendingUp,
+  Dumbbell,
+  Zap,
+  Clock,
+  RefreshCw,
+  Info,
 } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
 import { ProgressBar } from '../../components/ui/ProgressBar'
+import { track } from '../../lib/analytics'
 import { useAuth } from '../../contexts/AuthContext'
 import { useWorkoutSession } from '../../hooks/useWorkoutSession'
 import { useWorkout } from '../../hooks/useWorkouts'
+import { exerciseService } from '../../services/exerciseService'
+import { workoutProgressionService, type ExerciseProgression } from '../../services/workoutProgressionService'
 import { workoutSessionService } from '../../services/workoutSessionService'
-import type { SetLog, WorkoutPR, WorkoutExercise } from '../../types/domain'
+import { fromFirestoreDate } from '../../lib/firebase/date'
+import type { Exercise, SetLog, WorkoutPR, WorkoutExercise, WorkoutExerciseSubstitution, WorkoutSession } from '../../types/domain'
 
 type ScreenPhase = 'workout' | 'completion'
+
+type SetInput = {
+  reps: string
+  load: string
+}
+
+type SetInputErrors = {
+  reps?: string
+  load?: string
+}
+
+type SetProgressionReference = {
+  loadLabel: string
+  repsLabel: string
+}
+
+function formatDate(value?: any) {
+  const date = fromFirestoreDate(value)
+  return date ? date.toLocaleDateString('pt-BR') : '-'
+}
+
+function formatTime(seconds: number) {
+  const minutes = Math.floor(seconds / 60)
+  const remainingSeconds = seconds % 60
+  return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`
+}
+
+function formatLoad(value?: number) {
+  if (value === undefined || value === null || Number.isNaN(value)) return '-'
+  return `${value.toLocaleString('pt-BR', { maximumFractionDigits: 2 })} kg`
+}
+
+function formatTonnage(value: number) {
+  return `${value.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} kg`
+}
+
+function sanitizeTextList(items?: string[]) {
+  return (items || []).map((item) => item.trim()).filter(Boolean)
+}
+
+function normalizeVideoUrl(url?: string) {
+  if (!url) return null
+
+  try {
+    const parsed = new URL(url)
+    if (parsed.hostname.includes('youtube.com') && parsed.searchParams.get('v')) {
+      return `https://www.youtube.com/embed/${parsed.searchParams.get('v')}`
+    }
+    if (parsed.hostname.includes('youtu.be')) {
+      const videoId = parsed.pathname.replace('/', '')
+      return videoId ? `https://www.youtube.com/embed/${videoId}` : url
+    }
+    return url
+  } catch {
+    return null
+  }
+}
+
+function isValidSetLog(log: Partial<SetLog> | null | undefined) {
+  if (!log) return false
+  if (!Number.isFinite(log.reps) || !Number.isFinite(log.loadKg)) return false
+  if ((log.reps ?? 0) <= 0) return false
+  if ((log.loadKg ?? 0) < 0) return false
+  return true
+}
+
+function computeTotalTonnage(logs: SetLog[]) {
+  return logs.reduce((sum, log) => {
+    if (!isValidSetLog(log)) return sum
+    return sum + log.loadKg * log.reps
+  }, 0)
+}
+
+function parseNumericInput(raw: string, allowDecimal: boolean) {
+  const normalized = raw.replace(',', '.').trim()
+  if (!normalized) return null
+  const parsed = allowDecimal ? Number.parseFloat(normalized) : Number.parseInt(normalized, 10)
+  return Number.isFinite(parsed) ? parsed : null
+}
+
+function getPreviousSetReference(previousSession: WorkoutSession | null, exerciseId: string, setNumber: number, fallbackReps: string): SetProgressionReference {
+  const previousLog = previousSession?.logs?.find((log) => log.exerciseId === exerciseId && log.setNumber === setNumber && isValidSetLog(log))
+  return {
+    loadLabel: previousLog ? previousLog.loadKg.toLocaleString('pt-BR', { maximumFractionDigits: 2 }) : '',
+    repsLabel: previousLog ? String(previousLog.reps) : fallbackReps,
+  }
+}
 
 function WorkoutExecutionEmptyState({
   title,
@@ -33,7 +139,7 @@ function WorkoutExecutionEmptyState({
           <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-ec-violet/15 text-ec-violet">
             <Dumbbell className="h-6 w-6" />
           </div>
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-ec-violet">Treino</p>
+          <p className="text-xs font-black uppercase tracking-[0.2em] text-ec-violet">Treino</p>
           <h1 className="mt-2 font-display text-2xl font-black uppercase italic leading-tight text-white">
             {title}
           </h1>
@@ -56,15 +162,20 @@ export function WorkoutExecutionScreen() {
   const { session, isLoading: sessionLoading } = useWorkoutSession(sessionId)
   const { workout, isLoading: workoutLoading } = useWorkout(session?.workoutId)
 
-  const currentDay = useMemo(() => workout?.days.find(d => d.id === session?.dayId), [workout, session])
-
+  const [previousSession, setPreviousSession] = useState<WorkoutSession | null>(null)
+  const [exerciseDetails, setExerciseDetails] = useState<Record<string, Exercise>>({})
+  const [exerciseProgression, setExerciseProgression] = useState<Record<string, ExerciseProgression>>({})
+  const [contextError, setContextError] = useState<string | null>(null)
   const [currentExerciseIdx, setCurrentExerciseIdx] = useState(0)
   const [restTimer, setRestTimer] = useState(0)
   const [isRestActive, setIsRestActive] = useState(false)
   const [isRestPaused, setIsRestPaused] = useState(false)
   const [totalSeconds, setTotalSeconds] = useState(0)
   const [phase, setPhase] = useState<ScreenPhase>('workout')
-  const [setInputs, setSetInputs] = useState<Record<string, { reps: string; load: string }>>({})
+  const [setInputs, setSetInputs] = useState<Record<string, SetInput>>({})
+  const [setInputErrors, setSetInputErrors] = useState<Record<string, SetInputErrors>>({})
+  const [savingSetKey, setSavingSetKey] = useState<string | null>(null)
+  const [screenError, setScreenError] = useState<string | null>(null)
   const [showInactivityWarning, setShowInactivityWarning] = useState(false)
   const [completionPrs, setCompletionPrs] = useState<WorkoutPR[]>([])
   const [volumeDeltaPct, setVolumeDeltaPct] = useState<number | null>(null)
@@ -73,19 +184,97 @@ export function WorkoutExecutionScreen() {
   const [substitutionModalOpen, setSubstitutionModalOpen] = useState(false)
   const lastInteraction = useRef(Date.now())
 
+  const currentDay = useMemo(() => workout?.days.find((day) => day.id === session?.dayId), [workout, session])
+
+  useEffect(() => {
+    const uid = firebaseUser?.uid ?? ''
+    const day = currentDay
+    const activeSession = session
+    if (!uid || !day) return
+    const dayData = day
+
+    let active = true
+
+    async function loadContext() {
+      try {
+        const [recentSessions, detailEntries, progressionEntries] = await Promise.all([
+          sessionId && activeSession?.workoutId
+            ? workoutSessionService.getRecentSessions(uid, 30).then((sessions) =>
+                sessions.filter((item) => item.id !== sessionId && item.workoutId === activeSession.workoutId && item.status === 'completed')
+              )
+            : Promise.resolve([]),
+          Promise.all(
+            dayData.exercises.map(async (item) => {
+              const detail = await exerciseService.getExercise(item.exerciseId)
+              return [item.exerciseId, detail] as const
+            })
+          ),
+          Promise.all(
+            dayData.exercises.map(async (item) => {
+              const progression = await workoutProgressionService.getExerciseProgression(uid, item.id)
+              return [item.id, progression] as const
+            })
+          ),
+        ])
+
+        if (!active) return
+
+        setPreviousSession(recentSessions[0] || null)
+        setExerciseDetails(
+          detailEntries.reduce<Record<string, Exercise>>((acc, [exerciseId, detail]) => {
+            if (detail) acc[exerciseId] = detail
+            return acc
+          }, {})
+        )
+        setExerciseProgression(
+          progressionEntries.reduce<Record<string, ExerciseProgression>>((acc, [exerciseId, progression]) => {
+            acc[exerciseId] = progression
+            return acc
+          }, {})
+        )
+        setContextError(null)
+      } catch (error) {
+        if (!active) return
+        setContextError(error instanceof Error ? error.message : 'Não foi possível carregar o contexto de progressão deste treino.')
+      }
+    }
+
+    loadContext()
+
+    return () => {
+      active = false
+    }
+  }, [currentDay, firebaseUser?.uid, session?.workoutId, sessionId])
+
   const originalExercise = currentDay?.exercises[currentExerciseIdx]
-  const exercise = originalExercise ? (session?.substitutions?.[originalExercise.id] || originalExercise) : undefined
-  const progress = currentDay ? Math.round(((currentExerciseIdx) / currentDay.exercises.length) * 100) : 0
+  const exercise: WorkoutExercise | undefined = useMemo(() => {
+    if (!originalExercise) return undefined
+
+    const substitution = session?.substitutions?.[originalExercise.id]
+    const activeExercise = substitution || originalExercise
+    const detail = exerciseDetails[activeExercise.exerciseId]
+
+    return {
+      ...originalExercise,
+      ...activeExercise,
+      videoUrl: activeExercise.videoUrl || detail?.videoUrl,
+      instructions: activeExercise.instructions || detail?.instructions,
+      cues: sanitizeTextList(activeExercise.cues || detail?.cues),
+      commonMistakes: sanitizeTextList(activeExercise.commonMistakes || detail?.commonMistakes),
+      notes: activeExercise.notes || originalExercise.notes,
+      muscleGroups: activeExercise.muscleGroups?.length ? activeExercise.muscleGroups : detail?.muscleGroups || originalExercise.muscleGroups,
+      equipment: activeExercise.equipment || detail?.equipment || originalExercise.equipment,
+    }
+  }, [exerciseDetails, originalExercise, session?.substitutions])
+
+  const currentProgression = exercise ? exerciseProgression[exercise.id] : undefined
+  const progress = currentDay ? Math.round((currentExerciseIdx / currentDay.exercises.length) * 100) : 0
 
   const startedAtMs = useMemo(() => {
-    const raw = session?.startedAt as any
-    if (!raw) return Date.now()
-    if (typeof raw === 'string') return new Date(raw).getTime()
-    if (typeof raw?.toDate === 'function') return raw.toDate().getTime()
-    return Date.now()
+    const startedAt = fromFirestoreDate(session?.startedAt)
+    return startedAt ? startedAt.getTime() : Date.now()
   }, [session?.startedAt])
 
-  // Total workout timer persisted from startedAt
   useEffect(() => {
     if (phase !== 'workout') return
     const tick = () => setTotalSeconds(Math.max(0, Math.floor((Date.now() - startedAtMs) / 1000)))
@@ -94,80 +283,74 @@ export function WorkoutExecutionScreen() {
     return () => clearInterval(interval)
   }, [phase, startedAtMs])
 
-  // Rest countdown
   useEffect(() => {
     if (!isRestActive || isRestPaused || restTimer <= 0) return
     const interval = setInterval(() => {
-      setRestTimer(t => {
-        if (t <= 1) {
+      setRestTimer((value) => {
+        if (value <= 1) {
           setIsRestActive(false)
-          // Vibrate if available
           if (navigator.vibrate) navigator.vibrate([200, 100, 200])
           return 0
         }
-        return t - 1
+        return value - 1
       })
     }, 1000)
     return () => clearInterval(interval)
   }, [isRestActive, isRestPaused, restTimer])
 
-  // Inactivity detection
   useEffect(() => {
     if (phase !== 'workout') return
     const check = setInterval(() => {
       const idle = Date.now() - lastInteraction.current
       if (idle > 10 * 60 * 1000 && !showInactivityWarning) {
         setShowInactivityWarning(true)
-        if (firebaseUser && sessionId) {
+        if (firebaseUser?.uid && sessionId) {
           workoutSessionService.updateSession(firebaseUser.uid, sessionId, {
-            inactiveWarningShownAt: new Date().toISOString(),
-            lastInteractionAt: new Date(lastInteraction.current).toISOString(),
-          }).catch(() => {})
+            inactiveWarningShownAt: new Date(),
+            lastInteractionAt: new Date(lastInteraction.current),
+          }).catch(() => undefined)
         }
       }
-      if (idle > 20 * 60 * 1000 && firebaseUser && sessionId) {
+      if (idle > 20 * 60 * 1000 && firebaseUser?.uid && sessionId) {
         workoutSessionService.updateSession(firebaseUser.uid, sessionId, {
           status: 'inactive',
-          lastInteractionAt: new Date(lastInteraction.current).toISOString(),
-        }).catch(() => {})
+          lastInteractionAt: new Date(lastInteraction.current),
+        }).catch(() => undefined)
       }
     }, 30000)
     return () => clearInterval(check)
-  }, [phase, showInactivityWarning, firebaseUser, sessionId])
+  }, [firebaseUser?.uid, phase, sessionId, showInactivityWarning])
 
   const touchInteraction = useCallback(() => {
     lastInteraction.current = Date.now()
     setShowInactivityWarning(false)
-    if (firebaseUser && sessionId) {
+    if (firebaseUser?.uid && sessionId) {
       workoutSessionService.updateSession(firebaseUser.uid, sessionId, {
         status: 'active',
-        lastInteractionAt: new Date().toISOString(),
-      }).catch(() => {})
+        lastInteractionAt: new Date(),
+      }).catch(() => undefined)
     }
-  }, [firebaseUser, sessionId])
+  }, [firebaseUser?.uid, sessionId])
 
-  // --- Computed stats ---
   const logs = session?.logs || []
-  const totalTonnage = logs.reduce((sum, l) => sum + l.loadKg * l.reps, 0)
-  const completedExerciseIds = new Set(logs.map(l => l.exerciseId))
+  const totalTonnage = computeTotalTonnage(logs)
+  const completedExerciseIds = new Set(logs.map((log) => log.exerciseId))
   const totalSetsCompleted = logs.length
+
   const bestExercise = useMemo(() => {
     const volumes = new Map<string, number>()
-    logs.forEach(log => volumes.set(log.exerciseId, (volumes.get(log.exerciseId) || 0) + log.loadKg * log.reps))
+    logs.forEach((log) => {
+      if (!isValidSetLog(log)) return
+      volumes.set(log.exerciseId, (volumes.get(log.exerciseId) || 0) + log.loadKg * log.reps)
+    })
     const best = [...volumes.entries()].sort((a, b) => b[1] - a[1])[0]
-    return best ? currentDay?.exercises.find(ex => ex.id === best[0])?.exerciseName : null
-  }, [logs, currentDay])
-
-  const formatTime = (s: number) => {
-    const m = Math.floor(s / 60)
-    const sec = s % 60
-    return `${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`
-  }
+    return best ? currentDay?.exercises.find((item) => item.id === best[0])?.exerciseName : null
+  }, [currentDay, logs])
 
   if (sessionLoading || workoutLoading) {
     return (
       <div className="ec-student-standalone min-h-screen flex items-center justify-center">
-        <div className="w-10 h-10 border-4 border-ec-violet/30 border-t-ec-violet rounded-full animate-spin" />
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-ec-violet/30 border-t-ec-violet" />
       </div>
     )
   }
@@ -182,90 +365,101 @@ export function WorkoutExecutionScreen() {
     )
   }
 
-  // ============ COMPLETION SCREEN ============
   if (phase === 'completion') {
     return (
       <div className="ec-student-standalone min-h-screen text-text-primary flex flex-col">
         <div className="flex-1 flex flex-col items-center justify-center px-6 py-12 text-center">
           <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', damping: 12 }}>
-            <div className="w-24 h-24 rounded-full bg-accent-lime/20 flex items-center justify-center mb-8 mx-auto ring-4 ring-accent-lime/10">
-              <Trophy className="w-12 h-12 text-accent-lime" />
+            <div className="mx-auto mb-8 flex h-24 w-24 items-center justify-center rounded-full bg-accent-lime/20 ring-4 ring-accent-lime/10">
+              <Trophy className="h-12 w-12 text-accent-lime" />
             </div>
           </motion.div>
 
-          <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-            className="font-display text-3xl sm:text-4xl text-white uppercase italic font-black mb-2 tracking-tight"
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="mb-2 font-display text-3xl font-black uppercase italic tracking-tight text-white sm:text-4xl"
           >
-            Treino Finalizado!
+            Treino finalizado
           </motion.h1>
-          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}
-            className="text-text-muted text-sm mb-10 max-w-sm"
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="mb-10 max-w-sm text-sm text-text-muted"
           >
-            Boa. Você registrou mais um treino. É isso que constrói constância.
+            Boa. Você registrou mais uma sessão real e deixou histórico útil para a próxima execução.
           </motion.p>
 
-          {/* Stats Grid */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
-            className="grid grid-cols-2 gap-3 w-full max-w-sm mb-10"
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="mb-10 grid w-full max-w-sm grid-cols-2 gap-3"
           >
-            <StatCard icon={<Clock className="w-4 h-4" />} label="Duração" value={formatTime(totalSeconds)} />
-            <StatCard icon={<Dumbbell className="w-4 h-4" />} label="Exercícios" value={`${completedExerciseIds.size}/${currentDay.exercises.length}`} />
-            <StatCard icon={<Zap className="w-4 h-4" />} label="Séries" value={totalSetsCompleted.toString()} />
-            <StatCard icon={<TrendingUp className="w-4 h-4" />} label="Tonelagem" value={`${(totalTonnage / 1000).toFixed(1)}t`} />
+            <StatCard icon={<Clock className="h-4 w-4" />} label="Duração" value={formatTime(totalSeconds)} />
+            <StatCard icon={<Dumbbell className="h-4 w-4" />} label="Exercícios" value={`${completedExerciseIds.size}/${currentDay.exercises.length}`} />
+            <StatCard icon={<Zap className="h-4 w-4" />} label="Séries" value={String(totalSetsCompleted)} />
+            <StatCard icon={<TrendingUp className="h-4 w-4" />} label="Tonelagem" value={formatTonnage(totalTonnage)} />
           </motion.div>
 
-          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
-            className="w-full max-w-sm mb-8 rounded-2xl border border-white/10 bg-white/[0.035] p-4 text-left"
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="mb-8 w-full max-w-sm rounded-2xl border border-white/10 bg-white/[0.035] p-4 text-left"
           >
-            <p className="text-[10px] font-black uppercase tracking-widest text-text-muted">Resumo</p>
+            <p className="text-xs font-black uppercase tracking-widest text-text-secondary">Resumo</p>
             <p className="mt-2 text-sm text-white">
-              Tempo de treino: {formatTime(totalSeconds)}. {bestExercise ? `Melhor exercício: ${bestExercise}.` : 'Este é seu primeiro registro desse treino.'}
+              Tempo de treino: {formatTime(totalSeconds)}. {bestExercise ? `Maior volume em ${bestExercise}.` : 'Esse treino ainda está construindo seu histórico.'}
             </p>
             {volumeDeltaPct !== null && (
               <p className="mt-2 text-sm font-bold text-accent-lime">
-                Você fez {volumeDeltaPct >= 0 ? '+' : ''}{volumeDeltaPct}% de volume contra a última sessão.
+                Você fez {volumeDeltaPct >= 0 ? '+' : ''}
+                {volumeDeltaPct}% de volume contra a última sessão.
               </p>
             )}
             {completionPrs.length > 0 ? (
               <div className="mt-3 space-y-1">
-                {completionPrs.slice(0, 3).map(pr => (
+                {completionPrs.slice(0, 3).map((pr) => (
                   <p key={`${pr.exerciseId}-${pr.type}`} className="text-xs text-accent-lime">
-                    Novo PR em {pr.exerciseName}: {pr.type === 'load' ? `${pr.value}kg` : pr.type === 'reps' ? `${pr.value} reps` : `${pr.value}kg de volume`}
+                    Novo PR em {pr.exerciseName}: {pr.type === 'load' ? `${pr.value} kg` : pr.type === 'reps' ? `${pr.value} reps` : `${pr.value} kg de volume`}
                   </p>
                 ))}
               </div>
             ) : (
-              <p className="mt-3 text-xs text-text-muted">PRs aparecerão aqui conforme você registrar cargas e repetições.</p>
+              <p className="mt-3 text-xs text-text-muted">Os novos recordes aparecerão aqui quando houver comparação real com sessões anteriores.</p>
             )}
           </motion.div>
 
-          {/* Actions */}
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}
-            className="flex flex-col gap-3 w-full max-w-sm"
-          >
-            <Button variant="primary" className="w-full py-5" icon={<Share2 className="w-5 h-5" />}
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }} className="flex w-full max-w-sm flex-col gap-3">
+            <Button
+              variant="primary"
+              className="w-full py-5"
+              icon={<Share2 className="h-5 w-5" />}
               onClick={() => {
-                const text = `🏋️ Treino finalizado!\n⏱ ${formatTime(totalSeconds)}\n💪 ${totalSetsCompleted} séries\n🔥 ${(totalTonnage / 1000).toFixed(1)}t de volume\n\n#ExpertClub`
+                const text = `Treino finalizado\nTempo: ${formatTime(totalSeconds)}\nSéries: ${totalSetsCompleted}\nVolume: ${formatTonnage(totalTonnage)}`
                 if (navigator.share) {
-                  navigator.share({ text }).catch(() => {})
-                } else {
-                  navigator.clipboard.writeText(text)
-                  setShareFeedback('Resultado copiado para a área de transferência.')
+                  navigator.share({ text }).catch(() => undefined)
+                  return
                 }
+                navigator.clipboard.writeText(text)
+                setShareFeedback('Resumo copiado para a área de transferência.')
               }}
             >
-              Compartilhar
+              Compartilhar resultado
             </Button>
             {shareFeedback && (
               <p className="rounded-xl border border-accent-lime/35 bg-accent-lime/10 px-4 py-3 text-center text-xs font-bold text-accent-lime">
                 {shareFeedback}
               </p>
             )}
-            <Button variant="ghost" className="w-full py-5 border-subtle" onClick={() => navigate('/app/evolution')}>
-              Ver Evolução
+            <Button variant="ghost" className="w-full border-subtle py-5" onClick={() => navigate('/app/evolution')}>
+              Ver evolução
             </Button>
             <Button variant="ghost" className="w-full py-4 text-text-muted" onClick={() => navigate('/app/today')}>
-              Voltar para Hoje
+              Voltar para hoje
             </Button>
           </motion.div>
         </div>
@@ -273,8 +467,7 @@ export function WorkoutExecutionScreen() {
     )
   }
 
-  // ============ WORKOUT SCREEN ============
-  if (!exercise) {
+  if (!exercise || !originalExercise) {
     return (
       <WorkoutExecutionEmptyState
         title="Exercício não encontrado"
@@ -284,258 +477,516 @@ export function WorkoutExecutionScreen() {
     )
   }
 
-  const handleSetComplete = async (setNumber: number) => {
-    if (!firebaseUser || !sessionId) return
+  const activeSession = session
+  const activeDay = currentDay
+  const activeExercise = exercise
+  const baseExercise = originalExercise
+
+  async function handleSetComplete(setNumber: number) {
+    if (!firebaseUser?.uid || !sessionId) return
+
     touchInteraction()
+    setScreenError(null)
 
-    const key = `${exercise.id}-${setNumber}`
-    const input = setInputs[key]
-    const reps = parseInt(input?.reps || exercise.reps) || 0
-    const load = parseFloat(input?.load || '0') || 0
+    const key = `${activeExercise.id}-${setNumber}`
+    const input = setInputs[key] || { reps: '', load: '' }
+    const reps = parseNumericInput(input.reps, false)
+    const load = parseNumericInput(input.load, true)
+    const nextErrors: SetInputErrors = {}
 
-    const newLog: SetLog = { exerciseId: exercise.id, setNumber, reps, loadKg: load, rpe: 8 }
-    const updatedLogs = [...(session.logs || []), newLog]
+    if (reps === null) {
+      nextErrors.reps = 'Informe as repetições desta série.'
+    } else if (reps <= 0) {
+      nextErrors.reps = 'Use um número maior que zero.'
+    }
 
+    if (load === null) {
+      nextErrors.load = 'Informe a carga desta série.'
+    } else if (load < 0) {
+      nextErrors.load = 'A carga não pode ser negativa.'
+    }
+
+    if (nextErrors.reps || nextErrors.load) {
+      setSetInputErrors((prev) => ({ ...prev, [key]: nextErrors }))
+      return
+    }
+
+    const prescribedRpe = parseNumericInput(activeExercise.rpeTarget || '', true)
+    const newLog: SetLog = {
+      exerciseId: activeExercise.id,
+      setNumber,
+      reps: reps as number,
+      loadKg: load as number,
+      rpe: prescribedRpe ?? undefined,
+    }
+    const updatedLogs = [...(activeSession.logs || []).filter((log) => !(log.exerciseId === activeExercise.id && log.setNumber === setNumber)), newLog]
+      .sort((a, b) => a.exerciseId.localeCompare(b.exerciseId) || a.setNumber - b.setNumber)
+
+    setSavingSetKey(key)
     try {
       await workoutSessionService.updateSession(firebaseUser.uid, sessionId, { logs: updatedLogs })
-      setRestTimer(exercise.restSeconds)
+      setSetInputErrors((prev) => ({ ...prev, [key]: {} }))
+      setRestTimer(activeExercise.restSeconds)
       setIsRestActive(true)
       setIsRestPaused(false)
     } catch (error) {
-      console.error('Error updating session logs:', error)
+      setScreenError(error instanceof Error ? error.message : 'Não foi possível salvar esta série agora.')
+    } finally {
+      setSavingSetKey(null)
     }
   }
 
-  const handleSubstitute = async (alternative: any) => {
-    if (!firebaseUser || !sessionId || !originalExercise) return
+  async function handleSubstitute(alternative: WorkoutExerciseSubstitution) {
+    if (!firebaseUser?.uid || !sessionId) return
+
     touchInteraction()
-    
+    setScreenError(null)
+
     const updatedSubstitutions = {
-      ...(session.substitutions || {}),
-      [originalExercise.id]: {
-        ...originalExercise,
+      ...(activeSession.substitutions || {}),
+      [baseExercise.id]: {
+        ...baseExercise,
         exerciseId: alternative.exerciseId,
         exerciseName: alternative.exerciseName,
-        muscleGroups: alternative.muscleGroups || originalExercise.muscleGroups,
-        equipment: alternative.equipment || originalExercise.equipment,
-        videoUrl: alternative.videoUrl || originalExercise.videoUrl,
-        instructions: alternative.instructions || originalExercise.instructions,
-      } as WorkoutExercise
+        muscleGroups: alternative.muscleGroups || baseExercise.muscleGroups,
+        equipment: alternative.equipment || baseExercise.equipment,
+        videoUrl: alternative.videoUrl || baseExercise.videoUrl,
+        instructions: alternative.instructions || baseExercise.instructions,
+        cues: baseExercise.cues,
+        commonMistakes: baseExercise.commonMistakes,
+      },
     }
 
     try {
       await workoutSessionService.updateSession(firebaseUser.uid, sessionId, { substitutions: updatedSubstitutions })
       setSubstitutionModalOpen(false)
     } catch (error) {
-      console.error('Error substituting exercise:', error)
+      setScreenError(error instanceof Error ? error.message : 'Não foi possível substituir o exercício agora.')
     }
   }
 
-  const handleFinish = async () => {
-    if (!firebaseUser || !sessionId) return
+  async function handleFinish() {
+    if (!firebaseUser?.uid || !sessionId) return
+
+    setScreenError(null)
+
     try {
       const recent = await workoutSessionService.getRecentSessions(firebaseUser.uid, 30)
-      const previous = recent.find(item => item.id !== sessionId && item.workoutId === session.workoutId && item.status === 'completed')
+      const previous = recent.find((item) => item.id !== sessionId && item.workoutId === activeSession.workoutId && item.status === 'completed')
       const previousLogs = previous?.logs || []
       const prs: WorkoutPR[] = []
 
-      for (const log of logs) {
-        const exerciseName = currentDay.exercises.find(item => item.id === log.exerciseId)?.exerciseName || 'exercício'
-        const previousForExercise = previousLogs.filter(item => item.exerciseId === log.exerciseId)
-        const previousLoad = Math.max(0, ...previousForExercise.map(item => item.loadKg || 0))
-        const previousReps = Math.max(0, ...previousForExercise.map(item => item.reps || 0))
-        const previousVolume = Math.max(0, ...previousForExercise.map(item => (item.loadKg || 0) * (item.reps || 0)))
+      for (const log of logs.filter((item) => isValidSetLog(item))) {
+        const exerciseName = activeDay.exercises.find((item) => item.id === log.exerciseId)?.exerciseName || 'Exercício'
+        const previousForExercise = previousLogs.filter((item) => item.exerciseId === log.exerciseId && isValidSetLog(item))
+        const previousLoad = Math.max(0, ...previousForExercise.map((item) => item.loadKg || 0))
+        const previousReps = Math.max(0, ...previousForExercise.map((item) => item.reps || 0))
+        const previousVolume = Math.max(0, ...previousForExercise.map((item) => (item.loadKg || 0) * (item.reps || 0)))
         const currentVolume = log.loadKg * log.reps
+
         if (log.loadKg > previousLoad) prs.push({ exerciseId: log.exerciseId, exerciseName, type: 'load', value: log.loadKg, previousValue: previousLoad })
         if (log.reps > previousReps) prs.push({ exerciseId: log.exerciseId, exerciseName, type: 'reps', value: log.reps, previousValue: previousReps })
         if (currentVolume > previousVolume) prs.push({ exerciseId: log.exerciseId, exerciseName, type: 'volume', value: currentVolume, previousValue: previousVolume })
       }
-      const previousTonnage = previousLogs.reduce((sum, item) => sum + item.loadKg * item.reps, 0)
+
+      const previousTonnage = computeTotalTonnage(previousLogs)
       setCompletionPrs(prs)
       setVolumeDeltaPct(previousTonnage > 0 ? Math.round(((totalTonnage - previousTonnage) / previousTonnage) * 100) : null)
+
       await workoutSessionService.updateSession(firebaseUser.uid, sessionId, {
         status: 'completed',
-        completedAt: new Date().toISOString(),
-        finishedAt: new Date().toISOString(),
+        completedAt: new Date(),
+        finishedAt: new Date(),
         durationSeconds: totalSeconds,
-        lastInteractionAt: new Date().toISOString(),
+        lastInteractionAt: new Date(),
         totalTonnageKg: totalTonnage,
         exercisesCompleted: completedExerciseIds.size,
         totalSets: totalSetsCompleted,
         prs,
         xpEarned: 150,
       })
+      track('workout_session_completed', {
+        duration_seconds: totalSeconds,
+        total_tonnage_kg: totalTonnage,
+        exercises_completed: completedExerciseIds.size,
+        total_sets: totalSetsCompleted,
+        pr_count: prs.length,
+      })
       setPhase('completion')
     } catch (error) {
-      console.error('Error finishing session:', error)
+      setScreenError(error instanceof Error ? error.message : 'Não foi possível concluir o treino agora.')
     }
   }
 
-  const getInputKey = (exId: string, setNum: number) => `${exId}-${setNum}`
-  const getInput = (exId: string, setNum: number) => setInputs[getInputKey(exId, setNum)] || { reps: '', load: '' }
-  const updateInput = (exId: string, setNum: number, field: 'reps' | 'load', val: string) => {
+  const getInputKey = (exerciseId: string, setNum: number) => `${exerciseId}-${setNum}`
+  const getInput = (exerciseId: string, setNum: number) => setInputs[getInputKey(exerciseId, setNum)] || { reps: '', load: '' }
+  const updateInput = (exerciseId: string, setNum: number, field: 'reps' | 'load', value: string) => {
     touchInteraction()
-    setSetInputs(prev => ({
+    const key = getInputKey(exerciseId, setNum)
+    setSetInputs((prev) => ({
       ...prev,
-      [getInputKey(exId, setNum)]: { ...getInput(exId, setNum), [field]: val },
+      [key]: { ...getInput(exerciseId, setNum), [field]: value },
+    }))
+    setSetInputErrors((prev) => ({
+      ...prev,
+      [key]: { ...prev[key], [field]: undefined },
     }))
   }
 
+  const embeddedVideoUrl = normalizeVideoUrl(exercise.videoUrl)
+  const cues = sanitizeTextList(exercise.cues)
+  const commonMistakes = sanitizeTextList(exercise.commonMistakes)
+
   return (
-    <div className="ec-student-standalone ec-app-bg min-h-screen text-text-primary pb-40" onClick={touchInteraction}>
-      {/* Inactivity Warning */}
+    <div className="ec-student-standalone ec-app-bg min-h-screen pb-40 text-text-primary" onClick={touchInteraction}>
       <AnimatePresence>
         {showInactivityWarning && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center px-6"
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 px-6 backdrop-blur-md"
           >
-            <div className="ec-card rounded-3xl p-8 max-w-sm w-full text-center">
-              <AlertTriangle className="w-12 h-12 text-accent-yellow mx-auto mb-4" />
-              <h2 className="font-display text-xl text-white uppercase italic font-black mb-2">Seu treino está aberto</h2>
-              <p className="text-text-muted text-sm mb-6">Você ainda está treinando?</p>
+            <div className="ec-card w-full max-w-sm rounded-3xl p-8 text-center">
+              <AlertTriangle className="mx-auto mb-4 h-12 w-12 text-accent-yellow" />
+              <h2 className="mb-2 font-display text-xl font-black uppercase italic text-white">Seu treino está aberto</h2>
+              <p className="mb-6 text-sm text-text-muted">Você ainda está registrando esta sessão?</p>
               <div className="flex flex-col gap-3">
-                <Button variant="primary" className="w-full py-4" onClick={() => { touchInteraction() }}>Sim, continuar</Button>
-                <Button variant="ghost" className="w-full py-4 border-subtle" onClick={handleFinish}>Finalizar treino</Button>
+                <Button variant="primary" className="w-full py-4" onClick={() => touchInteraction()}>
+                  Sim, continuar
+                </Button>
+                <Button variant="ghost" className="w-full border-subtle py-4" onClick={handleFinish}>
+                  Finalizar treino
+                </Button>
               </div>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Header */}
       <header className="sticky top-0 z-50 px-4 py-3">
         <div className="ec-glass mx-auto flex max-w-4xl items-center justify-between rounded-2xl px-4 py-3">
-          <button onClick={() => navigate(-1)} className="flex h-10 w-10 items-center justify-center rounded-full text-text-muted hover:bg-white/[0.06] hover:text-white transition-colors">
-            <X className="w-5 h-5" />
+          <button
+            onClick={() => navigate(-1)}
+            className="flex h-10 w-10 items-center justify-center rounded-full text-text-muted transition-colors hover:bg-white/[0.06] hover:text-white"
+          >
+            <X className="h-5 w-5" />
           </button>
-          {/* Total Timer */}
           <div className="flex items-center gap-2">
-            <Clock className="w-4 h-4 text-accent-lime" />
-            <span className="font-display text-lg font-black text-white tabular-nums">{formatTime(totalSeconds)}</span>
+            <Clock className="h-4 w-4 text-accent-lime" />
+            <span className="font-display text-lg font-black tabular-nums text-white">{formatTime(totalSeconds)}</span>
           </div>
           <div className="w-10" />
         </div>
       </header>
 
-      {/* Progress */}
-      <section className="mx-auto max-w-4xl px-5 pt-4 pb-3">
-        <div className="flex justify-between items-end mb-2">
+      <section className="mx-auto max-w-4xl px-5 pb-3 pt-4">
+        <div className="mb-2 flex items-end justify-between">
           <div>
-            <h2 className="font-display text-xl uppercase italic leading-tight font-bold">{currentDay.name}</h2>
-            <p className="text-text-muted text-[10px] font-bold uppercase tracking-widest">Exercício {currentExerciseIdx + 1} de {currentDay.exercises.length}</p>
+            <h2 className="font-display text-xl font-bold uppercase italic leading-tight">{currentDay.name}</h2>
+            <p className="text-xs font-bold uppercase tracking-widest text-text-secondary">
+              Exercício {currentExerciseIdx + 1} de {currentDay.exercises.length}
+            </p>
           </div>
-          <span className="text-accent-lime font-display font-bold italic">{progress}%</span>
+          <span className="font-display font-bold italic text-accent-lime">{progress}%</span>
         </div>
         <ProgressBar value={progress} color="lime" />
       </section>
 
-      <main className="mx-auto max-w-4xl px-5 space-y-4">
-        {/* Exercise Card */}
+      <main className="mx-auto max-w-4xl space-y-4 px-5">
+        {screenError && (
+          <div className="rounded-2xl border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-sm text-rose-200">
+            {screenError}
+          </div>
+        )}
+        {contextError && (
+          <div className="rounded-2xl border border-accent-sky/30 bg-accent-sky/10 px-4 py-3 text-sm text-accent-sky">
+            {contextError}
+          </div>
+        )}
+
         <AnimatePresence mode="wait">
-          <motion.div key={exercise.id} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
-            className="ec-card rounded-2xl overflow-hidden"
+          <motion.div
+            key={exercise.id}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="ec-card overflow-hidden rounded-2xl"
           >
             <div className="p-5">
-              <div className="flex justify-between items-start mb-4">
+              <div className="mb-5 flex justify-between gap-4">
                 <div className="flex-1">
-                  {session?.substitutions?.[originalExercise!.id] && (
-                    <div className="inline-flex items-center gap-1 bg-accent-sky/10 px-2 py-0.5 rounded-full mb-2">
-                      <Zap className="w-3 h-3 text-accent-sky" />
-                      <span className="text-[9px] font-bold text-accent-sky uppercase tracking-widest">Substituído</span>
+                  {session.substitutions?.[originalExercise.id] && (
+                    <div className="mb-2 inline-flex items-center gap-1 rounded-full bg-accent-sky/10 px-2 py-0.5">
+                      <Zap className="h-3 w-3 text-accent-sky" />
+                      <span className="text-xs font-bold uppercase tracking-widest text-accent-sky">Substituído</span>
                     </div>
                   )}
-                  <h2 className="font-display text-xl text-text-primary mb-2 uppercase italic leading-tight font-bold">{exercise.exerciseName}</h2>
-                  <div className="flex gap-2 flex-wrap mb-4">
-                    {exercise.muscleGroups.map(mg => (
-                      <Badge key={mg} color="lime" className="text-[9px] uppercase">{mg}</Badge>
+                  <h2 className="mb-2 font-display text-xl font-bold uppercase italic leading-tight text-text-primary">
+                    {exercise.exerciseName}
+                  </h2>
+                  <div className="mb-3 flex flex-wrap gap-2">
+                    {(exercise.muscleGroups || []).map((muscleGroup) => (
+                      <Badge key={muscleGroup} color="lime" className="px-2.5 py-1 text-xs uppercase">
+                        {muscleGroup}
+                      </Badge>
                     ))}
-                    {exercise.equipment && <Badge color="violet" className="text-[9px] uppercase">{exercise.equipment}</Badge>}
+                    {exercise.equipment && (
+                      <Badge color="violet" className="px-2.5 py-1 text-xs uppercase">
+                        {exercise.equipment}
+                      </Badge>
+                    )}
+                    {exercise.rpeTarget !== undefined && (
+                      <Badge color="sky" className="px-2.5 py-1 text-xs uppercase">
+                        {`RPE ${exercise.rpeTarget}`}
+                      </Badge>
+                    )}
+                    {exercise.rirTarget !== undefined && (
+                      <Badge color="sky" className="px-2.5 py-1 text-xs uppercase">
+                        {`RIR ${exercise.rirTarget}`}
+                      </Badge>
+                    )}
                   </div>
-                  
-                  <div className="flex items-center gap-3">
-                    <Button 
-                      variant="ghost" 
-                      className={`text-xs py-2 px-4 ${exercise.videoUrl || exercise.instructions ? 'border-accent-sky/30 text-accent-sky hover:bg-accent-sky/10' : 'border-white/10 text-text-muted opacity-50'}`}
-                      icon={<PlayCircle className="w-4 h-4" />}
-                      onClick={() => (exercise.videoUrl || exercise.instructions) && setVideoModalOpen(true)}
-                      disabled={!exercise.videoUrl && !exercise.instructions}
-                    >
-                      Instruções
-                    </Button>
-                    
-                    <Button 
-                      variant="ghost" 
-                      className={`text-xs py-2 px-4 ${exercise.substitutionOptions?.length ? 'border-subtle text-white' : 'border-white/10 text-text-muted opacity-50'}`}
-                      icon={<RefreshCw className="w-4 h-4" />}
-                      onClick={() => exercise.substitutionOptions?.length && setSubstitutionModalOpen(true)}
-                      disabled={!exercise.substitutionOptions?.length}
-                    >
-                      Substituir
-                    </Button>
+                  <div className="grid gap-2 text-sm text-text-secondary sm:grid-cols-2">
+                    <ContextLine label="Séries" value={String(exercise.sets)} />
+                    <ContextLine label="Repetições" value={exercise.reps} />
+                    <ContextLine label="Descanso" value={`${exercise.restSeconds}s`} />
+                    <ContextLine label="Vídeo" value={exercise.videoUrl ? 'Disponível' : 'Indisponível'} />
                   </div>
                 </div>
               </div>
 
-              {/* Sets */}
-              <div className="space-y-2.5 mt-4">
-                <div className="grid grid-cols-12 gap-2 text-text-muted text-[9px] font-black uppercase tracking-widest px-1">
+              <div className="grid gap-3 md:grid-cols-2">
+                <button
+                  type="button"
+                  className={`rounded-2xl border px-4 py-4 text-left transition-colors ${exercise.videoUrl || exercise.instructions || cues.length || commonMistakes.length ? 'border-accent-sky/30 bg-accent-sky/10 text-accent-sky hover:bg-accent-sky/15' : 'border-white/10 bg-white/[0.03] text-text-muted'}`}
+                  onClick={() => (exercise.videoUrl || exercise.instructions || cues.length || commonMistakes.length) && setVideoModalOpen(true)}
+                  disabled={!exercise.videoUrl && !exercise.instructions && cues.length === 0 && commonMistakes.length === 0}
+                >
+                  <div className="flex items-center gap-2">
+                    <PlayCircle className="h-4 w-4" />
+                    <span className="text-sm font-bold">Ver execução</span>
+                  </div>
+                  <p className="mt-1 text-xs">
+                    Vídeo demonstrativo, instruções e pontos de atenção em uma só tela.
+                  </p>
+                </button>
+
+                <button
+                  type="button"
+                  className={`rounded-2xl border px-4 py-4 text-left transition-colors ${exercise.substitutionOptions?.length ? 'border-white/10 bg-white/[0.03] text-white hover:border-accent-lime/30' : 'border-white/10 bg-white/[0.03] text-text-muted opacity-60'}`}
+                  onClick={() => exercise.substitutionOptions?.length && setSubstitutionModalOpen(true)}
+                  disabled={!exercise.substitutionOptions?.length}
+                >
+                  <div className="flex items-center gap-2">
+                    <RefreshCw className="h-4 w-4" />
+                    <span className="text-sm font-bold">Substituir exercício</span>
+                  </div>
+                  <p className="mt-1 text-xs">Troque por uma alternativa aprovada no plano quando fizer sentido.</p>
+                </button>
+              </div>
+
+              {(exercise.notes || exercise.instructions || cues.length > 0 || commonMistakes.length > 0 || exercise.techniqueName) && (
+                <div className="mt-4 grid gap-3 md:grid-cols-2">
+                  {exercise.techniqueName && (
+                    <InfoCard title={`Técnica: ${exercise.techniqueName}`} tone="warning">
+                      <div className="space-y-1.5">
+                        {exercise.techniqueDescription && (
+                          <p className="text-sm font-semibold">{exercise.techniqueDescription}</p>
+                        )}
+                        {exercise.techniqueInstructions && (
+                          <p className="text-xs leading-relaxed opacity-90">{exercise.techniqueInstructions}</p>
+                        )}
+                      </div>
+                    </InfoCard>
+                  )}
+                  {exercise.notes && (
+                    <InfoCard title="Nota do treinador" tone="violet">
+                      {exercise.notes}
+                    </InfoCard>
+                  )}
+                  {exercise.instructions && (
+                    <InfoCard title="Como executar" tone="sky">
+                      {exercise.instructions}
+                    </InfoCard>
+                  )}
+                  {cues.length > 0 && (
+                    <InfoCard title="Cues do treinador" tone="lime">
+                      <ul className="space-y-1 text-sm">
+                        {cues.map((cue) => (
+                          <li key={cue}>• {cue}</li>
+                        ))}
+                      </ul>
+                    </InfoCard>
+                  )}
+                  {commonMistakes.length > 0 && (
+                    <InfoCard title="Erros comuns" tone="warning">
+                      <ul className="space-y-1 text-sm">
+                        {commonMistakes.map((mistake) => (
+                          <li key={mistake}>• {mistake}</li>
+                        ))}
+                      </ul>
+                    </InfoCard>
+                  )}
+                </div>
+              )}
+
+              <div className="mt-5 grid gap-3 lg:grid-cols-3">
+                <ProgressionCard
+                  icon={<TrendingUp className="h-4 w-4" />}
+                  label="Última execução"
+                  value={
+                    currentProgression?.latestDate
+                      ? `${formatLoad(currentProgression.latestLoad)} · ${currentProgression.latestReps || 0} reps`
+                      : 'Primeira execução registrada deste exercício.'
+                  }
+                  caption={currentProgression?.latestDate ? `Em ${formatDate(currentProgression.latestDate)}` : 'Ainda sem histórico para comparação.'}
+                />
+                <ProgressionCard
+                  icon={<Trophy className="h-4 w-4" />}
+                  label="Melhor marca"
+                  value={
+                    currentProgression?.bestDate
+                      ? `${formatLoad(currentProgression.bestLoad)} · ${currentProgression.bestReps || 0} reps`
+                      : 'Ainda sem melhor marca registrada.'
+                  }
+                  caption={currentProgression?.bestDate ? `Em ${formatDate(currentProgression.bestDate)}` : 'Ela aparece após a primeira sessão válida.'}
+                />
+                <ProgressionCard
+                  icon={<Dumbbell className="h-4 w-4" />}
+                  label="Volume recente"
+                  value={
+                    currentProgression?.recentVolume?.[0]
+                      ? formatTonnage(currentProgression.recentVolume[0].tonnage)
+                      : 'Sem volume anterior para mostrar.'
+                  }
+                  caption={
+                    currentProgression?.recentVolume?.[0]
+                      ? `Sessão anterior em ${formatDate(currentProgression.recentVolume[0].date)}`
+                      : 'Primeira execução registrada deste exercício.'
+                  }
+                />
+              </div>
+
+              <div className="mt-5 space-y-2.5">
+                <div className="grid grid-cols-12 gap-2 px-1 text-xs font-black uppercase tracking-widest text-text-secondary">
                   <div className="col-span-2">Série</div>
                   <div className="col-span-3 text-center">Reps</div>
-                  <div className="col-span-4 text-center">Kg</div>
-                  <div className="col-span-3 text-right pr-2">OK</div>
+                  <div className="col-span-4 text-center">Carga</div>
+                  <div className="col-span-3 pr-2 text-right">Salvar</div>
                 </div>
 
-                {Array.from({ length: exercise.sets }).map((_, i) => {
-                  const setNum = i + 1
-                  const isDone = session.logs?.some(l => l.exerciseId === exercise.id && l.setNumber === setNum)
-                  const prevDone = i === 0 || session.logs?.some(l => l.exerciseId === exercise.id && l.setNumber === i)
-                  const isActive = !isDone && prevDone
-                  const inp = getInput(exercise.id, setNum)
+                {Array.from({ length: exercise.sets }).map((_, index) => {
+                  const setNumber = index + 1
+                  const isDone = session.logs?.some((log) => log.exerciseId === exercise.id && log.setNumber === setNumber)
+                  const previousDone = index === 0 || session.logs?.some((log) => log.exerciseId === exercise.id && log.setNumber === index)
+                  const isActive = !isDone && previousDone
+                  const input = getInput(exercise.id, setNumber)
+                  const key = getInputKey(exercise.id, setNumber)
+                  const errors = setInputErrors[key] || {}
+
+                  // Resolve reps from setGroups if present
+                  let groupForSet: { label: string; sets: number; reps: string } | undefined
+                  let isGroupStart = false
+                  if (exercise.setGroups?.length) {
+                    let cursor = 0
+                    for (const g of exercise.setGroups) {
+                      const start = cursor
+                      cursor += g.sets
+                      if (index >= start && index < cursor) {
+                        groupForSet = g
+                        isGroupStart = index === start
+                        break
+                      }
+                    }
+                  }
+                  const repsRef = groupForSet?.reps ?? exercise.reps
+                  const previousReference = getPreviousSetReference(previousSession, exercise.id, setNumber, repsRef)
 
                   return (
-                    <div key={setNum}
-                      className={`grid grid-cols-12 gap-2 items-center p-2 rounded-xl border transition-all ${
-                        isActive ? 'bg-accent-lime/5 border-accent-lime/30 ring-1 ring-accent-lime/20' :
-                        isDone ? 'bg-white/[0.03] border-white/[0.05]' : 'opacity-40 border-transparent'
+                    <div key={setNumber}>
+                    {isGroupStart && groupForSet && (
+                      <div className="flex items-center gap-2 py-1.5 mb-1">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-accent-lime/70 flex items-center gap-1">
+                          <Zap className="w-3 h-3" />
+                          {groupForSet.label} — {groupForSet.sets}×{groupForSet.reps}
+                        </span>
+                        <div className="flex-1 h-px bg-accent-lime/15" />
+                      </div>
+                    )}
+                    <div
+                      className={`rounded-2xl border p-3 transition-all ${
+                        isActive
+                          ? 'border-accent-lime/30 bg-accent-lime/5 ring-1 ring-accent-lime/20'
+                          : isDone
+                            ? 'border-white/[0.05] bg-white/[0.03]'
+                            : 'border-transparent opacity-45'
                       }`}
                     >
-                      <div className={`col-span-2 font-display text-center font-bold ${isActive ? 'text-accent-lime text-lg italic' : 'text-text-muted'}`}>
-                        {setNum}
+                      <div className="grid grid-cols-12 items-center gap-2">
+                        <div className={`col-span-2 text-center font-display font-bold ${isActive ? 'text-lg italic text-accent-lime' : 'text-text-muted'}`}>
+                          {setNumber}
+                        </div>
+                        <div className="col-span-3">
+                          <input
+                            className={`ec-input w-full rounded-xl py-3 text-center text-base font-bold text-text-primary outline-none ${errors.reps ? 'border border-rose-400/60' : ''}`}
+                            placeholder={previousReference.repsLabel}
+                            type="number"
+                            inputMode="numeric"
+                            value={input.reps}
+                            onChange={(event) => updateInput(exercise.id, setNumber, 'reps', event.target.value)}
+                            disabled={isDone || !isActive}
+                          />
+                        </div>
+                        <div className="col-span-4">
+                          <input
+                            className={`ec-input w-full rounded-xl py-3 text-center text-base font-bold text-text-primary outline-none ${errors.load ? 'border border-rose-400/60' : ''}`}
+                            placeholder={previousReference.loadLabel || '0'}
+                            type="text"
+                            inputMode="decimal"
+                            value={input.load}
+                            onChange={(event) => updateInput(exercise.id, setNumber, 'load', event.target.value)}
+                            disabled={isDone || !isActive}
+                          />
+                        </div>
+                        <div className="col-span-3 flex justify-end px-1">
+                          <button
+                            onClick={() => isActive && handleSetComplete(setNumber)}
+                            disabled={!isActive || savingSetKey === key}
+                            className={`flex h-10 w-10 items-center justify-center rounded-full border-2 transition-all active:scale-90 ${
+                              isDone
+                                ? 'border-accent-lime bg-accent-lime text-bg-primary'
+                                : isActive
+                                  ? 'border-accent-lime hover:bg-accent-lime/20'
+                                  : 'border-white/10'
+                            }`}
+                          >
+                            {savingSetKey === key ? (
+                              <div className="h-4 w-4 animate-spin rounded-full border-2 border-accent-lime/30 border-t-accent-lime" />
+                            ) : isDone ? (
+                              <Check className="h-4 w-4" />
+                            ) : (
+                              <Check className="h-4 w-4 text-accent-lime" />
+                            )}
+                          </button>
+                        </div>
                       </div>
-                      <div className="col-span-3">
-                        <input
-                          className="ec-input w-full rounded-lg text-center font-bold text-text-primary py-2.5 outline-none text-sm"
-                          placeholder={exercise.reps}
-                          type="number"
-                          inputMode="numeric"
-                          value={inp.reps}
-                          onChange={e => updateInput(exercise.id, setNum, 'reps', e.target.value)}
-                          disabled={isDone || !isActive}
-                        />
+
+                      <div className="mt-2 grid gap-1 text-xs md:grid-cols-2">
+                        <span className="text-text-muted">
+                          Referência anterior: {previousReference.loadLabel ? `${previousReference.loadLabel} kg` : 'sem carga anterior'} · {previousReference.repsLabel} reps
+                        </span>
+                        <span className="text-text-muted md:text-right">
+                          {isDone ? 'Série salva.' : isActive ? 'Preencha reps e carga para salvar.' : 'Conclua a série anterior para liberar esta.'}
+                        </span>
                       </div>
-                      <div className="col-span-4">
-                        <input
-                          className="ec-input w-full rounded-lg text-center font-bold text-text-primary py-2.5 outline-none text-sm"
-                          placeholder="--"
-                          type="number"
-                          inputMode="decimal"
-                          value={inp.load}
-                          onChange={e => updateInput(exercise.id, setNum, 'load', e.target.value)}
-                          disabled={isDone || !isActive}
-                        />
-                      </div>
-                      <div className="col-span-3 flex justify-end px-1">
-                        <button
-                          onClick={() => isActive && handleSetComplete(setNum)}
-                          disabled={!isActive}
-                          className={`w-9 h-9 rounded-full border-2 flex items-center justify-center transition-all active:scale-90 ${
-                            isDone ? 'bg-accent-lime border-accent-lime text-bg-primary' :
-                            isActive ? 'border-accent-lime hover:bg-accent-lime/20' : 'border-white/10'
-                          }`}
-                        >
-                          {isDone && <Check className="w-4 h-4 font-black" />}
-                        </button>
-                      </div>
+                      {(errors.reps || errors.load) && (
+                        <div className="mt-2 space-y-1 text-xs text-rose-300">
+                          {errors.reps && <p>{errors.reps}</p>}
+                          {errors.load && <p>{errors.load}</p>}
+                        </div>
+                      )}
+                    </div>
                     </div>
                   )
                 })}
@@ -544,162 +995,202 @@ export function WorkoutExecutionScreen() {
           </motion.div>
         </AnimatePresence>
 
-        {/* Rest Timer V2 */}
-        <div className={`ec-card rounded-2xl p-5 transition-all ${isRestActive ? 'ring-1 ring-accent-sky/30 bg-accent-sky/[0.03]' : ''}`}>
-          <div className="flex items-center justify-between mb-3">
+        <div className={`ec-card rounded-2xl p-5 transition-all ${isRestActive ? 'bg-accent-sky/[0.03] ring-1 ring-accent-sky/30' : ''}`}>
+          <div className="mb-3 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Timer className={`w-6 h-6 ${isRestActive ? 'text-accent-sky animate-pulse' : 'text-text-muted'}`} />
+              <Timer className={`h-6 w-6 ${isRestActive ? 'animate-pulse text-accent-sky' : 'text-text-muted'}`} />
               <div>
                 <p className="text-sm font-bold text-white">Descanso</p>
-                <p className="text-[10px] text-text-muted font-bold uppercase tracking-wider">Meta: {exercise.restSeconds}s</p>
+                <p className="text-xs font-bold uppercase tracking-wider text-text-secondary">Meta: {exercise.restSeconds}s</p>
               </div>
             </div>
-            <span className={`text-3xl font-display font-black tabular-nums italic ${isRestActive ? 'text-accent-sky' : 'text-text-muted/40'}`}>
+            <span className={`font-display text-3xl font-black italic tabular-nums ${isRestActive ? 'text-accent-sky' : 'text-white/80'}`}>
               {formatTime(restTimer)}
             </span>
           </div>
 
           {isRestActive && (
-            <div className="flex gap-2 mt-2">
-              <button onClick={() => setIsRestPaused(p => !p)}
-                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-white/5 border border-white/10 text-sm font-bold text-white hover:bg-white/10 transition-all active:scale-95"
+            <div className="mt-2 flex gap-2">
+              <button
+                onClick={() => setIsRestPaused((value) => !value)}
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-3 text-sm font-bold text-white transition-all active:scale-95 hover:bg-white/10"
               >
-                {isRestPaused ? <PlayCircle className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
+                {isRestPaused ? <PlayCircle className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
                 {isRestPaused ? 'Retomar' : 'Pausar'}
               </button>
-              <button onClick={() => setRestTimer(t => t + 30)}
-                className="flex items-center justify-center gap-1.5 px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-sm font-bold text-white hover:bg-white/10 transition-all active:scale-95"
+              <button
+                onClick={() => setRestTimer((value) => value + 30)}
+                className="flex items-center justify-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-bold text-white transition-all active:scale-95 hover:bg-white/10"
               >
-                <Plus className="w-4 h-4" /> 30s
+                <Plus className="h-4 w-4" /> 30s
               </button>
-              <button onClick={() => { setRestTimer(0); setIsRestActive(false) }}
-                className="flex items-center justify-center gap-1.5 px-4 py-3 rounded-xl bg-accent-lime/10 border border-accent-lime/20 text-sm font-bold text-accent-lime hover:bg-accent-lime/20 transition-all active:scale-95"
+              <button
+                onClick={() => {
+                  setRestTimer(0)
+                  setIsRestActive(false)
+                }}
+                className="flex items-center justify-center gap-1.5 rounded-xl border border-accent-lime/20 bg-accent-lime/10 px-4 py-3 text-sm font-bold text-accent-lime transition-all active:scale-95 hover:bg-accent-lime/20"
               >
-                <SkipForward className="w-4 h-4" /> Pular
+                <SkipForward className="h-4 w-4" /> Pular
               </button>
             </div>
           )}
         </div>
 
-        {/* Navigation */}
         <div className="flex gap-3">
-          <Button variant="ghost" className="flex-1 border-subtle py-5" disabled={currentExerciseIdx === 0}
-            onClick={() => { setCurrentExerciseIdx(i => i - 1); touchInteraction() }}
-            icon={<ArrowLeft className="w-5 h-5" />}
+          <Button
+            variant="ghost"
+            className="flex-1 border-subtle py-5"
+            disabled={currentExerciseIdx === 0}
+            onClick={() => {
+              setCurrentExerciseIdx((value) => value - 1)
+              touchInteraction()
+            }}
+            icon={<ArrowLeft className="h-5 w-5" />}
           >
             Anterior
           </Button>
 
           {currentExerciseIdx < currentDay.exercises.length - 1 ? (
-            <Button variant="ghost" className="flex-1 bg-surface-1 py-5"
-              onClick={() => { setCurrentExerciseIdx(i => i + 1); touchInteraction() }}
-              icon={<ArrowRight className="w-5 h-5" />}
+            <Button
+              variant="ghost"
+              className="flex-1 bg-surface-1 py-5"
+              onClick={() => {
+                setCurrentExerciseIdx((value) => value + 1)
+                touchInteraction()
+              }}
+              icon={<ArrowRight className="h-5 w-5" />}
             >
               Próximo
             </Button>
           ) : (
-            <Button variant="primary" className="flex-1 py-5" onClick={handleFinish} icon={<Check className="w-5 h-5" />}>
+            <Button variant="primary" className="flex-1 py-5" onClick={handleFinish} icon={<Check className="h-5 w-5" />}>
               Finalizar
             </Button>
           )}
         </div>
       </main>
 
-      {/* Video Modal */}
       <AnimatePresence>
         {videoModalOpen && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 sm:p-6"
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4 backdrop-blur-md sm:p-6"
           >
-            <div className="ec-card rounded-3xl overflow-hidden max-w-2xl w-full max-h-[90vh] flex flex-col relative">
-              <button onClick={() => setVideoModalOpen(false)} className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-black/50 text-white flex items-center justify-center backdrop-blur-sm border border-white/10 hover:bg-white/10">
-                <X className="w-5 h-5" />
+            <div className="ec-card relative flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-3xl">
+              <button
+                onClick={() => setVideoModalOpen(false)}
+                className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-black/50 text-white backdrop-blur-sm hover:bg-white/10"
+              >
+                <X className="h-5 w-5" />
               </button>
-              
-              {exercise.videoUrl ? (
-                <div className="aspect-video bg-black w-full relative">
-                  <iframe 
-                    src={exercise.videoUrl.replace('watch?v=', 'embed/')} 
-                    className="w-full h-full absolute inset-0" 
-                    allowFullScreen 
-                    title="Vídeo de execução"
-                  />
+
+              {embeddedVideoUrl ? (
+                <div className="relative aspect-video w-full bg-black">
+                  <iframe src={embeddedVideoUrl} className="absolute inset-0 h-full w-full" allowFullScreen title="Vídeo demonstrativo" />
                 </div>
               ) : (
-                <div className="aspect-video bg-black/50 w-full flex flex-col items-center justify-center text-text-muted">
-                  <PlayCircle className="w-12 h-12 mb-3 opacity-20" />
-                  <p className="font-display uppercase italic font-bold">Sem vídeo disponível</p>
+                <div className="flex aspect-video w-full flex-col items-center justify-center bg-black/50 text-text-muted">
+                  <PlayCircle className="mb-3 h-12 w-12 opacity-20" />
+                  <p className="font-display font-bold uppercase italic">Vídeo indisponível</p>
+                  <p className="mt-2 text-xs">Use as instruções abaixo para conduzir a execução.</p>
                 </div>
               )}
-              
-              <div className="p-6 overflow-y-auto">
-                <h3 className="font-display text-xl text-white uppercase italic font-bold mb-4">{exercise.exerciseName}</h3>
-                
-                {exercise.instructions && (
-                  <div className="mb-6">
-                    <p className="text-[10px] font-black text-ec-violet uppercase tracking-widest mb-2">Instruções de Execução</p>
-                    <p className="text-sm text-text-secondary leading-relaxed whitespace-pre-wrap">{exercise.instructions}</p>
-                  </div>
-                )}
-                
-                {exercise.notes && (
-                  <div className="bg-accent-sky/10 border border-accent-sky/20 rounded-xl p-4">
-                    <p className="text-[10px] font-black text-accent-sky uppercase tracking-widest mb-1">Dica do Mentor</p>
-                    <p className="text-sm text-accent-sky/90">{exercise.notes}</p>
-                  </div>
-                )}
+
+              <div className="overflow-y-auto p-6">
+                <h3 className="mb-4 font-display text-xl font-bold uppercase italic text-white">{exercise.exerciseName}</h3>
+
+                <div className="grid gap-3">
+                  <InfoCard title="Como executar" tone="sky">
+                    {exercise.instructions || 'Sem instruções detalhadas cadastradas para este exercício.'}
+                  </InfoCard>
+                  {cues.length > 0 && (
+                    <InfoCard title="Cues do treinador" tone="lime">
+                      <ul className="space-y-1 text-sm">
+                        {cues.map((cue) => (
+                          <li key={cue}>• {cue}</li>
+                        ))}
+                      </ul>
+                    </InfoCard>
+                  )}
+                  {commonMistakes.length > 0 && (
+                    <InfoCard title="Erros comuns" tone="warning">
+                      <ul className="space-y-1 text-sm">
+                        {commonMistakes.map((mistake) => (
+                          <li key={mistake}>• {mistake}</li>
+                        ))}
+                      </ul>
+                    </InfoCard>
+                  )}
+                  {exercise.notes && (
+                    <InfoCard title="Nota do treinador" tone="violet">
+                      {exercise.notes}
+                    </InfoCard>
+                  )}
+                </div>
               </div>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Substitution Modal */}
       <AnimatePresence>
         {substitutionModalOpen && (
           <div className="fixed inset-0 z-[100] flex items-end bg-black/70 px-3 pb-3 backdrop-blur-sm sm:items-center sm:justify-center">
-            <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="w-full max-w-md rounded-3xl border border-white/10 bg-surface-1 p-5 shadow-2xl max-h-[85vh] flex flex-col"
+            <motion.div
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="flex max-h-[85vh] w-full max-w-md flex-col rounded-3xl border border-white/10 bg-surface-1 p-5 shadow-2xl"
             >
-              <div className="mb-4 flex items-start justify-between gap-4 shrink-0">
+              <div className="mb-4 flex shrink-0 items-start justify-between gap-4">
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-accent-sky">Substituir Exercício</p>
-                  <h3 className="mt-1 text-lg font-bold text-white leading-tight">{exercise.exerciseName}</h3>
+                  <p className="text-xs font-black uppercase tracking-widest text-accent-sky">Substituir exercício</p>
+                  <h3 className="mt-1 text-lg font-bold leading-tight text-white">{exercise.exerciseName}</h3>
                 </div>
                 <button
                   onClick={() => setSubstitutionModalOpen(false)}
-                  className="flex h-9 w-9 items-center justify-center rounded-full bg-white/5 text-text-muted hover:text-white shrink-0"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/5 text-text-muted hover:text-white"
                 >
                   <X className="h-4 w-4" />
                 </button>
               </div>
 
-              <div className="overflow-y-auto flex-1 pr-2">
-                <div className="bg-accent-sky/10 border border-accent-sky/20 rounded-xl p-3 mb-4 flex gap-3 items-start">
-                  <Check className="w-4 h-4 text-accent-sky shrink-0 mt-0.5" />
-                  <p className="text-xs text-accent-sky font-medium leading-relaxed">Estas substituições foram pré-aprovadas no seu plano e trabalham a mesma musculatura alvo com estímulos semelhantes.</p>
+              <div className="flex-1 overflow-y-auto pr-2">
+                <div className="mb-4 flex items-start gap-3 rounded-xl border border-accent-sky/20 bg-accent-sky/10 p-3">
+                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-accent-sky" />
+                  <p className="text-xs font-medium leading-relaxed text-accent-sky">
+                    Estas substituições foram pré-aprovadas no seu plano e mantêm musculatura e estímulo próximos do exercício original.
+                  </p>
                 </div>
 
                 <div className="space-y-3 pb-4">
-                  {exercise.substitutionOptions?.map((alt, idx) => (
+                  {exercise.substitutionOptions?.map((alternative, index) => (
                     <button
-                      key={idx}
-                      onClick={() => handleSubstitute(alt)}
-                      className="flex w-full flex-col justify-between rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-left hover:border-accent-lime/40 transition-colors group"
+                      key={`${alternative.exerciseId}-${index}`}
+                      onClick={() => handleSubstitute(alternative)}
+                      className="group flex w-full flex-col justify-between rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-left transition-colors hover:border-accent-lime/40"
                     >
-                      <div className="flex justify-between w-full mb-3">
+                      <div className="mb-3 flex w-full justify-between">
                         <div>
-                          <p className="text-sm font-bold text-white group-hover:text-accent-lime transition-colors">{alt.exerciseName}</p>
-                          <div className="flex gap-2 mt-2">
-                            {alt.muscleGroups?.slice(0, 2).map(mg => <Badge key={mg} color="lime" className="text-[9px] uppercase">{mg}</Badge>)}
+                          <p className="text-sm font-bold text-white transition-colors group-hover:text-accent-lime">{alternative.exerciseName}</p>
+                          <div className="mt-2 flex gap-2">
+                            {alternative.muscleGroups?.slice(0, 2).map((muscleGroup) => (
+                              <Badge key={muscleGroup} color="lime" className="px-2.5 py-1 text-xs uppercase">
+                                {muscleGroup}
+                              </Badge>
+                            ))}
                           </div>
                         </div>
-                        {alt.videoUrl && <PlayCircle className="w-5 h-5 text-accent-sky opacity-70" />}
+                        {alternative.videoUrl && <PlayCircle className="h-5 w-5 text-accent-sky opacity-70" />}
                       </div>
-                      
-                      {alt.equipment && (
-                        <div className="mt-2 text-xs text-text-muted font-medium">
-                          Equipamento: <span className="text-white">{alt.equipment}</span>
+
+                      {alternative.equipment && (
+                        <div className="mt-2 text-xs font-medium text-text-muted">
+                          Equipamento: <span className="text-white">{alternative.equipment}</span>
                         </div>
                       )}
                     </button>
@@ -714,11 +1205,73 @@ export function WorkoutExecutionScreen() {
   )
 }
 
-function StatCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+function StatCard({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
   return (
     <div className="ec-card rounded-2xl p-4 text-center">
-      <div className="flex items-center justify-center gap-1.5 mb-2 text-text-muted">{icon}<span className="text-[9px] font-black uppercase tracking-widest">{label}</span></div>
-      <p className="font-display text-xl font-black text-white italic">{value}</p>
+      <div className="mb-2 flex items-center justify-center gap-1.5 text-text-muted">
+        {icon}
+        <span className="text-xs font-black uppercase tracking-widest">{label}</span>
+      </div>
+      <p className="font-display text-xl font-black italic text-white">{value}</p>
+    </div>
+  )
+}
+
+function ContextLine({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl border border-white/5 bg-white/[0.03] px-3 py-2">
+      <p className="text-xs font-black uppercase tracking-widest text-text-secondary">{label}</p>
+      <p className="mt-1 text-sm font-bold text-white">{value}</p>
+    </div>
+  )
+}
+
+function ProgressionCard({
+  icon,
+  label,
+  value,
+  caption,
+}: {
+  icon: ReactNode
+  label: string
+  value: string
+  caption: string
+}) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+      <div className="flex items-center gap-2 text-text-muted">
+        {icon}
+        <p className="text-xs font-black uppercase tracking-widest">{label}</p>
+      </div>
+      <p className="mt-2 text-sm font-bold text-white">{value}</p>
+      <p className="mt-1 text-xs text-text-muted">{caption}</p>
+    </div>
+  )
+}
+
+function InfoCard({
+  title,
+  children,
+  tone,
+}: {
+  title: string
+  children: ReactNode
+  tone: 'sky' | 'lime' | 'warning' | 'violet'
+}) {
+  const tones = {
+    sky: 'border-accent-sky/20 bg-accent-sky/10 text-accent-sky',
+    lime: 'border-accent-lime/20 bg-accent-lime/10 text-accent-lime',
+    warning: 'border-accent-yellow/20 bg-accent-yellow/10 text-accent-yellow',
+    violet: 'border-ec-violet/20 bg-ec-violet/10 text-ec-violet',
+  }[tone]
+
+  return (
+    <div className={`rounded-2xl border p-4 ${tones}`}>
+      <div className="flex items-center gap-2">
+        <Info className="h-4 w-4" />
+        <p className="text-xs font-black uppercase tracking-widest">{title}</p>
+      </div>
+      <div className="mt-2 text-sm leading-relaxed text-white">{children}</div>
     </div>
   )
 }

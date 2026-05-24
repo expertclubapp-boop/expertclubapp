@@ -1,6 +1,7 @@
 import { collection, doc, getDocs, orderBy, query, setDoc, writeBatch } from 'firebase/firestore'
 import { db } from '../lib/firebase/firebase'
-import { createAdminCrudService, nowIso, makeId } from './adminCrudService'
+import { createAdminCrudService, makeId, nowFirestoreTimestamp } from './adminCrudService'
+import { normalizeFirestoreWriteData, toFirestoreDate } from '../lib/firebase/date'
 import type { Diet, DietSummary, Food } from '../types/domain'
 import { COLLECTIONS } from '../lib/firebase/paths'
 
@@ -17,15 +18,17 @@ export const adminDietService = {
     const versionRef = doc(db, COLLECTIONS.DIETS, diet.id, 'versions', versionId)
 
     const summary = calculateDietSummary(diet)
-    const publishedPlan: Diet = {
+    const now = nowFirestoreTimestamp()
+    const publishedPlan = normalizeFirestoreWriteData({
       ...diet,
+      createdAt: toFirestoreDate(diet.createdAt) ?? now,
       status: 'published',
       version: diet.version + 1,
-      publishedAt: nowIso(),
+      publishedAt: now,
       publishedBy: actor.email,
-      updatedAt: nowIso(),
+      updatedAt: now,
       summary
-    }
+    })
 
     // Update main doc (the "active" published version)
     batch.set(dietRef, publishedPlan, { merge: true })
@@ -45,15 +48,17 @@ export const adminDietService = {
 
   async rollback(actor: any, dietId: string, version: Diet): Promise<void> {
     const dietRef = doc(db, COLLECTIONS.DIETS, dietId)
-    const rollbackDraft: Diet = {
-      ...version,
-      status: 'draft',
-      updatedAt: nowIso(),
-      updatedBy: actor.email
+    const now = nowFirestoreTimestamp()
+    const { isCurrentVersion: _isCurrentVersion, publishedAt: _publishedAt, publishedBy: _publishedBy, ...rollbackVersion } = version as Diet & {
+      isCurrentVersion?: boolean
     }
-    delete (rollbackDraft as any).isCurrentVersion
-    delete rollbackDraft.publishedAt
-    delete rollbackDraft.publishedBy
+    const rollbackDraft = normalizeFirestoreWriteData({
+      ...rollbackVersion,
+      createdAt: toFirestoreDate(version.createdAt) ?? now,
+      status: 'draft',
+      updatedAt: now,
+      updatedBy: actor.email
+    })
 
     await setDoc(dietRef, rollbackDraft, { merge: true })
   }
@@ -84,13 +89,22 @@ export function createEmptyDiet(): Diet {
     mealsPerDay: 4,
     meals: [],
     tags: [],
+    recommendationMetadata: {
+      goals: ['fat_loss'],
+      sexes: ['unisex'],
+      preferences: ['flexible'],
+      caloriesRange: { min: 1650, max: 1950 },
+      proteinLevel: 'standard',
+      complexity: 'easy',
+      tags: [],
+    },
     level: 'beginner',
     status: 'draft',
     shoppingList: [],
     notes: '',
     version: 0,
-    createdAt: nowIso(),
-    updatedAt: nowIso(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   }
 }
 
@@ -104,7 +118,7 @@ export function createEmptyFood() {
     tags: [],
     substitutionGroups: [],
     status: 'active',
-    createdAt: nowIso(),
-    updatedAt: nowIso(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   }
 }

@@ -1,5 +1,6 @@
 import { collection, doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, query, orderBy, limit, where, increment, startAfter, DocumentSnapshot } from 'firebase/firestore'
 import { db } from '../lib/firebase/firebase'
+import { normalizeFirestoreWriteData, nowTimestamp } from '../lib/firebase/date'
 import type { CommunityPost, CommunityComment } from '../types/domain'
 
 const POSTS_PER_PAGE = 20
@@ -51,16 +52,16 @@ export const communityFeedService = {
   async createPost(post: Omit<CommunityPost, 'id' | 'createdAt' | 'likesCount' | 'commentsCount' | 'likedBy'>): Promise<string> {
     const colRef = collection(db, 'community_posts')
     const docRef = doc(colRef)
-    const newPost: CommunityPost = {
+    const newPost = {
       ...post,
       id: docRef.id,
-      createdAt: new Date().toISOString(),
+      createdAt: nowTimestamp(),
       likesCount: 0,
       commentsCount: 0,
       likedBy: [],
       status: post.status || 'published'
     }
-    await setDoc(docRef, newPost)
+    await setDoc(docRef, normalizeFirestoreWriteData(newPost))
     return docRef.id
   },
 
@@ -93,16 +94,16 @@ export const communityFeedService = {
 
     const colRef = collection(db, `community_posts/${postId}/comments`)
     const docRef = doc(colRef)
-    const newComment: CommunityComment = {
+    const newComment = {
       ...comment,
       content: trimmed,
       id: docRef.id,
       postId,
       status: 'published',
-      createdAt: new Date().toISOString()
+      createdAt: nowTimestamp()
     }
     
-    await setDoc(docRef, newComment)
+    await setDoc(docRef, normalizeFirestoreWriteData(newComment))
     
     const postRef = doc(db, 'community_posts', postId)
     await updateDoc(postRef, {

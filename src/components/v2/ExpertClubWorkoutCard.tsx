@@ -9,15 +9,17 @@ export function ExpertClubWorkoutCard({
   workout: Workout; 
   onClick?: (id: string) => void 
 }) {
+  const workoutThumbnail = (workout as Workout & { thumbnailUrl?: string }).thumbnailUrl
+
   return (
     <V2Card 
       className="p-0 overflow-hidden group hover:scale-[1.02] transition-all duration-300"
       onClick={() => onClick?.(workout.id)}
     >
       <div className="relative h-24">
-        {(workout as any).thumbnailUrl ? (
+        {workoutThumbnail ? (
           <img 
-            src={(workout as any).thumbnailUrl} 
+            src={workoutThumbnail} 
             alt={workout.title} 
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
           />
@@ -30,7 +32,7 @@ export function ExpertClubWorkoutCard({
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-white/70 via-white/10 to-transparent" />
         <div className="absolute top-4 left-4">
-           <V2Badge tone="violet" className="uppercase font-black text-[9px]">{workout.level || 'Expert'}</V2Badge>
+           <V2Badge tone="violet" className="px-2.5 py-1 text-xs font-black uppercase">{workout.level || 'Expert'}</V2Badge>
         </div>
       </div>
       
@@ -45,11 +47,11 @@ export function ExpertClubWorkoutCard({
         <div className="flex items-center gap-4 text-text-muted border-t border-white/5 pt-4 mt-auto">
           <div className="flex items-center gap-1.5">
             <Clock size={14} className="text-ec-violet" />
-            <span className="text-[10px] font-bold uppercase tracking-widest">{workout.durationMinutes}m</span>
+            <span className="text-xs font-bold uppercase tracking-widest text-white">{workout.durationMinutes}m</span>
           </div>
           <div className="flex items-center gap-1.5 border-l border-white/5 pl-4">
             <Calendar size={14} className="text-ec-violet" />
-            <span className="text-[10px] font-bold uppercase tracking-widest">{workout.daysPerWeek}x/sem</span>
+            <span className="text-xs font-bold uppercase tracking-widest text-white">{workout.daysPerWeek}x/sem</span>
           </div>
           <div className="ml-auto text-ec-violet group-hover:translate-x-1 transition-transform">
             <ChevronRight size={20} />

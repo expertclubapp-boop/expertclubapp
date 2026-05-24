@@ -15,7 +15,7 @@ export function OnboardingGuard({ children }: OnboardingGuardProps) {
   if (user && getUserRole(user) === 'member' && !isOnboardingCompleted(user)) {
     // Only redirect if not already in the onboarding flow
     if (!location.pathname.startsWith('/onboarding')) {
-      return <Navigate to="/onboarding/goal" replace />
+      return <Navigate to="/onboarding" replace />
     }
   }
 

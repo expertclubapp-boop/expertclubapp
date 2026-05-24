@@ -1,0 +1,43 @@
+{
+  "name": "Expert Club",
+  "short_name": "Expert Club",
+  "description": "Plataforma de mentoria fitness premium",
+  "start_url": "/app/today",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
+  "orientation": "portrait-primary",
+  "lang": "pt-BR",
+  "categories": ["health", "fitness"],
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Hoje",
+      "short_name": "Hoje",
+      "description": "Ver treino e dieta de hoje",
+      "url": "/app/today",
+      "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Check-in",
+      "short_name": "Check-in",
+      "description": "Registrar check-in diário",
+      "url": "/app/checkin/daily",
+      "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192" }]
+    }
+  ]
+}

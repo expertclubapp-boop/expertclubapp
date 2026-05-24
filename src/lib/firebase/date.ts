@@ -67,6 +67,63 @@ export function nowTimestamp(): Timestamp {
   return Timestamp.now()
 }
 
+const FIRESTORE_WRITE_DATE_FIELDS = new Set([
+  'createdAt',
+  'updatedAt',
+  'publishedAt',
+  'assignedAt',
+  'selectedAt',
+  'submittedAt',
+  'reviewedAt',
+  'completedAt',
+  'startedAt',
+  'finishedAt',
+  'joinedAt',
+  'paidAt',
+  'approvedAt',
+  'reversedAt',
+  'cancelledAt',
+  'expiresAt',
+  'renewalDate',
+  'currentPeriodStart',
+  'currentPeriodEnd',
+  'startedAt',
+  'onboardingCompletedAt',
+  'lastInteractionAt',
+  'inactiveWarningShownAt',
+  'publishedAt',
+  'startsAt',
+  'endsAt',
+  'effectiveFrom',
+  'firstSeenAt',
+  'attributedAt',
+  'processedAt',
+  'lastSubmittedAt',
+  'nextDueAt',
+  'date',
+])
+
+export function removeUndefinedFields<T extends Record<string, unknown>>(input: T): Partial<T> {
+  return Object.fromEntries(Object.entries(input).filter(([, value]) => value !== undefined)) as Partial<T>
+}
+
+export function normalizeFirestoreWriteData<T extends Record<string, unknown>>(input: T): Partial<T> {
+  const output: Record<string, unknown> = {}
+
+  for (const [key, value] of Object.entries(input)) {
+    if (value === undefined) continue
+
+    if (FIRESTORE_WRITE_DATE_FIELDS.has(key)) {
+      output[key] = toFirestoreDate(value as FirestoreDateInput) ?? value
+      continue
+    }
+
+    output[key] = value
+  }
+
+  return output as Partial<T>
+}
+
 export function dateMillis(value: FirestoreDateInput): number {
   return fromFirestoreDate(value)?.getTime() ?? 0
 }

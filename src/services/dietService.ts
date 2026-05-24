@@ -36,7 +36,8 @@ export const dietService = {
     await setDoc(docRef, {
       ...diet,
       createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
+      updatedAt: serverTimestamp(),
+      ...(diet.status === 'published' ? { publishedAt: serverTimestamp() } : {}),
     })
     return docRef.id
   },
@@ -46,7 +47,8 @@ export const dietService = {
     const docRef = doc(db, COLLECTIONS.DIETS, id)
     await updateDoc(docRef, {
       ...diet,
-      updatedAt: serverTimestamp()
+      updatedAt: serverTimestamp(),
+      ...(diet.status === 'published' ? { publishedAt: serverTimestamp() } : {}),
     })
   }
 }

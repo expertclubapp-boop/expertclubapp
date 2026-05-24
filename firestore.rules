@@ -2,6 +2,11 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // ═══════════════════════════════════════════════
+    // HELPER FUNCTIONS
+    // ═══════════════════════════════════════════════
+
     function isAuthenticated() {
       return request.auth != null;
     }
@@ -68,23 +73,15 @@ service cloud.firestore {
         && request.resource.data.uid == resource.data.uid
         && request.resource.data.email == resource.data.email
         && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
-          'role',
-          'uid',
-          'email',
-          'subscription',
-          'subscription.status',
-          'subscriptionStatus',
-          'subscriptionPlan',
-          'mentorId',
-          'referralCode',
-          'affiliateId',
-          'admin',
-          'isAdmin',
-          'adminFlags',
-          'permissions',
-          'customClaims'
+          'role', 'uid', 'email', 'subscription', 'subscription.status',
+          'subscriptionStatus', 'subscriptionPlan', 'mentorId', 'referralCode',
+          'affiliateId', 'admin', 'isAdmin', 'adminFlags', 'permissions', 'customClaims'
         ]);
     }
+
+    // ═══════════════════════════════════════════════
+    // CORE USER & SUBSCRIPTION
+    // ═══════════════════════════════════════════════
 
     match /users/{uid} {
       allow read: if isOwner(uid)
@@ -97,17 +94,9 @@ service cloud.firestore {
           && request.resource.data.email == request.auth.token.email
           && request.resource.data.role == 'member'
           && !request.resource.data.keys().hasAny([
-            'subscription',
-            'subscriptionStatus',
-            'subscriptionPlan',
-            'mentorId',
-            'referralCode',
-            'affiliateId',
-            'admin',
-            'isAdmin',
-            'adminFlags',
-            'permissions',
-            'customClaims'
+            'subscription', 'subscriptionStatus', 'subscriptionPlan', 'mentorId',
+            'referralCode', 'affiliateId', 'admin', 'isAdmin', 'adminFlags',
+            'permissions', 'customClaims'
           ])
         );
       allow update: if isAdmin() || isSafeUserSelfUpdate(uid);
@@ -130,25 +119,17 @@ service cloud.firestore {
         && request.resource.data.currency == 'BRL'
         && request.resource.data.interval == 'monthly'
         && request.resource.data.keys().hasOnly([
-          'uid',
-          'planId',
-          'planName',
-          'status',
-          'provider',
-          'price',
-          'currency',
-          'interval',
-          'startedAt',
-          'currentPeriodStart',
-          'currentPeriodEnd',
-          'createdAt',
-          'updatedAt'
+          'uid', 'planId', 'planName', 'status', 'provider', 'price', 'currency',
+          'interval', 'startedAt', 'currentPeriodStart', 'currentPeriodEnd',
+          'createdAt', 'updatedAt'
         ]);
       allow update, delete: if isAdmin();
     }
 
     match /plans/{planId} {
-      allow read: if isAuthenticated();
+      // Active plans readable without auth (public checkout page)
+      allow get: if resource.data.status == 'active' || isAuthenticated();
+      allow list: if isAuthenticated();
       allow write: if isAdmin();
     }
 
@@ -169,6 +150,10 @@ service cloud.firestore {
         && request.resource.data.createdAt == request.time;
       allow update, delete: if false;
     }
+
+    // ═══════════════════════════════════════════════
+    // AFFILIATES
+    // ═══════════════════════════════════════════════
 
     match /affiliateAccounts/{affiliateId} {
       allow get: if isAdmin() || isMentor() || (isAffiliate() && resource.data.uid == request.auth.uid);
@@ -209,6 +194,10 @@ service cloud.firestore {
       allow list, write: if isAdmin();
     }
 
+    // ═══════════════════════════════════════════════
+    // CATALOG — FOODS, DIETS, WORKOUTS, EXERCISES
+    // ═══════════════════════════════════════════════
+
     match /foods/{foodId} {
       allow read: if isAdmin() || isMentor() || (canUseStudentApp() && resource.data.status == 'active');
       allow write: if isAdmin() || isMentor();
@@ -217,7 +206,6 @@ service cloud.firestore {
     match /diets/{dietId} {
       allow read: if isAdmin() || isMentor() || (canUseStudentApp() && resource.data.status == 'published');
       allow write: if isAdmin() || isMentor();
-
       match /versions/{versionId} {
         allow read, write: if isAdmin() || isMentor();
       }
@@ -226,7 +214,6 @@ service cloud.firestore {
     match /workouts/{workoutId} {
       allow read: if isAdmin() || isMentor() || (canUseStudentApp() && resource.data.status == 'published');
       allow write: if isAdmin() || isMentor();
-
       match /versions/{versionId} {
         allow read, write: if isAdmin() || isMentor();
       }
@@ -236,6 +223,24 @@ service cloud.firestore {
       allow read: if isAdmin() || isMentor() || (canUseStudentApp() && resource.data.status == 'active');
       allow write: if isAdmin() || isMentor();
     }
+
+    // ═══════════════════════════════════════════════
+    // WORKOUT TECHNIQUES & SERIES PRESETS
+    // ═══════════════════════════════════════════════
+
+    match /workoutTechniques/{techniqueId} {
+      allow read: if isAdmin() || isMentor() || canUseStudentApp();
+      allow write: if isAdmin() || isMentor();
+    }
+
+    match /seriesPresets/{presetId} {
+      allow read: if isAdmin() || isMentor() || canUseStudentApp();
+      allow write: if isAdmin() || isMentor();
+    }
+
+    // ═══════════════════════════════════════════════
+    // STUDENT DATA — SUB-COLLECTIONS
+    // ═══════════════════════════════════════════════
 
     match /users/{uid}/hydrationDays/{date} {
       allow read: if (isOwner(uid) && canUseStudentApp()) || isAdmin() || (resource.data.uid == uid && isMentorOf(uid));
@@ -261,22 +266,124 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    function isSafeCheckinUpdate() {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+        'reviewStatus', 'adminFeedback', 'reviewedAt', 'reviewedBy'
+      ]);
+    }
+
     match /users/{uid}/dailyCheckins/{date} {
       allow read: if (isOwner(uid) && canUseStudentApp()) || isAdmin() || (resource.data.uid == uid && isMentorOf(uid));
-      allow create, update: if ((isOwner(uid) && canUseStudentApp() && ownsWrittenDoc(uid)) || isAdmin());
+      allow create: if ((isOwner(uid) && canUseStudentApp() && ownsWrittenDoc(uid)) || isAdmin());
+      allow update: if (isAdmin() || (isOwner(uid) && canUseStudentApp() && ownsWrittenDoc(uid) && isSafeCheckinUpdate()));
       allow delete: if isAdmin();
     }
 
     match /users/{uid}/weeklyCheckins/{week} {
       allow read: if (isOwner(uid) && canUseStudentApp()) || isAdmin() || isMentorOf(uid);
-      allow create, update: if ((isOwner(uid) && canUseStudentApp() && ownsWrittenDoc(uid)) || isAdmin());
+      allow create: if ((isOwner(uid) && canUseStudentApp() && ownsWrittenDoc(uid)) || isAdmin());
+      allow update: if (isAdmin() || (isOwner(uid) && canUseStudentApp() && ownsWrittenDoc(uid) && isSafeCheckinUpdate()));
       allow delete: if isAdmin();
     }
+
+    match /users/{uid}/prescriptionAssignments/{assignmentId} {
+      allow get, list: if isOwner(uid) || isAdmin();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /users/{uid}/planSelections/{selectionId} {
+      allow get, list: if isOwner(uid) || isAdmin();
+      allow create: if (
+        isOwner(uid)
+        && canUseStudentApp()
+        && request.resource.data.uid == uid
+        && request.resource.data.selectedBy == 'student'
+        && request.resource.data.source == 'recommendation'
+      ) || isAdmin();
+      allow update, delete: if isAdmin();
+    }
+
+    match /users/{uid}/contentProgress/{contentId} {
+      allow read: if isOwner(uid) || isAdmin() || isMentorOf(uid);
+      allow write: if isOwner(uid) || isAdmin();
+    }
+
+    match /users/{uid}/earnedBadges/{badgeId} {
+      allow read: if isOwner(uid) || isAdmin() || isMentorOf(uid);
+      allow write: if isAdmin();
+    }
+
+    match /users/{uid}/pushTokens/{tokenId} {
+      allow read, delete: if isOwner(uid) || isAdmin();
+      allow create, update: if isOwner(uid);
+    }
+
+    match /users/{uid}/notifications/{notifId} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow update: if isOwner(uid)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead'])
+        && request.resource.data.isRead == true;
+      allow create: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ═══════════════════════════════════════════════
+    // FEEDBACK SYSTEM
+    // ═══════════════════════════════════════════════
+
+    // feedbackSchedules — top-level, keyed by auto-id, uid field identifies owner
+    match /feedbackSchedules/{scheduleId} {
+      // Read: owner, admin, or mentor of the student
+      allow read: if isAdmin()
+        || (isAuthenticated() && resource.data.uid == request.auth.uid)
+        || (isMentor() && isMentorOf(resource.data.uid));
+
+      // Create: student creates their own (via ensureDefaultSchedule) OR mentor creates for their student
+      allow create: if isAdmin()
+        || (canUseStudentApp() && request.resource.data.uid == request.auth.uid)
+        || (isMentor() && isMentorOf(request.resource.data.uid));
+
+      // Update/Delete: admin or mentor of the student; student can pause/cancel their own
+      allow update: if isAdmin()
+        || (isMentor() && isMentorOf(resource.data.uid))
+        || (isOwner(resource.data.uid) && canUseStudentApp()
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt']));
+      allow delete: if isAdmin()
+        || (isMentor() && isMentorOf(resource.data.uid));
+    }
+
+    // feedbackRequests — sub-collection on users/{uid}
+    match /users/{uid}/feedbackRequests/{requestId} {
+      allow read: if isOwner(uid) || isAdmin() || isMentorOf(uid);
+
+      // Student can create (via ensureDefaultSchedule batch) + update (status, submittedAt, responseId)
+      allow create: if (isOwner(uid) && canUseStudentApp()) || isAdmin() || (isMentor() && isMentorOf(uid));
+
+      allow update: if isAdmin()
+        || (isMentor() && isMentorOf(uid))
+        || (isOwner(uid) && canUseStudentApp()
+            && request.resource.data.diff(resource.data).affectedKeys()
+               .hasOnly(['status', 'submittedAt', 'responseId']));
+
+      // Only admin/mentor can delete individual requests; student cannot delete their own
+      allow delete: if isAdmin() || (isMentor() && isMentorOf(uid));
+    }
+
+    // feedbackResponses — sub-collection on users/{uid}; write-once by student
+    match /users/{uid}/feedbackResponses/{responseId} {
+      allow read: if isOwner(uid) || isAdmin() || isMentorOf(uid);
+      allow create: if (isOwner(uid) && canUseStudentApp() && request.resource.data.uid == uid)
+        || isAdmin();
+      allow update, delete: if isAdmin();
+    }
+
+    // ═══════════════════════════════════════════════
+    // CHALLENGES, CONTENT, COMMUNITY
+    // ═══════════════════════════════════════════════
 
     match /challenges/{challengeId} {
       allow read: if isAdmin() || isMentor() || canUseStudentApp();
       allow write: if isAdmin();
-
       match /participants/{uid} {
         allow read: if isAdmin() || canUseStudentApp();
         allow write: if (isOwner(uid) && canUseStudentApp()) || isAdmin();
@@ -303,24 +410,13 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    match /users/{uid}/contentProgress/{contentId} {
-      allow read: if isOwner(uid) || isAdmin() || isMentorOf(uid);
-      allow write: if isOwner(uid) || isAdmin();
+    match /mentorAlerts/{alertId} {
+      allow read: if isAdmin() || (isMentor() && resource.data.mentorId == request.auth.uid);
+      allow write: if isAdmin();
     }
 
-    match /users/{uid}/earnedBadges/{badgeId} {
-      allow read: if isOwner(uid) || isAdmin() || isMentorOf(uid);
-      allow write: if isAdmin(); // Only Admin (or scoring service) can award badges
-    }
-
-    // ═══════════════════════════════════════════════
-    // COMMUNITY FEED
-    // ═══════════════════════════════════════════════
     match /community_posts/{postId} {
-      // Anyone authenticated can read published posts
       allow read: if isAdmin() || (canUseStudentApp() && resource.data.status == 'published');
-
-      // Students can create their own posts but CANNOT set isPinned/isOfficial or manipulate counts
       allow create: if canUseStudentApp()
         && request.resource.data.authorId == request.auth.uid
         && request.resource.data.isPinned == false
@@ -330,20 +426,14 @@ service cloud.firestore {
         && request.resource.data.status == 'published'
         && request.resource.data.content.size() <= 1000
         && request.resource.data.content.size() > 0;
-
-      // Students can only toggle likes on posts (update likedBy array and likesCount)
-      // Admin can do anything
       allow update: if isAdmin()
         || (canUseStudentApp()
           && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
             'authorId', 'authorName', 'authorPhoto', 'content', 'type',
             'createdAt', 'isPinned', 'isOfficial', 'status', 'imageUrl', 'commentsCount'
-          ])
-        );
-
+          ]));
       allow delete: if isAdmin();
 
-      // Comments sub-collection
       match /comments/{commentId} {
         allow read: if isAdmin() || canUseStudentApp();
         allow create: if canUseStudentApp()
@@ -357,41 +447,176 @@ service cloud.firestore {
     }
 
     // ═══════════════════════════════════════════════
-    // NOTIFICATIONS (per-user)
+    // COLLECTION GROUPS — Admin/Mentor cross-student reads
     // ═══════════════════════════════════════════════
-    match /users/{uid}/notifications/{notifId} {
-      // Users can only read their own notifications
-      allow read: if isOwner(uid) || isAdmin();
-      // Users can only mark their own notifications as read (update isRead field only)
-      allow update: if isOwner(uid)
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead'])
-        && request.resource.data.isRead == true;
-      // Only admin/system can create notifications
-      allow create: if isAdmin();
-      allow delete: if isAdmin();
-    }
 
-    // ═══════════════════════════════════════════════
-    // COLLECTION GROUPS (For Admin/Mentor Dashboards)
-    // ═══════════════════════════════════════════════
     match /{path=**}/workoutSessions/{sessionId} {
       allow read: if isAdmin() || (isMentor() && isMentorOf(resource.data.uid));
     }
-
     match /{path=**}/dietDays/{dateKey} {
       allow read: if isAdmin() || (isMentor() && isMentorOf(resource.data.uid));
     }
-
     match /{path=**}/dailyCheckins/{date} {
       allow read: if isAdmin() || (isMentor() && isMentorOf(resource.data.uid));
     }
-
     match /{path=**}/bodyCheckins/{checkinId} {
       allow read: if isAdmin() || (isMentor() && isMentorOf(resource.data.uid));
     }
-
     match /{path=**}/hydrationDays/{date} {
       allow read: if isAdmin() || (isMentor() && isMentorOf(resource.data.uid));
+    }
+    match /{path=**}/feedbackRequests/{requestId} {
+      allow read: if isAdmin() || (isMentor() && isMentorOf(resource.data.uid));
+    }
+    match /{path=**}/feedbackResponses/{responseId} {
+      allow read: if isAdmin() || (isMentor() && isMentorOf(resource.data.uid));
+    }
+
+    // ═══════════════════════════════════════════════
+    // ECONOMY SYSTEM — WALLET
+    // ═══════════════════════════════════════════════
+
+    match /walletLedger/{entryId} {
+      allow read: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      // Admin may only update operational/reversal metadata — never the financial core
+      allow update: if isAdmin()
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+          'userId', 'accountType', 'currency', 'entryType', 'amount'
+        ]);
+      allow delete: if false;
+    }
+
+    match /walletBalances/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow create: if isOwner(uid) || isAdmin();
+      allow update: if isAdmin()
+        || (isOwner(uid)
+          && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['userId', 'accountType', 'currency']));
+      allow delete: if false;
+    }
+
+    // ═══════════════════════════════════════════════
+    // ECONOMY SYSTEM — REFERRALS & CODES
+    // ═══════════════════════════════════════════════
+
+    match /studentReferralAccounts/{accountId} {
+      allow read: if isAdmin() || (isAuthenticated() && resource.data.uid == request.auth.uid);
+      allow create: if isAuthenticated() && request.resource.data.uid == request.auth.uid;
+      allow update: if isAdmin()
+        || (isAuthenticated()
+          && resource.data.uid == request.auth.uid
+          && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['uid', 'referralCode', 'fraudScore', 'status']));
+      allow delete: if isAdmin();
+    }
+
+    match /referralCodesV2/{codeId} {
+      allow get: if true; // public — referral landing page needs to look up codes
+      allow list: if isAuthenticated();
+      allow create: if isAuthenticated() && request.resource.data.ownerUid == request.auth.uid;
+      allow update: if isAdmin()
+        || (isAuthenticated()
+          && resource.data.ownerUid == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['totalClicks', 'uniqueClicks', 'updatedAt']));
+      allow delete: if isAdmin();
+    }
+
+    match /referrals/{referralId} {
+      allow read: if isAdmin() || (isAuthenticated() && resource.data.referrerId == request.auth.uid);
+      allow create: if isAdmin() || (isAuthenticated() && request.resource.data.referrerId == request.auth.uid);
+      allow update: if isAdmin();
+      allow delete: if false;
+    }
+
+    // ═══════════════════════════════════════════════
+    // ECONOMY SYSTEM — INFLUENCERS
+    // ═══════════════════════════════════════════════
+
+    match /influencerAccounts/{uid} {
+      allow get: if isAdmin() || (isAffiliate() && isOwner(uid));
+      allow list: if isAdmin();
+      allow write: if isAdmin();
+    }
+
+    match /influencerPayouts/{payoutId} {
+      allow read: if isAdmin() || (isAffiliate() && resource.data.influencerId == request.auth.uid);
+      allow create: if isAdmin()
+        || (isAffiliate()
+          && request.resource.data.influencerId == request.auth.uid
+          && request.resource.data.status == 'pending_review'
+          && request.resource.data.requestedBy == request.auth.uid);
+      allow update: if isAdmin();
+      allow delete: if false;
+    }
+
+    // ═══════════════════════════════════════════════
+    // ECONOMY SYSTEM — STORE
+    // ═══════════════════════════════════════════════
+
+    match /storeItems/{itemId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    match /storeRedemptions/{redemptionId} {
+      allow read: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update: if isAdmin();
+      allow delete: if false;
+    }
+
+    // ═══════════════════════════════════════════════
+    // ECONOMY SYSTEM — ANTI-FRAUD & WEBHOOKS
+    // ═══════════════════════════════════════════════
+
+    match /webhookEvents/{eventId} {
+      allow read: if isAdmin();
+      allow write: if isAdmin();
+    }
+
+    match /fraudSignals/{signalId} {
+      allow read: if isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // ═══════════════════════════════════════════════
+    // ECONOMY SYSTEM — REFERRAL CHALLENGES
+    // ═══════════════════════════════════════════════
+
+    match /referralChallenges/{challengeId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // ═══════════════════════════════════════════════
+    // OPERATIONAL INFRASTRUCTURE
+    // ═══════════════════════════════════════════════
+
+    // Kill switch + feature flags — admin writes, authenticated reads (for assertEnabled checks)
+    match /systemConfig/{docId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // Dead-letter queue for failed economy operations — admin only
+    match /deadLetterQueue/{entryId} {
+      allow read: if isAdmin();
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if false;
+    }
+
+    // Financial reconciliation reports — admin only
+    match /reconciliationReports/{reportId} {
+      allow read: if isAdmin();
+      allow write: if isAdmin();
+    }
+
+    match /referralChallengeProgress/{progressId} {
+      allow read: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
+      allow delete: if isAdmin();
     }
   }
 }

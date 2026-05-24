@@ -1,5 +1,6 @@
 import { collection, doc, getDoc, getDocs, query, updateDoc, where } from 'firebase/firestore'
 import { db } from '../lib/firebase/firebase'
+import { normalizeFirestoreWriteData, nowTimestamp } from '../lib/firebase/date'
 import { COLLECTIONS } from '../lib/firebase/paths'
 import type { MentorAssignment, User } from '../types/domain'
 
@@ -42,9 +43,9 @@ export const mentorAssignmentService = {
 
   async assignStudent(studentId: string, mentorId: string | null) {
     const userRef = doc(db, COLLECTIONS.USERS, studentId)
-    await updateDoc(userRef, {
+    await updateDoc(userRef, normalizeFirestoreWriteData({
       mentorId,
-      updatedAt: new Date().toISOString(),
-    })
+      updatedAt: nowTimestamp(),
+    }))
   },
 }

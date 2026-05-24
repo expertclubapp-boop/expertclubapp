@@ -1,8 +1,9 @@
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Coffee, Utensils, Zap, Flame, ShoppingCart, Repeat, AlertTriangle, Check } from 'lucide-react'
+import { ArrowLeft, Coffee, Lock, Utensils, Zap, Flame, ShoppingCart, Repeat, AlertTriangle, Check } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
 import { useDiet } from '../../hooks/useDiets'
 import { useProfile } from '../../hooks/useProfile'
+import { usePlanTier } from '../../hooks/usePlanTier'
 import { profileService } from '../../services/profileService'
 import { useAuth } from '../../contexts/AuthContext'
 import { PageShell } from '../../components/ui/Premium'
@@ -13,7 +14,8 @@ export function DietDetailScreen() {
   const { firebaseUser } = useAuth()
   const { diet, isLoading } = useDiet(dietId)
   const { profile } = useProfile()
-  
+  const { isLowTicket } = usePlanTier()
+
   const isSelected = profile?.selectedDietId === dietId
 
   if (isLoading) {
@@ -25,6 +27,27 @@ export function DietDetailScreen() {
   }
 
   if (!diet) return <div className="p-10 text-center text-text-muted font-display uppercase italic">Dieta não encontrada</div>
+
+  if (isLowTicket && diet.accessTier === 'mentoring') {
+    return (
+      <PageShell className="pb-40">
+        <div className="flex flex-col items-center justify-center py-20 px-6 text-center gap-6">
+          <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
+            <Lock className="w-8 h-8 text-amber-400" />
+          </div>
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-widest text-amber-400 mb-2">Exclusivo Mentoria 1:1</p>
+            <h2 className="text-xl font-black italic uppercase text-white mb-2">{diet.title}</h2>
+            <p className="text-sm text-text-muted max-w-xs mx-auto">Esta dieta faz parte do plano de Mentoria 1:1. Faça upgrade para ter acesso à prescrição nutricional personalizada.</p>
+          </div>
+          <Button variant="primary" className="px-8 py-3" onClick={() => navigate('/app/meu-plano')}>
+            Ver planos de mentoria
+          </Button>
+          <button onClick={() => navigate(-1)} className="text-xs text-text-muted underline underline-offset-2">Voltar</button>
+        </div>
+      </PageShell>
+    )
+  }
 
   const handleUseDiet = async () => {
     if (!firebaseUser || !dietId) return
@@ -51,7 +74,7 @@ export function DietDetailScreen() {
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-accent-lime/10 border border-accent-lime/20 rounded-full mb-4">
               <span className={`w-2 h-2 rounded-full ${isSelected ? 'bg-accent-lime animate-pulse' : 'bg-text-muted'}`}></span>
-              <span className="text-[10px] font-bold text-accent-lime uppercase tracking-widest">
+              <span className="text-xs font-bold uppercase tracking-widest text-accent-lime">
                 {isSelected ? 'Plano Ativo' : 'Sugestão Expert'}
               </span>
             </div>
@@ -80,9 +103,9 @@ export function DietDetailScreen() {
       <section className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-10">
         <div className="md:col-span-1 ec-card p-6 rounded-xl flex flex-col justify-center items-center relative overflow-hidden group">
           <div className="absolute inset-0 bg-white/[0.02] pointer-events-none"></div>
-          <span className="text-text-muted text-[10px] font-bold uppercase tracking-widest mb-2">Calorias</span>
+          <span className="mb-2 text-xs font-bold uppercase tracking-widest text-text-secondary">Calorias</span>
           <span className="text-heading-2 font-display text-accent-lime uppercase italic leading-none">{diet.calories}</span>
-          <span className="text-[10px] font-bold text-text-muted uppercase tracking-widest mt-2">kcal/dia</span>
+          <span className="mt-2 text-xs font-bold uppercase tracking-widest text-text-secondary">kcal/dia</span>
         </div>
 
         <div className="md:col-span-3 grid grid-cols-3 gap-4">
@@ -105,19 +128,19 @@ export function DietDetailScreen() {
                 </div>
                 <div>
                   <h4 className="text-text-primary font-bold font-display uppercase italic">{meal.name}</h4>
-                  <p className="text-[10px] text-text-muted font-bold uppercase tracking-widest">
-                    {meal.timeSuggestion || ''} • {meal.items.reduce((acc: number, f: any) => acc + (f.macros?.calories || 0), 0)} kcal
+                  <p className="text-xs font-bold uppercase tracking-widest text-text-secondary">
+                    {meal.timeSuggestion || ''} • {meal.items.reduce((acc: number, f: { macros?: { calories?: number } }) => acc + (f.macros?.calories || 0), 0)} kcal
                   </p>
                 </div>
               </div>
             </div>
             <div className="p-6 space-y-4">
-              {meal.items.map((item: any, idx: number) => (
+              {meal.items.map((item, idx: number) => (
                 <div key={idx} className="flex justify-between items-center group/item">
                   <div>
                     <span className="text-text-secondary font-medium">{item.foodName}</span>
                     {item.substitutionOptions && item.substitutionOptions.length > 0 && (
-                      <p className="text-[10px] text-text-muted uppercase mt-1">Substituições: {item.substitutionOptions.map((s: any) => s.foodName).join(', ')}</p>
+                      <p className="mt-1 text-xs uppercase text-text-secondary">Substituições: {item.substitutionOptions.map((s) => s.foodName).join(', ')}</p>
                     )}
                   </div>
                   <span className="font-display text-sm font-bold text-text-primary uppercase italic">{item.quantity}{item.unit}</span>
@@ -165,7 +188,7 @@ function MacroTile({ label, value, color, icon, percent }: { label: string; valu
   return (
     <div className="ec-card p-5 rounded-xl flex flex-col justify-between">
       <div className="flex justify-between items-start mb-4">
-        <span className="text-text-muted font-display text-[10px] font-bold uppercase tracking-widest">{label}</span>
+        <span className="font-display text-xs font-bold uppercase tracking-widest text-text-secondary">{label}</span>
         <div className={`p-1 rounded-md bg-opacity-10 ${colorMap[color].split(' ')[0]}`}>
           {icon}
         </div>

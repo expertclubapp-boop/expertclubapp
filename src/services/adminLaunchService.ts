@@ -1,4 +1,4 @@
-import { collection, getDocs, query, where, collectionGroup, orderBy } from 'firebase/firestore'
+import { collection, getDocs, query, where, collectionGroup, orderBy, limit, type Query } from 'firebase/firestore'
 import { db } from '../lib/firebase/firebase'
 import { toFirestoreDate } from '../lib/firebase/date'
 import { COLLECTIONS, SUB_COLLECTIONS } from '../lib/firebase/paths'
@@ -16,6 +16,54 @@ import type {
 } from '../types/domain'
 
 export type LaunchDateRange = "today" | "7d" | "30d" | "month" | "all"
+
+const LAUNCH_LIMITS = {
+  subscriptions: 1000,
+  events: 500,
+  users: 1000,
+  profiles: 1000,
+  affiliates: 100,
+  commissions: 1000,
+  activity: 500,
+}
+
+const TRACKED_SUBSCRIPTION_STATUSES = ['active', 'trialing', 'pending', 'past_due', 'cancelled', 'expired']
+const TRACKED_COMMISSION_STATUSES = ['approved', 'paid']
+
+function isPermissionDenied(error: unknown) {
+  return (error as { code?: string })?.code === 'permission-denied'
+}
+
+async function readRequired<T>(queryName: string, firestoreQuery: Query): Promise<T[]> {
+  try {
+    const snap = await getDocs(firestoreQuery)
+    return snap.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() } as T))
+  } catch (error) {
+    if (isPermissionDenied(error)) throw error
+    throw new Error(`Falha ao carregar métrica crítica de lançamento: ${queryName}`)
+  }
+}
+
+type OptionalRead<T> = { data: T[]; warning?: string }
+
+async function readOptional<T>(
+  queryName: string,
+  firestoreQuery: Query,
+): Promise<OptionalRead<T>> {
+  try {
+    const snap = await getDocs(firestoreQuery)
+    return { data: snap.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() } as T)) }
+  } catch (error) {
+    if (isPermissionDenied(error)) throw error
+    console.error(`[adminLaunchService] Métrica secundária indisponível: ${queryName}`, error)
+    return { data: [], warning: `${queryName} indisponível; atividade exibida como recorte vazio.` }
+  }
+}
+
+function unwrapOptionalResult<T>(result: PromiseSettledResult<OptionalRead<T>>): OptionalRead<T> {
+  if (result.status === 'rejected') throw result.reason
+  return result.value
+}
 
 export type LaunchOpsMetrics = {
   revenueConfirmed: number
@@ -78,55 +126,104 @@ export const adminLaunchService = {
     const startDateCursor = toFirestoreDate(startDate)
     const sevenDaysAgoCursor = toFirestoreDate(new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000))
 
-    // 2. Fetch Data (Client-side aggregation for V1 Launch)
-    // NOTE: In production with many users, these should be migrated to Cloud Functions aggregations.
-    
+    // 2. Fetch bounded data for the launch dashboard.
+    // Long-term scale should move these rollups to server-side aggregates.
     const [
-      subsSnap,
-      checkoutsSnap,
-      billingSnap,
-      usersSnap,
-      profilesSnap,
-      affiliatesSnap,
-      commissionsSnap,
-      workoutsSnap,
-      dietsSnap,
-      checkinsSnap
+      subscriptions,
+      checkouts,
+      billingEvents,
+      users,
+      profiles,
+      affiliates,
+      commissions,
     ] = await Promise.all([
-      getDocs(collection(db, COLLECTIONS.SUBSCRIPTIONS)),
-      getDocs(query(collection(db, COLLECTIONS.CHECKOUT_SESSIONS), where('createdAt', '>=', startDateCursor))),
-      getDocs(query(collection(db, COLLECTIONS.BILLING_EVENTS), where('createdAt', '>=', startDateCursor))),
-      getDocs(collection(db, COLLECTIONS.USERS)),
-      getDocs(collection(db, COLLECTIONS.PROFILES)),
-      getDocs(collection(db, COLLECTIONS.AFFILIATE_ACCOUNTS)),
-      getDocs(collection(db, COLLECTIONS.COMMISSION_LEDGER)),
-      getDocs(query(
-        collectionGroup(db, SUB_COLLECTIONS.WORKOUT_SESSIONS),
-        where('startedAt', '>=', sevenDaysAgoCursor),
-        orderBy('startedAt', 'desc')
-      )),
-      getDocs(query(
-        collectionGroup(db, SUB_COLLECTIONS.DIET_DAYS),
-        where('createdAt', '>=', sevenDaysAgoCursor),
-        orderBy('createdAt', 'desc')
-      )),
-      getDocs(query(
-        collectionGroup(db, SUB_COLLECTIONS.DAILY_CHECKINS),
-        where('createdAt', '>=', sevenDaysAgoCursor),
-        orderBy('createdAt', 'desc')
-      ))
+      readRequired<Subscription>(
+        'subscriptions.status.limited',
+        query(
+          collection(db, COLLECTIONS.SUBSCRIPTIONS),
+          where('status', 'in', TRACKED_SUBSCRIPTION_STATUSES),
+          limit(LAUNCH_LIMITS.subscriptions),
+        ),
+      ),
+      readRequired<CheckoutSession>(
+        'checkoutSessions.range.limited',
+        query(
+          collection(db, COLLECTIONS.CHECKOUT_SESSIONS),
+          where('createdAt', '>=', startDateCursor),
+          orderBy('createdAt', 'desc'),
+          limit(LAUNCH_LIMITS.events),
+        ),
+      ),
+      readRequired<BillingEvent>(
+        'billingEvents.range.limited',
+        query(
+          collection(db, COLLECTIONS.BILLING_EVENTS),
+          where('createdAt', '>=', startDateCursor),
+          orderBy('createdAt', 'desc'),
+          limit(LAUNCH_LIMITS.events),
+        ),
+      ),
+      readRequired<User>(
+        'users.member.limited',
+        query(collection(db, COLLECTIONS.USERS), where('role', '==', 'member'), limit(LAUNCH_LIMITS.users)),
+      ),
+      readRequired<UserProfile>(
+        'profiles.limited',
+        query(collection(db, COLLECTIONS.PROFILES), limit(LAUNCH_LIMITS.profiles)),
+      ),
+      readRequired<AffiliateAccount>(
+        'affiliateAccounts.limited',
+        query(collection(db, COLLECTIONS.AFFILIATE_ACCOUNTS), limit(LAUNCH_LIMITS.affiliates)),
+      ),
+      readRequired<CommissionEntry>(
+        'commissionLedger.status.limited',
+        query(
+          collection(db, COLLECTIONS.COMMISSION_LEDGER),
+          where('status', 'in', TRACKED_COMMISSION_STATUSES),
+          limit(LAUNCH_LIMITS.commissions),
+        ),
+      ),
     ])
 
-    const subscriptions = subsSnap.docs.map(d => d.data() as Subscription)
-    const checkouts = checkoutsSnap.docs.map(d => d.data() as CheckoutSession)
-    const billingEvents = billingSnap.docs.map(d => d.data() as BillingEvent)
-    const users = usersSnap.docs.map(d => d.data() as User)
-    const profiles = profilesSnap.docs.map(d => d.data() as UserProfile)
-    const affiliates = affiliatesSnap.docs.map(d => d.data() as AffiliateAccount)
-    const commissions = commissionsSnap.docs.map(d => d.data() as CommissionEntry)
-    const workoutSessions7d = workoutsSnap.docs.map(d => d.data() as WorkoutSession)
-    const dietDays7d = dietsSnap.docs.map(d => d.data() as DietDay)
-    const dailyCheckins7d = checkinsSnap.docs.map(d => d.data() as DailyCheckin)
+    const activityResults = await Promise.allSettled([
+      readOptional<WorkoutSession>(
+        'workoutSessions.7d',
+        query(
+          collectionGroup(db, SUB_COLLECTIONS.WORKOUT_SESSIONS),
+          where('startedAt', '>=', sevenDaysAgoCursor),
+          orderBy('startedAt', 'desc'),
+          limit(LAUNCH_LIMITS.activity),
+        ),
+      ),
+      readOptional<DietDay>(
+        'dietDays.7d',
+        query(
+          collectionGroup(db, SUB_COLLECTIONS.DIET_DAYS),
+          where('createdAt', '>=', sevenDaysAgoCursor),
+          orderBy('createdAt', 'desc'),
+          limit(LAUNCH_LIMITS.activity),
+        ),
+      ),
+      readOptional<DailyCheckin>(
+        'dailyCheckins.7d',
+        query(
+          collectionGroup(db, SUB_COLLECTIONS.DAILY_CHECKINS),
+          where('createdAt', '>=', sevenDaysAgoCursor),
+          orderBy('createdAt', 'desc'),
+          limit(LAUNCH_LIMITS.activity),
+        ),
+      ),
+    ])
+    const workoutsResult = unwrapOptionalResult(activityResults[0] as PromiseSettledResult<OptionalRead<WorkoutSession>>)
+    const dietsResult = unwrapOptionalResult(activityResults[1] as PromiseSettledResult<OptionalRead<DietDay>>)
+    const checkinsResult = unwrapOptionalResult(activityResults[2] as PromiseSettledResult<OptionalRead<DailyCheckin>>)
+
+    const workoutSessions7d = workoutsResult.data
+    const dietDays7d = dietsResult.data
+    const dailyCheckins7d = checkinsResult.data
+    const queryWarnings = [workoutsResult, dietsResult, checkinsResult]
+      .map((result) => result.warning)
+      .filter(Boolean) as string[]
 
     // 3. Compute Metrics
     const metrics: LaunchOpsMetrics = {
@@ -196,8 +293,8 @@ export const adminLaunchService = {
 
     // 4. Compute Affiliates Table
     const affiliateRows: AffiliateLaunchRow[] = affiliates.map(aff => {
-      const affCheckouts = checkouts.filter(c => c.referralCode && (c as any).affiliateId === aff.id || c.source === aff.id)
-      const affSubs = subscriptions.filter(s => s.referralCode && (s as any).affiliateId === aff.id || s.source === aff.id)
+      const affCheckouts = checkouts.filter(c => (c.referralCode && (c as any).affiliateId === aff.id) || c.source === aff.id)
+      const affSubs = subscriptions.filter(s => (s.referralCode && (s as any).affiliateId === aff.id) || s.source === aff.id)
       const affComms = commissions.filter(c => c.affiliateId === aff.id)
       
       let approved = 0
@@ -293,6 +390,15 @@ export const adminLaunchService = {
         actionHref: '/admin/commissions'
       })
     }
+
+    queryWarnings.forEach((warning, index) => {
+      alerts.push({
+        id: `partial-metric-${index + 1}`,
+        severity: 'info',
+        title: 'Métrica parcial',
+        description: warning,
+      })
+    })
 
     return { metrics, affiliateRows, alerts, users }
   }

@@ -1,17 +1,16 @@
 import { useState, useMemo } from 'react'
-import { Link } from 'react-router-dom'
+
 import {
   AlertTriangle,
   CalendarClock,
   CircleDollarSign,
   ClipboardCheck,
-  Dumbbell,
   Users,
-  ChevronRight,
-  Target,
-  Activity,
-  Search
+  Search,
+  User,
 } from 'lucide-react'
+import { AnimatePresence } from 'framer-motion'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { useProfile } from '../../hooks/useProfile'
 import {
@@ -19,12 +18,12 @@ import {
   useMentorCheckins,
   useMentorFinance,
   useMentorInfluencers,
-  useMentorOverview,
   useMentorReports,
   useMentorStudents,
 } from '../../hooks/mentor/useMentorWorkspace'
-import { V2Card, V2IconBubble, V2Badge, V2Button, V2Avatar, cx } from '../../components/v2/ExpertClubV2Base'
+import { V2Card, V2Badge, V2Button, V2Avatar, cx } from '../../components/v2/ExpertClubV2Base'
 import { V2StatCard } from '../../components/v2/ExpertClubStatCard'
+import { PrescriptionDrawer } from './PrescriptionDrawer'
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0)
@@ -37,135 +36,83 @@ function formatDate(value: string | null) {
   return parsed.toLocaleDateString('pt-BR')
 }
 
-function SectionHeader({ title, subtitle, eyebrow }: { title: string; subtitle?: string; eyebrow?: string }) {
+function SectionHeader({ title, subtitle, eyebrow, isPartial }: { title: string; subtitle?: string; eyebrow?: string; isPartial?: boolean }) {
   return (
-    <div className="mb-8">
+    <div className="mb-8 relative">
       {eyebrow && <span className="text-[10px] font-black tracking-[0.2em] text-ec-violet uppercase mb-1 block">{eyebrow}</span>}
-      <h1 className="text-3xl font-black italic text-white uppercase leading-tight">{title}</h1>
-      {subtitle && <p className="text-sm text-text-muted mt-1">{subtitle}</p>}
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-black italic text-white uppercase leading-tight">{title}</h1>
+          {subtitle && <p className="text-sm text-text-muted mt-1">{subtitle}</p>}
+        </div>
+        {isPartial && <SlicingNotice />}
+      </div>
+    </div>
+  )
+}
+
+function SlicingNotice() {
+  return (
+    <div className="flex items-center gap-2 px-3 py-2 bg-yellow-500/10 border border-yellow-500/20 rounded-xl max-w-[200px]">
+      <AlertTriangle size={14} className="text-yellow-500 shrink-0" />
+      <span className="text-[9px] font-black italic text-yellow-500 uppercase leading-tight">
+        Exibindo recorte dos dados recentes para performance.
+      </span>
     </div>
   )
 }
 
 export function MentorOverviewScreen() {
-  const { data, isLoading } = useMentorOverview()
+  return (
+    <div className="space-y-8 max-w-2xl mx-auto py-20 text-center">
+      <SectionHeader 
+        title="Área Deprecada" 
+        eyebrow="AVISO IMPORTANTE" 
+        subtitle="O Expert Club B2C unificou a operação no perfil de Administrador." 
+      />
+      <V2Card className="p-8">
+        <AlertTriangle className="w-12 h-12 text-accent-yellow mx-auto mb-4" />
+        <h2 className="text-xl font-black italic text-white uppercase mb-2">Painel de Mentor Desativado</h2>
+        <p className="text-sm text-text-muted mb-6">
+          A estrutura de múltiplos mentores não faz parte do escopo operacional atual do Expert Club.
+          Todas as ferramentas de prescrição, acompanhamento de alunos e check-ins foram movidas para o painel de <strong>Administrador</strong>.
+        </p>
+        <p className="text-[10px] font-bold uppercase tracking-widest text-ec-violet">
+          Se você é o operador do sistema, acesse com uma conta Admin.
+        </p>
+      </V2Card>
+    </div>
+  )
+}
+
+
+export function MentorStudentsScreen() {
+  const navigate = useNavigate()
+  const { data, isLoading } = useMentorStudents()
+  const [search, setSearch] = useState('')
+  const [status, setStatus] = useState('all')
+  const [prescriptionStudent, setPrescriptionStudent] = useState<{ uid: string; name: string } | null>(null)
+
+  const filtered = useMemo(() => {
+    if (!data?.rows) return []
+    return data.rows.filter((student) => {
+      const haystack = `${student.displayName} ${student.email} ${student.planName}`.toLowerCase()
+      const matchesSearch = haystack.includes(search.toLowerCase())
+      const matchesStatus = status === 'all' || student.subscriptionStatus === status
+      return matchesSearch && matchesStatus
+    })
+  }, [data?.rows, search, status])
 
   if (isLoading) return <div className="py-20 flex justify-center"><div className="w-8 h-8 border-4 border-ec-violet/30 border-t-ec-violet rounded-full animate-spin" /></div>
 
   return (
     <div className="space-y-8">
       <SectionHeader 
-        title="Visão Geral" 
-        eyebrow="WORKSPACE DO MENTOR" 
-        subtitle="Acompanhamento real dos seus alunos e métricas de engajamento." 
+        title="Alunos" 
+        eyebrow="CARTEIRA DO MENTOR" 
+        subtitle="Base real de alunos e histórico de engajamento." 
+        isPartial={data?.isPartial} 
       />
-
-      {data && (
-        <>
-          <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6 gap-4">
-            <V2StatCard label="Alunos Ativos" value={String(data.activeStudents)} icon={Users} tone="violet" />
-            <V2StatCard label="Check-ins Pendentes" value={String(data.pendingCheckins)} icon={ClipboardCheck} tone="warning" />
-            <V2StatCard label="Treinos/Semana" value={String(data.completedWorkoutsWeek)} icon={Dumbbell} tone="success" />
-            <V2StatCard label="Aderência Média" value={data.averageDietAdherence === null ? '-' : `${data.averageDietAdherence}%`} icon={Activity} tone="info" />
-            <V2StatCard label="MRR Estimado" value={formatCurrency(data.estimatedMrr)} icon={CircleDollarSign} tone="success" />
-            <V2StatCard label="Afiliados" value={String(data.activeAffiliates)} icon={Users} tone="neutral" />
-          </section>
-
-          <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
-            <div className="xl:col-span-8 space-y-8">
-              <V2Card className="p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center gap-2">
-                    <V2IconBubble icon={AlertTriangle} tone="warning" size={16} />
-                    <h3 className="text-xs font-black italic text-white uppercase tracking-widest">Atenção Imediata</h3>
-                  </div>
-                  <Link to="/mentor/checkins" className="text-[10px] font-black italic text-ec-violet uppercase hover:underline">VER TODOS</Link>
-                </div>
-
-                <div className="space-y-3">
-                  {data.attentionStudents.map((student) => (
-                    <div key={student.uid} className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5 hover:border-ec-violet/30 transition-all group">
-                      <div className="flex items-center gap-4">
-                        <V2Avatar uid={student.uid} name={student.displayName} size="sm" />
-                        <div>
-                          <p className="text-xs font-black italic text-white uppercase group-hover:text-ec-violet transition-colors">{student.displayName}</p>
-                          <p className="text-[10px] text-text-muted font-medium">{student.email}</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-xs font-black italic text-yellow-500 uppercase">{student.pendingCheckinDays ?? '-'} DIAS SEM CHECK-IN</p>
-                        <p className="text-[9px] text-text-muted font-bold uppercase tracking-widest">ÚLTIMO TREINO: {formatDate(student.lastWorkoutAt)}</p>
-                      </div>
-                    </div>
-                  ))}
-                  {data.attentionStudents.length === 0 && (
-                    <div className="py-12 text-center border border-dashed border-white/10 rounded-2xl">
-                       <p className="text-text-muted text-[10px] font-bold uppercase tracking-widest">Tudo em dia com seus alunos.</p>
-                    </div>
-                  )}
-                </div>
-              </V2Card>
-            </div>
-
-            <div className="xl:col-span-4 space-y-8">
-               <V2Card className="p-6">
-                  <div className="flex items-center gap-2 mb-6">
-                    <V2IconBubble icon={Target} tone="info" size={16} />
-                    <h3 className="text-xs font-black italic text-white uppercase tracking-widest">Ações Rápidas</h3>
-                  </div>
-                  <div className="space-y-3">
-                     <QuickActionLink to="/mentor/checkins" label="Revisar Check-ins" />
-                     <QuickActionLink to="/mentor/alunos" label="Base de Alunos" />
-                     <QuickActionLink to="/mentor/financeiro" label="Ver Financeiro" />
-                  </div>
-               </V2Card>
-
-               <V2Card className="p-6 bg-ec-violet text-white border-none overflow-hidden relative group">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 blur-3xl rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-700" />
-                  <div className="relative z-10">
-                     <CircleDollarSign size={24} className="mb-4" />
-                     <h4 className="text-lg font-black italic uppercase mb-2">MRR ESTIMADO</h4>
-                     <p className="text-3xl font-black italic mb-2">{formatCurrency(data.estimatedMrr)}</p>
-                     <p className="text-xs text-white/70 font-medium">Baseado em assinaturas ativas na sua carteira.</p>
-                  </div>
-               </V2Card>
-            </div>
-          </div>
-        </>
-      )}
-    </div>
-  )
-}
-
-function QuickActionLink({ to, label }: { to: string; label: string }) {
-  return (
-    <Link to={to} className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5 hover:border-ec-violet/50 hover:bg-white/[0.08] transition-all group">
-      <span className="text-xs font-black italic text-white uppercase group-hover:text-ec-violet transition-colors">{label}</span>
-      <ChevronRight size={16} className="text-text-muted group-hover:text-ec-violet group-hover:translate-x-1 transition-all" />
-    </Link>
-  )
-}
-
-export function MentorStudentsScreen() {
-  const { data, isLoading } = useMentorStudents()
-  const [search, setSearch] = useState('')
-  const [status, setStatus] = useState('all')
-
-  const filtered = useMemo(() => {
-    if (!data) return []
-    return data.filter((student) => {
-      const haystack = `${student.displayName} ${student.email} ${student.planName}`.toLowerCase()
-      const matchesSearch = haystack.includes(search.toLowerCase())
-      const matchesStatus = status === 'all' || student.subscriptionStatus === status
-      return matchesSearch && matchesStatus
-    })
-  }, [data, search, status])
-
-  if (isLoading) return <div className="py-20 flex justify-center"><div className="w-8 h-8 border-4 border-ec-violet/30 border-t-ec-violet rounded-full animate-spin" /></div>
-
-  return (
-    <div className="space-y-8">
-      <SectionHeader title="Alunos" eyebrow="CARTEIRA DO MENTOR" subtitle="Base real de alunos e histórico de engajamento." />
 
       <div className="flex flex-col md:flex-row gap-4">
         <div className="flex-1 relative group">
@@ -237,14 +184,23 @@ export function MentorStudentsScreen() {
                     </div>
                   </td>
                   <td className="p-4 text-right">
-                    <V2Button
-                      variant="secondary"
-                      disabled
-                      title="Detalhe do aluno ainda nao esta disponivel no workspace do mentor."
-                      className="h-8 px-4 text-[10px] font-black uppercase italic"
-                    >
-                      DETALHES
-                    </V2Button>
+                    <div className="flex items-center gap-2 justify-end">
+                      <V2Button
+                        variant="ghost"
+                        onClick={() => navigate(`/mentor/students/${student.uid}`)}
+                        className="h-8 px-3 text-[10px] font-black uppercase italic"
+                      >
+                        <User className="w-3.5 h-3.5 mr-1" />
+                        PERFIL
+                      </V2Button>
+                      <V2Button
+                        variant="secondary"
+                        onClick={() => setPrescriptionStudent({ uid: student.uid, name: student.displayName })}
+                        className="h-8 px-4 text-[10px] font-black uppercase italic"
+                      >
+                        PRESCREVER
+                      </V2Button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -252,6 +208,16 @@ export function MentorStudentsScreen() {
           </table>
         </div>
       </V2Card>
+
+      <AnimatePresence>
+        {prescriptionStudent && (
+          <PrescriptionDrawer
+            studentId={prescriptionStudent.uid}
+            studentName={prescriptionStudent.name}
+            onClose={() => setPrescriptionStudent(null)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   )
 }
@@ -261,15 +227,20 @@ export function MentorCheckinsScreen() {
   const [search, setSearch] = useState('')
 
   const filtered = useMemo(() => {
-    if (!data) return []
-    return data.filter((row) => `${row.displayName} ${row.email}`.toLowerCase().includes(search.toLowerCase()))
-  }, [data, search])
+    if (!data?.rows) return []
+    return data.rows.filter((row) => `${row.displayName} ${row.email}`.toLowerCase().includes(search.toLowerCase()))
+  }, [data?.rows, search])
 
   if (isLoading) return <div className="py-20 flex justify-center"><div className="w-8 h-8 border-4 border-ec-violet/30 border-t-ec-violet rounded-full animate-spin" /></div>
 
   return (
     <div className="space-y-8">
-      <SectionHeader title="Check-ins" eyebrow="ACOMPANHAMENTO" subtitle="Fila real de follow-ups diários e semanais." />
+      <SectionHeader 
+        title="Check-ins" 
+        eyebrow="ACOMPANHAMENTO" 
+        subtitle="Fila real de follow-ups diários e semanais." 
+        isPartial={data?.isPartial}
+      />
 
       <div className="relative group max-w-md">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted group-focus-within:text-ec-violet transition-colors" />
@@ -333,7 +304,12 @@ export function MentorFinanceScreen() {
 
   return (
     <div className="space-y-8">
-      <SectionHeader title="Financeiro" eyebrow="RECEITA E COMISSÕES" subtitle="Visão real de receita, risco e ganhos na sua carteira." />
+      <SectionHeader 
+        title="Financeiro" 
+        eyebrow="RECEITA E COMISSÕES" 
+        subtitle="Visão real de receita, risco e ganhos na sua carteira." 
+        isPartial={data?.isPartial}
+      />
 
       {data && (
         <>
@@ -382,7 +358,12 @@ export function MentorInfluencersScreen() {
 
   return (
     <div className="space-y-8">
-      <SectionHeader title="Influencers" eyebrow="AFILIADOS VINCULADOS" subtitle="Parceiros que trouxeram alunos para sua carteira." />
+      <SectionHeader 
+        title="Influencers" 
+        eyebrow="AFILIADOS VINCULADOS" 
+        subtitle="Parceiros que trouxeram alunos para sua carteira." 
+        isPartial={data?.isPartial}
+      />
 
       <V2Card className="p-0 overflow-hidden">
         <div className="overflow-x-auto">
@@ -397,7 +378,7 @@ export function MentorInfluencersScreen() {
               </tr>
             </thead>
             <tbody>
-              {data?.map((affiliate) => (
+              {data?.rows.map((affiliate) => (
                 <tr key={affiliate.id} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors group">
                   <td className="p-6">
                     <div className="flex items-center gap-3">
@@ -460,7 +441,12 @@ export function MentorReportsScreen() {
   if (isLoading) return <div className="py-20 flex justify-center"><div className="w-8 h-8 border-4 border-ec-violet/30 border-t-ec-violet rounded-full animate-spin" /></div>
   return (
     <div className="space-y-8">
-      <SectionHeader title="Relatórios" eyebrow="ANÁLISE DE BASE" subtitle="Resumo operacional e pontos de queda." />
+      <SectionHeader 
+        title="Relatórios" 
+        eyebrow="ANÁLISE DE BASE" 
+        subtitle="Resumo operacional e pontos de queda." 
+        isPartial={data?.isPartial}
+      />
       {data && (
         <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <V2StatCard label="Ativos 7d" value={String(data.activeIn7Days)} icon={Users} tone="violet" />
@@ -504,4 +490,4 @@ function DataField({ label, value }: { label: string; value: string }) {
 }
 
 export function MentorWorkoutPrescriptorScreen() { return <div className="p-10 text-center text-text-muted font-black italic uppercase">Módulo de Prescrição V2 em breve.</div> }
-export function MentorDietPrescriptorScreen() { return <div className="p-10 text-center text-text-muted font-black italic uppercase">Módulo de Nutrição V2 em breve.</div> }
+export { MentorDietPrescriptorScreen } from './MentorDietPrescriptorScreen'

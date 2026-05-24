@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { 
-  PlayCircle, 
-  Search, 
-  Calendar, 
-  Download, 
-  Dumbbell, 
-  Utensils, 
-  Zap, 
+import {
+  PlayCircle,
+  Search,
+  Calendar,
+  Download,
+  Dumbbell,
+  Lock as LockIcon,
+  Utensils,
+  Zap,
   FileText,
   BarChart3,
   CheckCircle2,
@@ -17,6 +18,7 @@ import {
 import { NotificationsDrawer } from '../../components/ui/NotificationsDrawer'
 import { useContent } from '../../hooks/useContent'
 import { useAuth } from '../../contexts/AuthContext'
+import { usePlanTier } from '../../hooks/usePlanTier'
 import { Button } from '../../components/ui/Button'
 import { PageShell } from '../../components/ui/Premium'
 import { getYoutubeEmbedUrl } from '../../services/adminContentService'
@@ -27,6 +29,7 @@ export function ExpertCenterScreen() {
   const navigate = useNavigate()
   const { firebaseUser } = useAuth()
   const { items, progress, isLoading, saveProgress } = useContent()
+  const { isLowTicket } = usePlanTier()
   const [selectedCategory, setSelectedCategory] = useState('Todos')
   const [activeContent, setActiveContent] = useState<ExpertContent | null>(null)
 
@@ -55,6 +58,10 @@ export function ExpertCenterScreen() {
   const featured = items.find(i => i.featured && i.status === 'published')
 
   const handleOpenContent = (item: ExpertContent) => {
+    if (isLowTicket && item.accessTier === 'mentoring') {
+      navigate('/app/meu-plano')
+      return
+    }
     setActiveContent(item)
     navigate(`/app/content/${item.id}`, { replace: true })
     if (!progress[item.id]) {
@@ -218,11 +225,12 @@ export function ExpertCenterScreen() {
                   
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                     {catItems.map(item => (
-                      <VideoCard 
-                        key={item.id} 
-                        item={item} 
+                      <VideoCard
+                        key={item.id}
+                        item={item}
                         isCompleted={progress[item.id]?.status === 'completed'}
-                        onPlay={() => handleOpenContent(item)} 
+                        locked={isLowTicket && item.accessTier === 'mentoring'}
+                        onPlay={() => handleOpenContent(item)}
                       />
                     ))}
                   </div>
@@ -338,7 +346,7 @@ export function ExpertCenterScreen() {
   )
 }
 
-function VideoCard({ item, isMock, isCompleted, onPlay }: any) {
+function VideoCard({ item, isMock, isCompleted, locked, onPlay }: any) {
   if (isMock) {
     return (
       <div className="group opacity-40 grayscale transition-all">
@@ -350,26 +358,35 @@ function VideoCard({ item, isMock, isCompleted, onPlay }: any) {
   }
 
   return (
-    <button className="group text-left disabled:cursor-not-allowed disabled:opacity-60" onClick={onPlay} disabled={!onPlay}>
+    <button className="group text-left" onClick={onPlay}>
       <div className="relative aspect-video rounded-xl overflow-hidden mb-3 border border-white/5">
-        <img 
-          src={item.thumbnailUrl || "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=400"} 
-          alt={item.title} 
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
+        <img
+          src={item.thumbnailUrl || "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=400"}
+          alt={item.title}
+          className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 ${locked ? 'opacity-40 blur-[2px]' : ''}`}
         />
-        <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-          <PlayCircle className="text-ec-violet w-12 h-12" />
-        </div>
-        {isCompleted && (
-          <div className="absolute top-2 left-2 bg-ec-violet text-white p-1 rounded-full shadow-lg">
-            <CheckCircle2 className="w-4 h-4" />
+        {locked ? (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 bg-black/50">
+            <LockIcon className="w-8 h-8 text-amber-400" />
+            <span className="text-[9px] font-black uppercase tracking-widest text-amber-400">Mentoria 1:1</span>
           </div>
+        ) : (
+          <>
+            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              <PlayCircle className="text-ec-violet w-12 h-12" />
+            </div>
+            {isCompleted && (
+              <div className="absolute top-2 left-2 bg-ec-violet text-white p-1 rounded-full shadow-lg">
+                <CheckCircle2 className="w-4 h-4" />
+              </div>
+            )}
+          </>
         )}
         <span className="absolute bottom-2 right-2 bg-black/80 text-white text-[9px] px-2 py-0.5 rounded font-bold tracking-widest uppercase">
           {item.durationMinutes ? `${item.durationMinutes}m` : 'EXCL'}
         </span>
       </div>
-      <h5 className="text-text-primary font-bold text-sm line-clamp-2 group-hover:text-ec-violet transition-colors font-display italic uppercase">
+      <h5 className={`font-bold text-sm line-clamp-2 transition-colors font-display italic uppercase ${locked ? 'text-text-muted' : 'text-text-primary group-hover:text-ec-violet'}`}>
         {item.title}
       </h5>
       <p className="text-text-muted text-[10px] mt-1 font-bold uppercase tracking-widest">{item.category} • há 2 dias</p>

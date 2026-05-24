@@ -1,5 +1,6 @@
 import { doc, getDoc, setDoc } from 'firebase/firestore'
 import { db } from '../lib/firebase/firebase'
+import { normalizeFirestoreWriteData, nowTimestamp } from '../lib/firebase/date'
 import { adminAuditLogService, type AdminActor } from './adminAuditLogService'
 
 export interface AdminCommunitySettings {
@@ -21,7 +22,7 @@ const fallback: AdminCommunitySettings = {
   rules: [],
   welcomeText: '',
   status: 'active',
-  updatedAt: new Date().toISOString(),
+  updatedAt: '',
 }
 
 export const adminCommunityService = {
@@ -32,7 +33,7 @@ export const adminCommunityService = {
 
   async save(actor: AdminActor, data: AdminCommunitySettings) {
     const previous = await this.get()
-    await setDoc(doc(db, 'settings', 'community'), { ...data, updatedAt: new Date().toISOString() }, { merge: true })
+    await setDoc(doc(db, 'settings', 'community'), normalizeFirestoreWriteData({ ...data, updatedAt: nowTimestamp() }), { merge: true })
     await adminAuditLogService.create(actor, 'admin_update', 'community', 'community', previous, data)
   },
 }

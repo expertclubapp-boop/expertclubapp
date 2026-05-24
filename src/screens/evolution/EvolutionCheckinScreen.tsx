@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowLeft, Check, Camera, Ruler, TrendingUp, AlertTriangle, CheckCircle as CheckIcon } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
 import { useAuth } from '../../contexts/AuthContext'
+import { safeDateKey } from '../../lib/firebase/date'
 import { bodyCheckinService } from '../../services/bodyCheckinService'
 import type { BodyCheckin } from '../../types/domain'
 
@@ -25,13 +26,14 @@ export function EvolutionCheckinScreen() {
     nextMonthGoal: '',
   })
 
-  const handleUpdate = (field: string, value: any) => {
+  const handleUpdate = (field: string, value: string | number | undefined) => {
     setFormData(prev => {
       if (field.includes('.')) {
         const [obj, key] = field.split('.')
+        const nested = obj === 'measurements' ? (prev.measurements || {}) : (prev.photoUrls || {})
         return {
           ...prev,
-          [obj]: { ...(prev as any)[obj], [key]: value }
+          [obj]: { ...nested, [key]: value }
         }
       }
       return { ...prev, [field]: value }
@@ -59,7 +61,7 @@ export function EvolutionCheckinScreen() {
       const checkin: Omit<BodyCheckin, 'uid' | 'createdAt' | 'updatedAt'> = {
         ...formData,
         id: checkinId,
-        date: new Date().toISOString().split('T')[0],
+        date: safeDateKey(),
         weightKg: Number(formData.weightKg || 0),
         measurements: formData.measurements || {},
         photoUrls: uploadedPhotoUrls,
@@ -101,7 +103,7 @@ export function EvolutionCheckinScreen() {
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div className="text-center">
-            <p className="text-[10px] font-black uppercase tracking-widest text-text-muted">Passo {step} de 3</p>
+            <p className="text-xs font-black uppercase tracking-widest text-text-muted">Passo {step} de 3</p>
             <p className="text-xs font-bold text-white">Registro de Evolução</p>
           </div>
           <div className="w-10" />
@@ -121,7 +123,7 @@ export function EvolutionCheckinScreen() {
 
             <div className="ec-card rounded-2xl p-5 space-y-5">
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-widest text-text-muted mb-2">Peso Atual (kg)</label>
+                <label className="block text-xs font-bold uppercase tracking-widest text-text-muted mb-2">Peso Atual (kg)</label>
                 <input 
                   type="number" 
                   className="ec-input w-full text-lg font-bold" 
@@ -133,19 +135,19 @@ export function EvolutionCheckinScreen() {
               
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-widest text-text-muted mb-2">Cintura (cm)</label>
+                  <label className="block text-xs font-bold uppercase tracking-widest text-text-muted mb-2">Cintura (cm)</label>
                   <input type="number" className="ec-input w-full" placeholder="--" value={formData.measurements?.waistCm || ''} onChange={e => handleUpdate('measurements.waistCm', parseFloat(e.target.value))} />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-widest text-text-muted mb-2">Abdômen (cm)</label>
+                  <label className="block text-xs font-bold uppercase tracking-widest text-text-muted mb-2">Abdômen (cm)</label>
                   <input type="number" className="ec-input w-full" placeholder="--" value={formData.measurements?.abdomenCm || ''} onChange={e => handleUpdate('measurements.abdomenCm', parseFloat(e.target.value))} />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-widest text-text-muted mb-2">Quadril (cm)</label>
+                  <label className="block text-xs font-bold uppercase tracking-widest text-text-muted mb-2">Quadril (cm)</label>
                   <input type="number" className="ec-input w-full" placeholder="--" value={formData.measurements?.hipsCm || ''} onChange={e => handleUpdate('measurements.hipsCm', parseFloat(e.target.value))} />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-widest text-text-muted mb-2">Braço (cm)</label>
+                  <label className="block text-xs font-bold uppercase tracking-widest text-text-muted mb-2">Braço (cm)</label>
                   <input type="number" className="ec-input w-full" placeholder="--" value={formData.measurements?.armCm || ''} onChange={e => handleUpdate('measurements.armCm', parseFloat(e.target.value))} />
                 </div>
               </div>
@@ -182,8 +184,8 @@ export function EvolutionCheckinScreen() {
               ].map(([key, pos]) => (
                 <label key={key} className="ec-card rounded-2xl p-4 aspect-[3/4] flex flex-col items-center justify-center text-center cursor-pointer hover:border-accent-lime/30 transition-colors border-dashed border-2 border-white/10">
                   <Camera className="w-8 h-8 text-text-muted mb-2" />
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-text-muted">Foto de {pos}</span>
-                  <span className="mt-2 text-[10px] text-accent-lime font-bold">
+                  <span className="text-xs font-bold uppercase tracking-widest text-text-muted">Foto de {pos}</span>
+                  <span className="mt-2 text-xs text-accent-lime font-bold">
                     {photoFiles[key] ? 'Selecionada' : 'Enviar foto'}
                   </span>
                   <input
@@ -215,15 +217,15 @@ export function EvolutionCheckinScreen() {
 
             <div className="space-y-4">
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-widest text-text-muted mb-2">Maior dificuldade</label>
+                <label className="block text-xs font-bold uppercase tracking-widest text-text-muted mb-2">Maior dificuldade</label>
                 <input type="text" className="ec-input w-full" placeholder="Ex: Comer doce à noite" value={formData.mainDifficulty || ''} onChange={e => handleUpdate('mainDifficulty', e.target.value)} />
               </div>
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-widest text-text-muted mb-2">Maior vitória</label>
+                <label className="block text-xs font-bold uppercase tracking-widest text-text-muted mb-2">Maior vitória</label>
                 <input type="text" className="ec-input w-full" placeholder="Ex: Fui treinar mesmo cansado" value={formData.mainEvolution || ''} onChange={e => handleUpdate('mainEvolution', e.target.value)} />
               </div>
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-widest text-text-muted mb-2">Objetivo para o próximo ciclo</label>
+                <label className="block text-xs font-bold uppercase tracking-widest text-text-muted mb-2">Objetivo para o próximo ciclo</label>
                 <input type="text" className="ec-input w-full" placeholder="Ex: Beber 3L de água todo dia" value={formData.nextMonthGoal || ''} onChange={e => handleUpdate('nextMonthGoal', e.target.value)} />
               </div>
             </div>

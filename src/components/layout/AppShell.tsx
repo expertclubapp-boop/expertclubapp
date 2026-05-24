@@ -1,4 +1,6 @@
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
+import { useEffect } from 'react'
+import { MobileBottomNav } from './MobileBottomNav'
 import {
   BarChart3,
   CalendarDays,
@@ -18,6 +20,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { V2Avatar, cx } from '../v2/ExpertClubV2Base'
+import { trackPageView } from '../../lib/analytics'
 
 const appNavItems = [
   { to: '/app/today', icon: LayoutDashboard, label: 'Hoje' },
@@ -49,7 +52,11 @@ const mentorNavItems = [
 export function AppShell() {
   const location = useLocation()
   const { user, logout, isQaBypass } = useAuth()
-  
+
+  useEffect(() => {
+    trackPageView(location.pathname)
+  }, [location.pathname])
+
   const isAdmin = location.pathname.startsWith('/admin')
   const isMentor = location.pathname.startsWith('/mentor')
   const isStudent = !isAdmin && !isMentor
@@ -59,8 +66,8 @@ export function AppShell() {
 
   if (isStudent) {
     return (
-      <div className="ec-student-app-host min-h-screen">
-        <main className="ec-student-app-main">
+      <div className="ec-student-app-host min-h-screen bg-ink-900">
+        <main className="ec-student-app-main pb-28">
           {isQaBypass && (
             <div className="mb-4 rounded-xl border border-amber-400/40 bg-amber-400/10 px-4 py-3 text-xs font-bold uppercase tracking-wider text-amber-200">
               QA BYPASS - Firestore real pode negar dados. Nao usar como prova de permissao Firebase.
@@ -68,22 +75,7 @@ export function AppShell() {
           )}
           <Outlet />
         </main>
-
-        <nav className="ec-student-bottom-nav" aria-label="Navegação do aluno">
-          {appNavItems.slice(0, 5).map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              className={({ isActive }) => cx(
-                "flex flex-col items-center gap-1.5 rounded-xl transition-all",
-                isActive ? "is-active text-ec-violet" : "text-text-muted"
-              )}
-            >
-              <item.icon size={20} />
-              <span>{item.label}</span>
-            </NavLink>
-          ))}
-        </nav>
+        <MobileBottomNav />
       </div>
     )
   }

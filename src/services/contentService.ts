@@ -9,6 +9,7 @@ import {
   where
 } from 'firebase/firestore'
 import { db } from '../lib/firebase/firebase'
+import { dateMillis, normalizeFirestoreWriteData } from '../lib/firebase/date'
 import { COLLECTIONS, SUB_COLLECTIONS, getSubCollectionPath } from '../lib/firebase/paths'
 import type { ExpertContent, ContentProgress } from '../types/domain'
 import { challengeScoringService } from './challengeScoringService'
@@ -19,7 +20,7 @@ export const contentService = {
     const colRef = collection(db, COLLECTIONS.CONTENT)
     const snap = await getDocs(colRef)
     const items = snap.docs.map(d => d.data()) as ExpertContent[]
-    return items.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    return items.sort((a, b) => dateMillis(b.createdAt) - dateMillis(a.createdAt))
   },
 
   async getContentById(id: string) {
@@ -30,7 +31,7 @@ export const contentService = {
 
   async saveContent(content: ExpertContent) {
     const docRef = doc(db, COLLECTIONS.CONTENT, content.id)
-    await setDoc(docRef, content)
+    await setDoc(docRef, normalizeFirestoreWriteData(content))
   },
 
   async deleteContent(id: string) {
@@ -45,8 +46,8 @@ export const contentService = {
     const snap = await getDocs(q)
     const items = snap.docs.map(d => d.data()) as ExpertContent[]
     return items.sort((a, b) => {
-      const dateA = a.publishedAt ? new Date(a.publishedAt).getTime() : new Date(a.createdAt).getTime()
-      const dateB = b.publishedAt ? new Date(b.publishedAt).getTime() : new Date(b.createdAt).getTime()
+      const dateA = a.publishedAt ? dateMillis(a.publishedAt) : dateMillis(a.createdAt)
+      const dateB = b.publishedAt ? dateMillis(b.publishedAt) : dateMillis(b.createdAt)
       return dateB - dateA
     })
   },
@@ -61,8 +62,8 @@ export const contentService = {
     const snap = await getDocs(q)
     const items = snap.docs.map(d => d.data()) as ExpertContent[]
     return items.sort((a, b) => {
-      const dateA = a.publishedAt ? new Date(a.publishedAt).getTime() : new Date(a.createdAt).getTime()
-      const dateB = b.publishedAt ? new Date(b.publishedAt).getTime() : new Date(b.createdAt).getTime()
+      const dateA = a.publishedAt ? dateMillis(a.publishedAt) : dateMillis(a.createdAt)
+      const dateB = b.publishedAt ? dateMillis(b.publishedAt) : dateMillis(b.createdAt)
       return dateB - dateA
     })
   },
@@ -76,7 +77,7 @@ export const contentService = {
 
   async saveProgress(uid: string, progress: ContentProgress) {
     const docRef = doc(db, getSubCollectionPath(COLLECTIONS.USERS, uid, SUB_COLLECTIONS.CONTENT_PROGRESS), progress.contentId)
-    await setDoc(docRef, progress, { merge: true })
+    await setDoc(docRef, normalizeFirestoreWriteData(progress), { merge: true })
 
     if (progress.status === 'completed') {
       challengeScoringService.processUserAction({
