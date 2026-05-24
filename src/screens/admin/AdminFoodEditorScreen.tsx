@@ -1,11 +1,17 @@
 import { useState, useEffect } from 'react'
+import { toastError } from '../../components/ui/Toast'
 import { useNavigate, useParams } from 'react-router-dom'
+import { Zap } from 'lucide-react'
 import { PageShell } from '../../components/ui/Premium'
 import { Button } from '../../components/ui/Button'
 import { AdminToolbar, Field, TextInput, StatusSelect } from './AdminShared'
 import { foodService } from '../../services/foodService'
 import { sanitizeTags } from '../../services/adminCrudService'
 import type { Food } from '../../types/domain'
+
+function calcCalories(protein: number, carbs: number, fat: number) {
+  return Math.round(protein * 4 + carbs * 4 + fat * 9)
+}
 
 const emptyFood: Omit<Food, 'id' | 'createdAt' | 'updatedAt'> = {
   name: '',
@@ -22,6 +28,7 @@ export function AdminFoodEditorScreen() {
   const navigate = useNavigate()
   const [food, setFood] = useState<Omit<Food, 'id' | 'createdAt' | 'updatedAt'>>(emptyFood)
   const [isLoading, setIsLoading] = useState(false)
+  const [autoCalc, setAutoCalc] = useState(true)
 
   useEffect(() => {
     if (foodId && foodId !== 'new') {
@@ -44,7 +51,7 @@ export function AdminFoodEditorScreen() {
       }
       navigate('/admin/foods')
     } catch (error) {
-      alert('Erro ao salvar alimento.')
+      toastError('Erro ao salvar alimento.')
       console.error(error)
     } finally {
       setIsLoading(false)
@@ -108,18 +115,105 @@ export function AdminFoodEditorScreen() {
           </Field>
         </div>
 
-        <Field label="Calorias (kcal)">
-          <TextInput type="number" value={food.macrosPerBasePortion.calories} onChange={e => setFood({ ...food, macrosPerBasePortion: { ...food.macrosPerBasePortion, calories: Number(e.target.value) } })} />
-        </Field>
+        {/* Macros — protein/carbs/fat first, calories auto or manual */}
         <Field label="Proteína (g)">
-          <TextInput type="number" value={food.macrosPerBasePortion.protein} onChange={e => setFood({ ...food, macrosPerBasePortion: { ...food.macrosPerBasePortion, protein: Number(e.target.value) } })} />
+          <TextInput
+            type="number"
+            value={food.macrosPerBasePortion.protein}
+            onChange={e => {
+              const protein = Number(e.target.value)
+              setFood(prev => ({
+                ...prev,
+                macrosPerBasePortion: {
+                  ...prev.macrosPerBasePortion,
+                  protein,
+                  calories: autoCalc ? calcCalories(protein, prev.macrosPerBasePortion.carbs, prev.macrosPerBasePortion.fat) : prev.macrosPerBasePortion.calories,
+                },
+              }))
+            }}
+          />
         </Field>
         <Field label="Carboidratos (g)">
-          <TextInput type="number" value={food.macrosPerBasePortion.carbs} onChange={e => setFood({ ...food, macrosPerBasePortion: { ...food.macrosPerBasePortion, carbs: Number(e.target.value) } })} />
+          <TextInput
+            type="number"
+            value={food.macrosPerBasePortion.carbs}
+            onChange={e => {
+              const carbs = Number(e.target.value)
+              setFood(prev => ({
+                ...prev,
+                macrosPerBasePortion: {
+                  ...prev.macrosPerBasePortion,
+                  carbs,
+                  calories: autoCalc ? calcCalories(prev.macrosPerBasePortion.protein, carbs, prev.macrosPerBasePortion.fat) : prev.macrosPerBasePortion.calories,
+                },
+              }))
+            }}
+          />
         </Field>
         <Field label="Gorduras (g)">
-          <TextInput type="number" value={food.macrosPerBasePortion.fat} onChange={e => setFood({ ...food, macrosPerBasePortion: { ...food.macrosPerBasePortion, fat: Number(e.target.value) } })} />
+          <TextInput
+            type="number"
+            value={food.macrosPerBasePortion.fat}
+            onChange={e => {
+              const fat = Number(e.target.value)
+              setFood(prev => ({
+                ...prev,
+                macrosPerBasePortion: {
+                  ...prev.macrosPerBasePortion,
+                  fat,
+                  calories: autoCalc ? calcCalories(prev.macrosPerBasePortion.protein, prev.macrosPerBasePortion.carbs, fat) : prev.macrosPerBasePortion.calories,
+                },
+              }))
+            }}
+          />
         </Field>
+        <Field label="Fibras (g) — opcional">
+          <TextInput
+            type="number"
+            value={food.macrosPerBasePortion.fiber ?? ''}
+            onChange={e => setFood(prev => ({ ...prev, macrosPerBasePortion: { ...prev.macrosPerBasePortion, fiber: e.target.value === '' ? undefined : Number(e.target.value) } }))}
+            placeholder="0"
+          />
+        </Field>
+
+        {/* Calories — auto-calculated or manual override */}
+        <div className="md:col-span-2 lg:col-span-3">
+          <div className="flex items-end gap-3">
+            <div className="w-40">
+              <Field label="Calorias (kcal)">
+                <TextInput
+                  type="number"
+                  value={food.macrosPerBasePortion.calories}
+                  onChange={e => { setAutoCalc(false); setFood(prev => ({ ...prev, macrosPerBasePortion: { ...prev.macrosPerBasePortion, calories: Number(e.target.value) } })) }}
+                  className={autoCalc ? 'opacity-70' : ''}
+                />
+              </Field>
+            </div>
+            <div className="flex items-center gap-2 pb-1">
+              <button
+                type="button"
+                onClick={() => {
+                  setAutoCalc(true)
+                  setFood(prev => ({
+                    ...prev,
+                    macrosPerBasePortion: {
+                      ...prev.macrosPerBasePortion,
+                      calories: calcCalories(prev.macrosPerBasePortion.protein, prev.macrosPerBasePortion.carbs, prev.macrosPerBasePortion.fat),
+                    },
+                  }))
+                }}
+                className={`flex items-center gap-1.5 text-[10px] px-3 py-2 rounded-lg border font-bold uppercase tracking-widest transition-all ${autoCalc ? 'bg-accent-lime/20 border-accent-lime/40 text-accent-lime' : 'border-white/10 text-text-muted hover:border-accent-lime/30 hover:text-accent-lime'}`}
+              >
+                <Zap className="w-3 h-3" /> {autoCalc ? 'Auto (ativo)' : 'Recalcular'}
+              </button>
+              {autoCalc && (
+                <span className="text-[10px] text-text-muted">
+                  {food.macrosPerBasePortion.protein}P × 4 + {food.macrosPerBasePortion.carbs}C × 4 + {food.macrosPerBasePortion.fat}G × 9
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
 
         <div className="md:col-span-2 lg:col-span-3 mt-4"><h3 className="font-bold text-white uppercase italic tracking-wider">Organização & Substituição</h3></div>
         

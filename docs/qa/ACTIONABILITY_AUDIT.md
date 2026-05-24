@@ -45,13 +45,25 @@ Toda acao deve ser funcional, disabled com motivo ou removida. Acoes ativas sem 
 | `/app/today` | Cards de missao | Cards vazios/herdados com seta e texto administrativo. | Cards navegam para check-in, treino, dieta ou hidratacao com estado real/empty state. | Corrigido |
 | `/app/diets/today` | Refeicao concluida | Tela lia `consumed`, mas o service grava `completed`. | Leitura aceita `completed` e legado `consumed`. | Corrigido |
 | `/app/diets/today` | Dieta sem refeicoes | Tela parecia pobre/vazia. | Empty state honesto com CTA real para biblioteca de dietas. | Corrigido |
+| `/app/diets/today` | Substituicao alimentar mock | Opcoes `Opção A/B (Equivalente)` hardcoded com cast `as any`. Risco de gravar `foodId: undefined` no Firestore. | Mock removido. Modal mostra empty state honesto. `substituteFood` removida do destructuring. Nenhum payload invalido pode ser gravado. | Corrigido (P0) |
+| `/app/*` | Affiliate acessando rotas de aluno | `AppRoute` nao bloqueava affiliate; experiencia quebrada com permission errors. | Affiliate redirecionado para `/affiliate/dashboard`. Mentor redirecionado para `/mentor/overview`. | Corrigido (P0) |
 | `/app/checkin/daily` | Progresso recente | Erro de indice podia derrubar a leitura de progresso no console. | Query mantida; fallback local apenas para erro de indice em propagacao. | Corrigido |
 | `/app/content` | Busca | Icone parecia ativo sem fluxo real. | Disabled com motivo explicito. | Corrigido |
 | `/app/challenges` | Quero participar | Fluxo usava reload. | Feedback inline e estado participando otimista. | Corrigido |
+| `/app/community` | Publicar post (cooldown) | `alert()` nativo. | Substituido por `toastError`. | Corrigido |
+| `/app/community` | Reportar post/comentário | `window.confirm()` e `alert()` nativos. | Confirmação inline e `toastSuccess`. | Corrigido |
+| `/app/community` | Excluir comentário | `window.confirm()` nativo. | Confirmação inline e `toastSuccess`. | Corrigido |
+| `/app/community` | Anexar foto | Botão ativo sem função. | Desabilitado com motivo honesto. | Corrigido |
+| `/app/community` | Entrar no Grupo WhatsApp | Botão sem função / link mock. | Usa link real das `settings` ou fica disabled com motivo. | Corrigido |
+| `/app/community` | Falar com suporte | `href="#"`. | Usa link real das `settings` ou fica disabled com motivo. | Corrigido |
 | `/app/challenges` | Compartilhar ranking | Botao ativo sem fluxo real. | Disabled com motivo explicito. | Corrigido |
 | `/app/content` | Download de material | Botao ativo sem fluxo real. | Disabled com motivo. | Corrigido |
 | `/app/content` | Cards mock | `cursor-pointer` sugeria clique. | Cursor removido nos mocks. | Corrigido |
 | `/app/billing/plans` | Checkout com erro | `alert()` nativo. | Mensagem inline no topo. | Corrigido |
+| `/admin/workouts/*` | Ações de catálogo e editor | `alert()` / `confirm()` nativos. | `ConfirmButton` para duplicação/arquivamento e `toastError` para erros. | Corrigido |
+| `/admin/diets/*` | Ações de catálogo e editor | `alert()` / `confirm()` nativos. | `ConfirmButton` para duplicação/arquivamento e `toastError` para erros. | Corrigido |
+| `/admin/exercises/*` | Ações de catálogo e editor | `alert()` / `confirm()` nativos. | `ConfirmButton` para duplicação/arquivamento e `toastError` para erros. | Corrigido |
+| `/admin/foods/*` | Ações de catálogo e editor | `alert()` / `confirm()` nativos. | `ConfirmButton` para duplicação/arquivamento e `toastError` para erros. | Corrigido |
 
 ## Acoes funcionais conectadas
 
@@ -97,23 +109,29 @@ Toda acao deve ser funcional, disabled com motivo ou removida. Acoes ativas sem 
 
 | Arquivo | Ocorrencia | Rota impactada | Decisao |
 |---|---|---|---|
-| `src/screens/admin/AdminDietEditorScreen.tsx` | `alert()` / `confirm()` | Rotas antigas de dieta fora do fluxo validado principal | Pendente; substituir por estado inline em passada dedicada de catalogo legado. |
-| `src/screens/admin/AdminDietsScreen.tsx` | `alert()` / `confirm()` | Rotas antigas de dieta fora do fluxo validado principal | Pendente; substituir por estado inline em passada dedicada de catalogo legado. |
-| `src/screens/admin/AdminWorkoutEditorScreen.tsx` | `alert()` / `confirm()` | Rotas antigas de treino fora do fluxo validado principal | Pendente; substituir por estado inline em passada dedicada de catalogo legado. |
-| `src/screens/admin/AdminWorkoutsScreen.tsx` | `alert()` / `confirm()` | Rotas antigas de treino fora do fluxo validado principal | Pendente; substituir por estado inline em passada dedicada de catalogo legado. |
-| `src/screens/admin/AdminExerciseEditorScreen.tsx` / `AdminExercisesScreen.tsx` | `alert()` / `confirm()` | Catalogo antigo de exercicios | Pendente; fora da matriz de screenshots desta passada. |
-| `src/screens/admin/AdminFoodEditorScreen.tsx` / `AdminFoodsScreen.tsx` | `alert()` / `confirm()` | Catalogo antigo de alimentos | Pendente; fora da matriz de screenshots desta passada. |
-| `src/screens/affiliate/*` | `alert()` | Portal/area de afiliado | Pendente; fora da matriz admin/mentor/student principal. |
-| `src/screens/community/CommunityScreen.tsx` | `alert()` / `confirm()` | Comunidade do aluno | Pendente; fora das rotas solicitadas para screenshot nesta passada. |
-| `src/screens/onboarding/PreferencesScreen.tsx` | `alert()` | Onboarding/preferences | Pendente; fora da matriz desta passada. |
-| `src/utils/referral.ts` | `console.log` | Util dev/marketing | Revisar depois; nao e implementacao de botao em rota principal. |
+| `src/screens/admin/AdminDietEditorScreen.tsx` | `alert()` / `confirm()` | Rotas de dieta | Corrigido com toasts e ConfirmButton |
+| `src/screens/admin/AdminDietsScreen.tsx` | `alert()` / `confirm()` | Rotas de dieta | Corrigido com toasts e ConfirmButton |
+| `src/screens/admin/AdminWorkoutEditorScreen.tsx` | `alert()` / `confirm()` | Rotas de treino | Corrigido com toasts e ConfirmButton |
+| `src/screens/admin/AdminWorkoutsScreen.tsx` | `alert()` / `confirm()` | Rotas de treino | Corrigido com toasts e ConfirmButton |
+| `src/screens/admin/AdminExerciseEditorScreen.tsx` / `AdminExercisesScreen.tsx` | `alert()` / `confirm()` | Catalogo de exercicios | Corrigido com toasts e ConfirmButton |
+| `src/screens/admin/AdminFoodEditorScreen.tsx` / `AdminFoodsScreen.tsx` | `alert()` / `confirm()` | Catalogo de alimentos | Corrigido com toasts e ConfirmButton |
+| `src/screens/affiliate/*` | `alert()` | Portal/area de afiliado | Pendente (Legacy alert em link copy) |
+| `src/screens/onboarding/PreferencesScreen.tsx` | `alert()` | Onboarding/preferences | Pendente (Legacy alert em save error) |
 
 ## Veredito tecnico desta auditoria
 
-Parcial: actionability ainda pendente.
+**Admin catalog native UX cleanup validado para QA interno controlado.**
 
-Motivo: as rotas principais admin/mentor/student da matriz foram corrigidas e documentadas, e o shell mobile do aluno foi recuperado com sessao real de treino validada. Ainda existem ocorrencias legadas em arquivos roteados fora do recorte operacional principal. Nao declarar UI/UX hardening global completo enquanto essas ocorrencias existirem.
+Actionability das rotas principais Admin/Mentor/Aluno **hardened** para QA interno controlado.
 
-## Atualizacao - Student V2 visual parity
+## Atualizacao - Admin Catalog Native UX Cleanup (2026-05-10)
 
-No escopo aluno mobile solicitado em `docs/qa/STUDENT_V2_VISUAL_PARITY_REPORT.md`, as acoes falsas relevantes foram tratadas como funcionais, disabled com motivo ou nao clicaveis. A pendencia de actionability permanece global, concentrada em rotas antigas fora da matriz aluno.
+Limpeza completa da actionability nos catálogos administrativos (Diets, Workouts, Exercises, Foods):
+- Removidos todos os `alert()` e `window.confirm()` (Auditadas 21 ocorrências de alert e 4 de confirm).
+- Implementado `ConfirmButton` para duplicação em todas as telas de listagem e editores.
+- Substituído feedback de erro e validação por `toastError`.
+- **Validação Final:** `smoke:roles`, `test:rules` e `smoke:setup:dry` passaram.
+- **Audit Global:** `grep` em `src/` confirma 0 ocorrências de `confirm`, `window.alert/confirm` e `href="#"`. Restam 3 `alert()` legados fora das rotas principais (Onboarding e Affiliate).
+
+Veredito: **Admin catalog native UX cleanup validado para QA interno controlado.**
+Actionability das rotas principais Admin/Mentor/Aluno **hardened** para QA interno controlado.

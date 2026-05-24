@@ -18,7 +18,19 @@ import { adminBadgeService, createEmptyBadge } from '../../services/adminBadgeSe
 import { adminPlanService, createEmptyPlan } from '../../services/adminPlanService'
 import { makeId, sanitizeTags } from '../../services/adminCrudService'
 import { fromFirestoreDate } from '../../lib/firebase/date'
-import { Badge, Challenge, ExpertContent, Diet, Plan, Workout } from '../../types/domain'
+import {
+  Badge,
+  Challenge,
+  ExpertContent,
+  Diet,
+  DietComplexity,
+  DietProteinLevel,
+  DietRecommendationGoal,
+  Plan,
+  Workout,
+  WorkoutEquipmentProfile,
+  WorkoutRecommendationGoal,
+} from '../../types/domain'
 import { AdminSearchFilter, AdminState, AdminToolbar, ConfirmButton, Field, parseJson, StatusSelect, TextArea, TextInput, toJson } from './AdminShared'
 import { DietPrescriptor } from './components/DietPrescriptor'
 import { WorkoutPrescriptor } from './components/WorkoutPrescriptor'
@@ -36,6 +48,62 @@ const config = {
   plans: { title: 'Planos', newPath: '/admin/plans', editPath: () => '/admin/plans' },
   badges: { title: 'Badges', newPath: '/admin/badges/new', editPath: (id: string) => `/admin/badges/${id}` },
 } as const
+
+const workoutRecommendationGoalOptions: Array<{ value: WorkoutRecommendationGoal; label: string }> = [
+  { value: 'hypertrophy', label: 'Hipertrofia' },
+  { value: 'fat_loss', label: 'Emagrecimento' },
+  { value: 'maintenance', label: 'Manutenção' },
+  { value: 'performance', label: 'Performance' },
+  { value: 'strength', label: 'Força' },
+]
+
+const dietRecommendationGoalOptions: Array<{ value: DietRecommendationGoal; label: string }> = [
+  { value: 'fat_loss', label: 'Emagrecimento' },
+  { value: 'hypertrophy', label: 'Hipertrofia' },
+  { value: 'maintenance', label: 'Manutenção' },
+  { value: 'performance', label: 'Performance' },
+]
+
+const recommendationSexOptions = [
+  { value: 'male', label: 'Masculino' },
+  { value: 'female', label: 'Feminino' },
+  { value: 'unisex', label: 'Unissex' },
+] as const
+
+const frequencyOptions = [3, 4, 5, 6] as const
+
+const trainingLevelOptions = [
+  { value: 'beginner', label: 'Iniciante' },
+  { value: 'intermediate', label: 'Intermediário' },
+  { value: 'advanced', label: 'Avançado' },
+] as const
+
+const trainingLocationOptions = [
+  { value: 'gym', label: 'Academia' },
+  { value: 'home', label: 'Casa' },
+  { value: 'mixed', label: 'Misto' },
+] as const
+
+const workoutEquipmentOptions: Array<{ value: WorkoutEquipmentProfile; label: string }> = [
+  { value: 'full_gym', label: 'Academia completa' },
+  { value: 'basic_gym', label: 'Academia básica' },
+  { value: 'dumbbells', label: 'Halteres' },
+  { value: 'bodyweight', label: 'Peso corporal' },
+  { value: 'mixed', label: 'Misto' },
+]
+
+const dietPreferenceOptions = [
+  { value: 'flexible', label: 'Flexível' },
+  { value: 'economic', label: 'Econômica' },
+  { value: 'low_carb', label: 'Low carb' },
+  { value: 'vegetarian', label: 'Vegetariana' },
+  { value: 'carnivore', label: 'Carnívora' },
+] as const
+
+function toggleOption<T extends string>(current: T[] | undefined, value: T): T[] {
+  const list = current || []
+  return list.includes(value) ? list.filter((entry) => entry !== value) : [...list, value]
+}
 
 export function AdminDietsScreen() { const h = useAdminDiets(); return <ResourceList resource="diets" items={h.items} isLoading={h.isLoading} error={h.error} reload={h.reload} /> }
 export function AdminWorkoutsScreen() { const h = useAdminWorkouts(); return <ResourceList resource="workouts" items={h.items} isLoading={h.isLoading} error={h.error} reload={h.reload} /> }
@@ -193,6 +261,25 @@ function DietEditor({ id }: { id?: string }) {
           <Field label="Gordura"><TextInput type="number" value={item.fat} onChange={e => setItem({ ...item, fat: Number(e.target.value) })} /></Field>
           <Field label="Tags"><TextInput value={item.tags.join(', ')} onChange={e => setItem({ ...item, tags: sanitizeTags(e.target.value) })} /></Field>
           <Field label="Observações"><TextArea value={item.notes || ''} onChange={e => setItem({ ...item, notes: e.target.value })} className="min-h-24" /></Field>
+          <div className="md:col-span-2 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+            <p className="mb-4 text-xs font-black uppercase tracking-widest text-white">Metadata de recomendação</p>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="md:col-span-2">
+                <TogglePills label="Objetivos compatíveis" options={dietRecommendationGoalOptions} values={item.recommendationMetadata?.goals || []} onToggle={(value) => setItem({ ...item, recommendationMetadata: { ...item.recommendationMetadata, goals: toggleOption(item.recommendationMetadata?.goals, value as DietRecommendationGoal) } })} />
+              </div>
+              <div className="md:col-span-2">
+                <TogglePills label="Sexo recomendado" options={recommendationSexOptions} values={item.recommendationMetadata?.sexes || ['unisex']} onToggle={(value) => setItem({ ...item, recommendationMetadata: { ...item.recommendationMetadata, sexes: toggleOption(item.recommendationMetadata?.sexes || ['unisex'], value as 'male' | 'female' | 'unisex') } })} />
+              </div>
+              <div className="md:col-span-2">
+                <TogglePills label="Preferência alimentar" options={dietPreferenceOptions} values={item.recommendationMetadata?.preferences || []} onToggle={(value) => setItem({ ...item, recommendationMetadata: { ...item.recommendationMetadata, preferences: toggleOption(item.recommendationMetadata?.preferences, value as 'flexible' | 'economic' | 'low_carb' | 'vegetarian' | 'carnivore') } })} />
+              </div>
+              <Field label="Kcal mínimas"><TextInput type="number" value={item.recommendationMetadata?.caloriesRange?.min || ''} onChange={e => setItem({ ...item, recommendationMetadata: { ...item.recommendationMetadata, caloriesRange: { min: Number(e.target.value), max: item.recommendationMetadata?.caloriesRange?.max || Number(e.target.value) } } })} /></Field>
+              <Field label="Kcal máximas"><TextInput type="number" value={item.recommendationMetadata?.caloriesRange?.max || ''} onChange={e => setItem({ ...item, recommendationMetadata: { ...item.recommendationMetadata, caloriesRange: { min: item.recommendationMetadata?.caloriesRange?.min || Number(e.target.value), max: Number(e.target.value) } } })} /></Field>
+              <Field label="Nível de proteína"><select className="ec-input w-full rounded-xl px-4 py-3 text-sm text-white" value={item.recommendationMetadata?.proteinLevel || 'standard'} onChange={e => setItem({ ...item, recommendationMetadata: { ...item.recommendationMetadata, proteinLevel: e.target.value as DietProteinLevel } })}><option value="standard">Padrão</option><option value="high">Alta proteína</option></select></Field>
+              <Field label="Complexidade"><select className="ec-input w-full rounded-xl px-4 py-3 text-sm text-white" value={item.recommendationMetadata?.complexity || 'easy'} onChange={e => setItem({ ...item, recommendationMetadata: { ...item.recommendationMetadata, complexity: e.target.value as DietComplexity } })}><option value="easy">Fácil</option><option value="medium">Intermediária</option><option value="advanced">Avançada</option></select></Field>
+              <div className="md:col-span-2"><Field label="Tags de recomendação"><TextInput value={(item.recommendationMetadata?.tags || []).join(', ')} onChange={e => setItem({ ...item, recommendationMetadata: { ...item.recommendationMetadata, tags: sanitizeTags(e.target.value) } })} /></Field></div>
+            </div>
+          </div>
           
           <div className="md:col-span-2 mt-8">
             <h3 className="font-display text-2xl font-black uppercase italic text-white mb-6 border-b border-white/5 pb-4">Plano Alimentar</h3>
@@ -218,7 +305,7 @@ function DietEditor({ id }: { id?: string }) {
              </div>
              <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-text-muted">
                <span>Última Publicação</span>
-               <span className="text-white">{item.publishedAt ? new Date(item.publishedAt).toLocaleDateString('pt-BR') : 'Nunca'}</span>
+               <span className="text-white">{fromFirestoreDate(item.publishedAt)?.toLocaleDateString('pt-BR') || 'Nunca'}</span>
              </div>
           </div>
 
@@ -333,6 +420,18 @@ export function AdminWorkoutEditorScreen() {
           <Field label="Tempo por treino"><TextInput type="number" value={item.durationMinutes} onChange={e => setItem({ ...item, durationMinutes: Number(e.target.value) })} /></Field>
           <Field label="Foco"><TextInput value={(item.focus || []).join(', ')} onChange={e => setItem({ ...item, focus: sanitizeTags(e.target.value) })} /></Field>
           <Field label="Tags"><TextInput value={item.tags.join(', ')} onChange={e => setItem({ ...item, tags: sanitizeTags(e.target.value) })} /></Field>
+          <div className="md:col-span-2 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+            <p className="mb-4 text-xs font-black uppercase tracking-widest text-white">Metadata de recomendação</p>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="md:col-span-2"><TogglePills label="Objetivos compatíveis" options={workoutRecommendationGoalOptions} values={item.recommendationMetadata?.goals || []} onToggle={(value) => setItem({ ...item, recommendationMetadata: { ...item.recommendationMetadata, goals: toggleOption(item.recommendationMetadata?.goals, value as WorkoutRecommendationGoal) } })} /></div>
+              <div className="md:col-span-2"><TogglePills label="Sexo recomendado" options={recommendationSexOptions} values={item.recommendationMetadata?.sexes || ['unisex']} onToggle={(value) => setItem({ ...item, recommendationMetadata: { ...item.recommendationMetadata, sexes: toggleOption(item.recommendationMetadata?.sexes || ['unisex'], value as 'male' | 'female' | 'unisex') } })} /></div>
+              <div className="md:col-span-2"><TogglePills label="Frequências" options={frequencyOptions.map((value) => ({ value: String(value), label: `${value}x/semana` }))} values={(item.recommendationMetadata?.frequencies || []).map(String)} onToggle={(value) => setItem({ ...item, recommendationMetadata: { ...item.recommendationMetadata, frequencies: toggleOption((item.recommendationMetadata?.frequencies || []).map(String), value).map(Number).filter((entry): entry is 3 | 4 | 5 | 6 => [3, 4, 5, 6].includes(entry)) } })} /></div>
+              <div className="md:col-span-2"><TogglePills label="Níveis" options={trainingLevelOptions} values={item.recommendationMetadata?.levels || []} onToggle={(value) => setItem({ ...item, recommendationMetadata: { ...item.recommendationMetadata, levels: toggleOption(item.recommendationMetadata?.levels, value as 'beginner' | 'intermediate' | 'advanced') } })} /></div>
+              <div className="md:col-span-2"><TogglePills label="Locais" options={trainingLocationOptions} values={item.recommendationMetadata?.locations || []} onToggle={(value) => setItem({ ...item, recommendationMetadata: { ...item.recommendationMetadata, locations: toggleOption(item.recommendationMetadata?.locations, value as 'gym' | 'home' | 'mixed') } })} /></div>
+              <Field label="Perfil de equipamento"><select className="ec-input w-full rounded-xl px-4 py-3 text-sm text-white" value={item.recommendationMetadata?.equipmentProfile || 'mixed'} onChange={e => setItem({ ...item, recommendationMetadata: { ...item.recommendationMetadata, equipmentProfile: e.target.value as WorkoutEquipmentProfile } })}>{workoutEquipmentOptions.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}</select></Field>
+              <div className="md:col-span-2"><Field label="Tags de recomendação"><TextInput value={(item.recommendationMetadata?.tags || []).join(', ')} onChange={e => setItem({ ...item, recommendationMetadata: { ...item.recommendationMetadata, tags: sanitizeTags(e.target.value) } })} /></Field></div>
+            </div>
+          </div>
           
           <div className="md:col-span-2 mt-8">
             <h3 className="font-display text-2xl font-black uppercase italic text-white mb-6 border-b border-white/5 pb-4">Planejamento de Treino</h3>
@@ -358,7 +457,7 @@ export function AdminWorkoutEditorScreen() {
              </div>
              <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-text-muted">
                <span>Última Publicação</span>
-               <span className="text-white">{item.publishedAt ? new Date(item.publishedAt).toLocaleDateString('pt-BR') : 'Nunca'}</span>
+               <span className="text-white">{fromFirestoreDate(item.publishedAt)?.toLocaleDateString('pt-BR') || 'Nunca'}</span>
              </div>
           </div>
 
@@ -422,7 +521,6 @@ export function AdminContentEditorScreen() {
     const next = { 
       ...item, 
       status: status || item.status, 
-      updatedAt: new Date().toISOString(),
       publishedAt: status === 'published' ? new Date().toISOString() : item.publishedAt
     }
     await adminContentService.save(actor, next)
@@ -473,6 +571,12 @@ export function AdminContentEditorScreen() {
           <Field label="Thumbnail URL"><TextInput value={item.thumbnailUrl || ''} onChange={e => setItem({ ...item, thumbnailUrl: e.target.value })} /></Field>
           <Field label="Duração (minutos)"><TextInput type="number" value={item.durationMinutes || ''} onChange={e => setItem({ ...item, durationMinutes: Number(e.target.value) })} /></Field>
           <Field label="Destaque"><select className="ec-input w-full rounded-xl px-4 py-3 text-sm text-white" value={item.featured ? 'true' : 'false'} onChange={e => setItem({ ...item, featured: e.target.value === 'true' })}><option value="false">Não</option><option value="true">Sim</option></select></Field>
+          <Field label="Acesso">
+            <select className="ec-input w-full rounded-xl px-4 py-3 text-sm text-white" value={item.accessTier || 'all'} onChange={e => setItem({ ...item, accessTier: e.target.value as 'all' | 'mentoring' })}>
+              <option value="all">Todos os planos</option>
+              <option value="mentoring">Exclusivo Mentoria 1:1</option>
+            </select>
+          </Field>
           <Field label="Tags"><TextInput value={(item.tags || []).join(', ')} onChange={e => setItem({ ...item, tags: sanitizeTags(e.target.value) })} /></Field>
           <div className="md:col-span-2"><Field label="Descrição"><TextArea value={item.description || ''} onChange={e => setItem({ ...item, description: e.target.value })} className="min-h-32" /></Field></div>
           
@@ -558,8 +662,8 @@ export function AdminChallengeEditorScreen() {
               <option value="beginner">Iniciante</option>
             </select>
           </Field>
-          <Field label="Início"><TextInput type="datetime-local" value={item.startsAt.slice(0, 16)} onChange={e => setItem({ ...item, startsAt: new Date(e.target.value).toISOString() })} /></Field>
-          <Field label="Fim"><TextInput type="datetime-local" value={item.endsAt.slice(0, 16)} onChange={e => setItem({ ...item, endsAt: new Date(e.target.value).toISOString() })} /></Field>
+          <Field label="Início"><TextInput type="datetime-local" value={fromFirestoreDate(item.startsAt)?.toISOString().slice(0, 16) || ''} onChange={e => setItem({ ...item, startsAt: new Date(e.target.value).toISOString() })} /></Field>
+          <Field label="Fim"><TextInput type="datetime-local" value={fromFirestoreDate(item.endsAt)?.toISOString().slice(0, 16) || ''} onChange={e => setItem({ ...item, endsAt: new Date(e.target.value).toISOString() })} /></Field>
           <Field label="Ranking Habilitado"><select className="ec-input w-full rounded-xl px-4 py-3 text-sm text-white" value={item.rankingEnabled ? 'true' : 'false'} onChange={e => setItem({ ...item, rankingEnabled: e.target.value === 'true' })}><option value="true">Sim</option><option value="false">Não</option></select></Field>
           <Field label="Badges (IDs separados por vírgula)"><TextInput value={item.badges.join(', ')} onChange={e => setItem({ ...item, badges: sanitizeTags(e.target.value) })} /></Field>
           <div className="md:col-span-2"><Field label="Descrição"><TextArea value={item.description} onChange={e => setItem({ ...item, description: e.target.value })} className="min-h-24" /></Field></div>
@@ -586,7 +690,7 @@ export function AdminBadgeEditorScreen() {
   useEffect(() => { if (badgeId && badgeId !== 'new') adminBadgeService.get(badgeId).then(found => found && setItem(found)) }, [badgeId])
   
   async function save() { 
-    await adminBadgeService.save(actor, { ...item, updatedAt: new Date().toISOString() })
+    await adminBadgeService.save(actor, item)
     navigate('/admin/badges') 
   }
 
@@ -662,6 +766,43 @@ function InlineManager({ title, items, isLoading, error, reload, createEmpty, se
 
 function serviceFor(resource: Resource) {
   return { diets: adminDietService, workouts: adminWorkoutService, content: adminContentService, challenges: adminChallengeService, plans: adminPlanService, badges: adminBadgeService }[resource]
+}
+
+function TogglePills({
+  label,
+  options,
+  values,
+  onToggle,
+}: {
+  label: string
+  options: ReadonlyArray<{ value: string; label: string }>
+  values: string[]
+  onToggle: (value: string) => void
+}) {
+  return (
+    <div>
+      <p className="mb-2 text-[10px] font-black uppercase tracking-widest text-text-muted">{label}</p>
+      <div className="flex flex-wrap gap-2">
+        {options.map((option) => {
+          const selected = values.includes(option.value)
+          return (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => onToggle(option.value)}
+              className={`rounded-full border px-3 py-2 text-[11px] font-bold transition-colors ${
+                selected
+                  ? 'border-ec-violet bg-ec-violet/10 text-white'
+                  : 'border-white/10 bg-white/[0.03] text-text-muted hover:border-white/20'
+              }`}
+            >
+              {option.label}
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
 }
 
 function StatusBadge({ status }: { status?: string }) {

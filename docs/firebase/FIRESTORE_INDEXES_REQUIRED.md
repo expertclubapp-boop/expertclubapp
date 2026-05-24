@@ -26,11 +26,11 @@ Antes de escala ou producao real, validar novamente:
 | workoutSessions | startedAt | >= sevenDaysAgo | startedAt desc | adminLaunchService | Sim | Sim | Criado e validado |
 | dietDays | createdAt | >= sevenDaysAgo | createdAt desc | adminLaunchService | Sim | Sim | Criado e validado |
 | dailyCheckins | createdAt | >= sevenDaysAgo | createdAt desc | adminLaunchService | Sim | Sim | Criado e validado |
-| bodyCheckins | createdAt | >= monthAgo | createdAt desc | adminMetricsService | Definido em `firestore.indexes.json`; deploy pendente | Nao | Necessario para hardening de metricas |
+| bodyCheckins | createdAt | >= monthAgo | createdAt desc | adminMetricsService | Criado e validado para QA interno | Sim | Necessario para hardening de metricas |
 
 ## AdminMetricsService Query Hardening
 
-Status: implementado no codigo para QA interno controlado; indice novo de `bodyCheckins.createdAt` ainda nao foi deployado nesta PR.
+Status: implementado no codigo e deployado para QA interno controlado.
 
 | Servico | Query | Collection/Group | Filtro | OrderBy | Limit | Risco tratado |
 |---|---|---|---|---|---|---|
@@ -83,7 +83,7 @@ Arquivo: `src/services/adminLaunchService.ts`
 | workoutSessions7d | workoutSessions | `where('startedAt', '>=', Timestamp)` + `orderBy('startedAt', 'desc')` + `limit(500)` |
 | dietDays7d | dietDays | `where('createdAt', '>=', Timestamp)` + `orderBy('createdAt', 'desc')` + `limit(500)` |
 | dailyCheckins7d | dailyCheckins | `where('createdAt', '>=', Timestamp)` + `orderBy('createdAt', 'desc')` + `limit(500)` |
-| bodyCheckins30d | bodyCheckins | `where('createdAt', '>=', Timestamp)` + `orderBy('createdAt', 'desc')` + `limit(500)`; indice definido, deploy pendente |
+| bodyCheckins30d | bodyCheckins | `where('createdAt', '>=', Timestamp)` + `orderBy('createdAt', 'desc')` + `limit(500)`; Criado e validado |
 
 ## Deploy
 
@@ -99,13 +99,14 @@ Resultado: PASS.
 
 Observacao: o primeiro teste de browser pegou os indices ainda propagando. O dashboard exibiu erro `COLLECTION_GROUP_DESC index ... not ready yet` para `workoutSessions.startedAt` e depois `dailyCheckins.createdAt`. Apos aguardar a propagacao e tentar novamente, o dashboard carregou sem erro operacional.
 
-Nesta PR, nao foi executado deploy de indices. O indice novo `bodyCheckins.createdAt` foi apenas definido em `firestore.indexes.json` e deve ser aplicado/validado antes de depender do recorte de `adminMetricsService` em ambiente remoto com volume.
+O indice novo `bodyCheckins.createdAt` foi deployado e validado para o ambiente `expertcoaching-b91e2`.
 
 ## Browser validation
 
 | Rota | Usuario | Screenshot | Permission denied? | Erro de indice? | Status |
 |---|---|---|---|---|---|
-| /admin/dashboard | admin@expertclub.test | `qa/firestore-indexes/admin-dashboard-index-validation-final.png` | Nao | Nao | PASS |
+| /admin/dashboard | admin@expertclub.test | `qa/firestore-indexes/admin-dashboard-bodycheckins-index.png` | Nao | Nao | PASS |
+| /admin/metrics | admin@expertclub.test | `qa/firestore-indexes/admin-metrics-bodycheckins-index.png` | Nao | Nao | PASS |
 
 ## Outras queries collectionGroup observadas
 

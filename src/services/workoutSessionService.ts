@@ -2,8 +2,9 @@ import { collection, doc, setDoc, getDoc, updateDoc, query, orderBy, limit, getD
 import { db } from '../lib/firebase/firebase'
 import { nowTimestamp, toFirestoreDate } from '../lib/firebase/date'
 import { COLLECTIONS, SUB_COLLECTIONS, getSubCollectionPath } from '../lib/firebase/paths'
-import type { WorkoutSession } from '../types/domain'
+import type { SetLog, WorkoutSession } from '../types/domain'
 import { challengeScoringService } from './challengeScoringService'
+import { streakService } from './streakService'
 
 const SESSION_DATE_FIELDS = [
   'startedAt',
@@ -19,18 +20,52 @@ function normalizeSessionDateFields(data: Partial<WorkoutSession>) {
   const normalized: Record<string, unknown> = { ...data }
   SESSION_DATE_FIELDS.forEach((field) => {
     if (field in normalized) {
-      const timestamp = toFirestoreDate(normalized[field] as any)
+      const timestamp = toFirestoreDate(normalized[field] as Parameters<typeof toFirestoreDate>[0])
       if (timestamp) normalized[field] = timestamp
     }
   })
   return normalized as Partial<WorkoutSession>
 }
 
+function isValidSetLog(log: Partial<SetLog> | null | undefined) {
+  if (!log) return false
+  if (!Number.isFinite(log.reps) || !Number.isFinite(log.loadKg)) return false
+  if ((log.reps ?? 0) <= 0) return false
+  if ((log.loadKg ?? 0) < 0) return false
+  return true
+}
+
+function normalizeSetLog(log: Partial<SetLog>): SetLog | null {
+  const reps = typeof log.reps === 'number' ? log.reps : Number(log.reps)
+  const loadKg = typeof log.loadKg === 'number' ? log.loadKg : Number(log.loadKg)
+  const setNumber = typeof log.setNumber === 'number' ? log.setNumber : Number(log.setNumber)
+  if (!Number.isFinite(setNumber) || setNumber <= 0) return null
+
+  const normalized: SetLog = {
+    exerciseId: String(log.exerciseId || ''),
+    setNumber,
+    reps,
+    loadKg,
+  }
+  if (typeof log.rpe === 'number' && Number.isFinite(log.rpe)) {
+    normalized.rpe = log.rpe
+  }
+  return isValidSetLog(normalized) ? normalized : null
+}
+
+function computeTotalTonnage(logs: SetLog[] | undefined) {
+  return (logs || []).reduce((sum, log) => sum + (isValidSetLog(log) ? log.loadKg * log.reps : 0), 0)
+}
+
+type DateLike = {
+  toDate?: () => Date
+}
+
 function sessionStartedAtMs(session: WorkoutSession) {
-  const raw = (session as any).startedAt
+  const raw = session.startedAt
 
   if (!raw) return 0
-  if (typeof raw?.toDate === 'function') return raw.toDate().getTime()
+  if (typeof (raw as DateLike)?.toDate === 'function') return (raw as DateLike).toDate?.()?.getTime() ?? 0
   if (raw instanceof Date) return raw.getTime()
   if (typeof raw === 'number') return Number.isFinite(raw) ? raw : 0
   if (typeof raw === 'string') {
@@ -42,8 +77,9 @@ function sessionStartedAtMs(session: WorkoutSession) {
 }
 
 function isMissingIndexError(error: unknown) {
-  const code = (error as any)?.code
-  const message = String((error as any)?.message ?? '')
+  const firestoreError = error as { code?: string; message?: string } | null
+  const code = firestoreError?.code
+  const message = String(firestoreError?.message ?? '')
 
   return code === 'failed-precondition' && /index|requires/i.test(message)
 }
@@ -63,10 +99,12 @@ export const workoutSessionService = {
       lastInteractionAt: nowTimestamp(),
       durationSeconds: 0,
       totalTonnageKg: 0,
+      totalTonnage: 0,
       exercisesCompleted: 0,
       totalSets: 0,
       prs: [],
       createdAt: nowTimestamp(),
+      updatedAt: nowTimestamp(),
     })
     
     return sessionId
@@ -82,8 +120,19 @@ export const workoutSessionService = {
   async updateSession(uid: string, sessionId: string, data: Partial<WorkoutSession>): Promise<void> {
     const path = getSubCollectionPath(COLLECTIONS.USERS, uid, SUB_COLLECTIONS.WORKOUT_SESSIONS)
     const docRef = doc(db, path, sessionId)
+    const normalizedLogs = Array.isArray(data.logs)
+      ? data.logs.map(normalizeSetLog).filter((log): log is SetLog => Boolean(log))
+      : undefined
+    const computedTonnage = normalizedLogs ? computeTotalTonnage(normalizedLogs) : data.totalTonnageKg
+    const normalizedPayload: Partial<WorkoutSession> = {
+      ...data,
+      ...(normalizedLogs ? { logs: normalizedLogs } : {}),
+      ...(computedTonnage !== undefined ? { totalTonnageKg: computedTonnage } : {}),
+    }
+
     await updateDoc(docRef, {
-      ...normalizeSessionDateFields(data),
+      ...normalizeSessionDateFields(normalizedPayload),
+      ...(computedTonnage !== undefined ? { totalTonnage: computedTonnage } : {}),
       updatedAt: nowTimestamp(),
     })
 
@@ -92,7 +141,8 @@ export const workoutSessionService = {
         uid,
         sourceType: 'workout_completed',
         sourceId: sessionId
-      }).catch(console.error)
+      }).catch(() => undefined)
+      streakService.recordActivity(uid).catch(() => undefined)
     }
   },
 

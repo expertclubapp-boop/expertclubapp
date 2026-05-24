@@ -36,7 +36,8 @@ export const workoutService = {
     await setDoc(docRef, {
       ...workout,
       createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
+      updatedAt: serverTimestamp(),
+      ...(workout.status === 'published' ? { publishedAt: serverTimestamp() } : {}),
     })
     return docRef.id
   },
@@ -46,7 +47,8 @@ export const workoutService = {
     const docRef = doc(db, COLLECTIONS.WORKOUTS, id)
     await updateDoc(docRef, {
       ...workout,
-      updatedAt: serverTimestamp()
+      updatedAt: serverTimestamp(),
+      ...(workout.status === 'published' ? { publishedAt: serverTimestamp() } : {}),
     })
   }
 }

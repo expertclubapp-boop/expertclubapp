@@ -14,6 +14,16 @@ const config: Config = {
         'surface-2': '#141822',
         'surface-3': '#1A1F2C',
 
+        /* === Wireframe design system tokens === */
+        'ink-900': '#11121A',
+        'ink-800': '#1A1C22',
+        'ink-700': '#2A2D35',
+        'ink-500': '#555863',
+        'volt-600': '#5B3DF5',
+        'volt-400': '#8A73FF',
+        'hot': '#FF3D6E',
+        'lime-ok': '#1F8A5B',
+
         /* === Brand Primary — Violeta Elétrico === */
         'ec-violet': '#6C4DFF',
         'ec-violet-2': '#5637F5',
@@ -42,8 +52,9 @@ const config: Config = {
       },
       fontFamily: {
         display: ['Space Grotesk', 'sans-serif'],
-        body: ['Inter', 'sans-serif'],
-        'body-md': ['Inter', 'sans-serif'],
+        body: ['Inter Tight', 'Inter', 'sans-serif'],
+        'body-md': ['Inter Tight', 'Inter', 'sans-serif'],
+        mono: ['JetBrains Mono', 'ui-monospace', 'monospace'],
       },
       fontSize: {
         'display-xl': ['64px', { lineHeight: '1.05', letterSpacing: '-0.02em', fontWeight: '700' }],

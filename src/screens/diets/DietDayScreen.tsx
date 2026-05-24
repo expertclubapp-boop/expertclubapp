@@ -1,14 +1,12 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { 
-  Check, 
-  ChefHat, 
-  Flame, 
-  Drumstick, 
-  Droplets, 
-  RefreshCw, 
-  X, 
-  ChevronDown, 
+import {
+  Check,
+  ChefHat,
+  Droplets,
+  RefreshCw,
+  X,
+  ChevronDown,
   ChevronUp,
   ChevronRight
 } from 'lucide-react'
@@ -18,8 +16,8 @@ import { V2Card, V2IconBubble, V2ProgressBar, V2Button, V2Badge, cx } from '../.
 
 export function DietDayScreen() {
   const navigate = useNavigate()
-  const { dietDay, diet, isLoading, toggleFood, substituteFood } = useDietDay()
-  const [substitutionTarget, setSubstitutionTarget] = useState<{ mealId: string; food: any } | null>(null)
+  const { dietDay, diet, isLoading, toggleFood } = useDietDay()
+  const [substitutionTarget, setSubstitutionTarget] = useState<{ mealId: string; food: { foodId: string; foodName: string } } | null>(null)
   const [expandedMeals, setExpandedMeals] = useState<Record<string, boolean>>({})
 
   const toggleMeal = (mealId: string) => setExpandedMeals(prev => ({ ...prev, [mealId]: prev[mealId] === false ? true : false }))
@@ -47,37 +45,42 @@ export function DietDayScreen() {
 
   const adherence = dietDay.adherencePercent || 0
   const adherenceTone = adherence >= 80 ? 'success' : adherence >= 50 ? 'info' : 'violet'
+  type DietMeal = NonNullable<typeof diet.meals>[number] & {
+    mealId?: string
+    mealName?: string
+    time?: string
+  }
+  type MealLog = typeof dietDay.meals[number]['foods'][number] & {
+    consumed?: boolean
+    quantity?: string | number
+    unit?: string
+  }
 
   return (
     <ExpertClubMobileShell active="Dieta" title="Hoje" subtitle={diet.title}>
       <div className="flex flex-col gap-8 pb-32">
         
         {/* PROGRESS CARD */}
-        <V2Card className="p-6">
-          <div className="flex justify-between items-end mb-4">
-            <div>
-              <p className="text-[10px] font-black tracking-[0.2em] text-text-muted uppercase mb-1">ADESÃO DO DIA</p>
-              <h2 className="text-2xl font-black italic text-white uppercase leading-tight">{adherence}%</h2>
-            </div>
-            <V2Badge tone={adherenceTone}>{adherence >= 80 ? 'EXCELENTE' : 'EM PROGRESSO'}</V2Badge>
+        <V2Card className="p-4">
+          <div className="flex justify-between items-center mb-3">
+            <p className="text-xs font-mono font-black uppercase tracking-[0.15em] text-text-muted">Adesão do dia</p>
+            <V2Badge tone={adherenceTone}>{adherence}%</V2Badge>
           </div>
-          <V2ProgressBar value={adherence} tone={adherenceTone} className="h-2.5" />
-          
-          <div className="grid grid-cols-2 gap-4 mt-6">
-            <div className="flex items-center gap-3">
-               <V2IconBubble icon={Flame} tone="warning" size={14} />
-               <div className="text-[10px] font-bold text-text-muted uppercase tracking-widest">
-                 <span className="block text-white">{diet.calories}</span>
-                 KCAL META
-               </div>
-            </div>
-            <div className="flex items-center gap-3">
-               <V2IconBubble icon={Drumstick} tone="violet" size={14} />
-               <div className="text-[10px] font-bold text-text-muted uppercase tracking-widest">
-                 <span className="block text-white">{diet.protein}G</span>
-                 PROTEÍNA
-               </div>
-            </div>
+          <V2ProgressBar value={adherence} tone={adherenceTone} className="h-1.5 mb-4" />
+
+          <div className="grid grid-cols-4 gap-2">
+            {[
+              { l: 'KCAL', v: dietDay.totalCaloriesConsumed ?? 0, t: dietDay.totalCaloriesPlanned ?? diet.calories ?? 0, unit: '' },
+              { l: 'P', v: dietDay.totalProteinConsumed ?? 0, t: dietDay.totalProteinPlanned ?? (diet as any).protein ?? 0, unit: 'g' },
+              { l: 'C', v: dietDay.totalCarbsConsumed ?? 0, t: dietDay.totalCarbsPlanned ?? (diet as any).carbs ?? 0, unit: 'g' },
+              { l: 'G', v: dietDay.totalFatConsumed ?? 0, t: dietDay.totalFatPlanned ?? (diet as any).fat ?? 0, unit: 'g' },
+            ].map((m) => (
+              <div key={m.l} className="rounded-xl bg-black/20 border border-white/6 p-2 text-center">
+                <p className="font-mono text-[9px] text-text-muted mb-1">{m.l}</p>
+                <p className="font-mono text-sm font-bold text-white leading-none">{m.v}{m.unit}</p>
+                <p className="font-mono text-[9px] text-text-muted mt-0.5">/{m.t}{m.unit}</p>
+              </div>
+            ))}
           </div>
         </V2Card>
 
@@ -86,7 +89,7 @@ export function DietDayScreen() {
           {diet.meals.length === 0 && (
             <V2Card className="p-6">
               <V2IconBubble icon={ChefHat} tone="warning" size={18} className="mb-4" />
-              <p className="text-[10px] font-black tracking-[0.2em] text-accent-yellow uppercase">REFEIÇÕES</p>
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-accent-yellow">REFEIÇÕES</p>
               <h3 className="mt-2 text-lg font-black italic text-white uppercase">Dieta sem refeições configuradas</h3>
               <p className="mt-2 text-sm font-medium leading-relaxed text-text-secondary">
                 O plano tem meta de calorias e macros, mas ainda não possui refeições cadastradas. Abra a biblioteca para escolher outro plano ou aguarde a prescrição completa.
@@ -96,13 +99,14 @@ export function DietDayScreen() {
               </V2Button>
             </V2Card>
           )}
-          {diet.meals.map((meal: any) => {
-            const mealLogs = (dietDay.meals as any[]).find(m => m.mealId === (meal.id || meal.mealId))?.foods || []
-            const mealDone = mealLogs.length > 0 && mealLogs.every((f: any) => f.completed || f.consumed)
+          {diet.meals.map((meal: DietMeal) => {
+            const resolvedMealId = meal.id ?? meal.mealId ?? meal.name
+            const mealLogs: MealLog[] = (dietDay.meals.find(m => m.mealId === resolvedMealId)?.foods ?? []) as MealLog[]
+            const mealDone = mealLogs.length > 0 && mealLogs.every((f) => f.completed || f.consumed)
             const mealTotal = mealLogs.length
-            const mealCompleted = mealLogs.filter((f: any) => f.completed || f.consumed).length
-            const mealId = meal.id || meal.mealId
-            const isExpanded = expandedMeals[mealId] !== false
+            const mealCompleted = mealLogs.filter((f) => f.completed || f.consumed).length
+            const mealId = resolvedMealId
+            const isExpanded = expandedMeals[resolvedMealId] !== false
             const mealTime = meal.timeSuggestion || meal.time
 
             return (
@@ -123,8 +127,8 @@ export function DietDayScreen() {
                     <div className="text-left">
                       <h3 className="text-sm font-black italic text-white uppercase">{meal.name || meal.mealName}</h3>
                       <div className="flex items-center gap-2">
-                        {mealTime && <span className="text-[9px] font-bold text-ec-violet uppercase">{mealTime}</span>}
-                        <span className="text-[9px] font-bold text-text-muted uppercase">{mealCompleted}/{mealTotal} ITENS</span>
+                        {mealTime && <span className="text-xs font-bold uppercase text-ec-violet">{mealTime}</span>}
+                        <span className="text-xs font-bold uppercase text-text-secondary">{mealCompleted}/{mealTotal} ITENS</span>
                       </div>
                     </div>
                   </div>
@@ -133,7 +137,7 @@ export function DietDayScreen() {
 
                 {isExpanded && (
                   <div className="px-4 pb-4 space-y-3 animate-in fade-in duration-300">
-                    {mealLogs.map((log: any) => (
+                    {mealLogs.map((log: MealLog) => (
                       <div key={log.foodId} className="flex items-center justify-between py-2 border-t border-white/5 first:border-t-0">
                         <div className="flex items-center gap-3">
                            <button 
@@ -149,7 +153,7 @@ export function DietDayScreen() {
                               <p className={cx("text-xs font-bold", (log.completed || log.consumed) ? "text-text-muted line-through" : "text-white")}>
                                 {log.foodName}
                               </p>
-                              <p className="text-[10px] text-text-muted">{log.amount || log.quantity} {log.unit}</p>
+                              <p className="text-xs text-text-secondary">{log.amount || log.quantity} {log.unit}</p>
                            </div>
                         </div>
                         <button 
@@ -175,7 +179,7 @@ export function DietDayScreen() {
           <div className="flex items-center gap-4">
              <V2IconBubble icon={Droplets} tone="info" size={16} />
              <div>
-                <p className="text-[10px] font-black tracking-[0.2em] text-accent-sky uppercase">HIDRATAÇÃO</p>
+                <p className="text-xs font-black uppercase tracking-[0.2em] text-accent-sky">HIDRATAÇÃO</p>
                 <h4 className="text-sm font-black italic text-white uppercase group-hover:text-accent-sky transition-colors">Atingir Meta de Água</h4>
              </div>
           </div>
@@ -184,7 +188,7 @@ export function DietDayScreen() {
 
       </div>
 
-      {/* SUBSTITUTION MODAL */}
+      {/* SUBSTITUTION MODAL — honest empty state (P0 cleanup) */}
       {substitutionTarget && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
           <V2Card className="w-full max-w-md p-6 animate-in slide-in-from-bottom-8 duration-300">
@@ -193,24 +197,17 @@ export function DietDayScreen() {
                 <button onClick={() => setSubstitutionTarget(null)} className="text-text-muted"><X size={24} /></button>
              </div>
              
-             <p className="text-sm text-text-muted mb-6">Substitua <span className="text-white font-bold">{substitutionTarget.food.foodName}</span> por uma opção equivalente em macronutrientes.</p>
-             
-             <div className="space-y-3 mb-8">
-                {['Opção A (Equivalente)', 'Opção B (Equivalente)'].map(opt => (
-                  <button 
-                    key={opt}
-                    onClick={() => {
-                      substituteFood(substitutionTarget.mealId, substitutionTarget.food.foodId, { foodName: opt } as any)
-                      setSubstitutionTarget(null)
-                    }}
-                    className="w-full p-4 rounded-2xl bg-white/5 border border-white/5 text-left font-bold text-white hover:border-ec-violet transition-all"
-                  >
-                    {opt}
-                  </button>
-                ))}
+             <p className="text-sm text-text-muted mb-4">Substitua <span className="text-white font-bold">{substitutionTarget.food.foodName}</span> por uma opção equivalente em macronutrientes.</p>
+
+             <div className="rounded-2xl bg-white/5 border border-white/5 p-5 mb-6">
+                <V2IconBubble icon={RefreshCw} tone="neutral" size={14} className="mb-3 opacity-50" />
+                <p className="text-xs font-bold text-text-muted uppercase tracking-wider mb-1">Substituições indisponíveis</p>
+                <p className="text-[11px] text-text-secondary leading-relaxed">
+                  Seu mentor ainda não cadastrou alternativas aprovadas para este alimento. Quando disponíveis, as opções aparecerão aqui com macros equivalentes.
+                </p>
              </div>
              
-             <V2Button variant="secondary" className="w-full" onClick={() => setSubstitutionTarget(null)}>CANCELAR</V2Button>
+             <V2Button variant="secondary" className="w-full" onClick={() => setSubstitutionTarget(null)}>FECHAR</V2Button>
           </V2Card>
         </div>
       )}

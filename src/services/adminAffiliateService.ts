@@ -1,5 +1,6 @@
 import { collection, doc, getDoc, getDocs, increment, orderBy, query, setDoc, updateDoc, where, writeBatch } from 'firebase/firestore'
 import { db } from '../lib/firebase/firebase'
+import { normalizeFirestoreWriteData, nowTimestamp, removeUndefinedFields } from '../lib/firebase/date'
 import { COLLECTIONS } from '../lib/firebase/paths'
 import type { AffiliateAccount, ReferralCode } from '../types/domain'
 import { adminAuditLogService, type AdminActor } from './adminAuditLogService'
@@ -12,20 +13,23 @@ export const adminAffiliateService = {
 
   async create(actor: AdminActor, input: Pick<AffiliateAccount, 'name' | 'email'> & Partial<AffiliateAccount>) {
     const id = input.email.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase()
-    const affiliate: AffiliateAccount = {
+    const now = nowTimestamp()
+    const nowIso = now.toDate().toISOString()
+    const commissionRate = input.commissionRate ?? 0.2
+    const affiliate = normalizeFirestoreWriteData(removeUndefinedFields({
       id,
       name: input.name,
       email: input.email,
       instagram: input.instagram || '',
       pixKey: input.pixKey || '',
       status: input.status || 'active',
-      commissionRate: input.commissionRate ?? 0.2,
+      commissionRate,
       payoutMethod: input.payoutMethod || 'pix',
       totalCommissionPaid: 0,
       pendingCommission: 0,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    }
+      createdAt: now,
+      updatedAt: now,
+    }))
     const code = `${input.name.split(' ')[0].toUpperCase()}${Math.floor(100 + Math.random() * 900)}`
     await setDoc(doc(db, COLLECTIONS.AFFILIATE_ACCOUNTS, id), affiliate)
     await setDoc(doc(db, COLLECTIONS.REFERRAL_CODES, code), {
@@ -35,28 +39,43 @@ export const adminAffiliateService = {
       status: 'active',
       discountType: 'none',
       discountValue: 0,
-      commissionRate: affiliate.commissionRate,
+      commissionRate,
       usageCount: 0,
       activeSubscriptionsCount: 0,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    } satisfies ReferralCode)
+      createdAt: now,
+      updatedAt: now,
+    } satisfies Omit<ReferralCode, 'createdAt' | 'updatedAt'> & { createdAt: unknown; updatedAt: unknown })
     await adminAuditLogService.create(actor, 'criar_afiliada', 'affiliate', id, null, affiliate)
-    return { affiliate, code }
+    const createdAffiliate: AffiliateAccount = {
+      id,
+      name: input.name,
+      email: input.email,
+      instagram: input.instagram || '',
+      pixKey: input.pixKey || '',
+      status: input.status || 'active',
+      commissionRate,
+      payoutMethod: input.payoutMethod || 'pix',
+      totalCommissionPaid: 0,
+      pendingCommission: 0,
+      createdAt: nowIso,
+      updatedAt: nowIso,
+    }
+    return { affiliate: createdAffiliate, code }
   },
 
   async updateStatus(actor: AdminActor, affiliateId: string, status: AffiliateAccount['status']) {
     const before = await getDoc(doc(db, COLLECTIONS.AFFILIATE_ACCOUNTS, affiliateId))
-    await updateDoc(doc(db, COLLECTIONS.AFFILIATE_ACCOUNTS, affiliateId), { status, updatedAt: new Date().toISOString() })
+    await updateDoc(doc(db, COLLECTIONS.AFFILIATE_ACCOUNTS, affiliateId), normalizeFirestoreWriteData({ status, updatedAt: nowTimestamp() }))
     if (status === 'blocked') {
       const codes = await getDocs(query(collection(db, COLLECTIONS.REFERRAL_CODES), where('affiliateId', '==', affiliateId)))
-      await Promise.all(codes.docs.map(code => updateDoc(code.ref, { status: 'inactive', updatedAt: new Date().toISOString() })))
+      await Promise.all(codes.docs.map(code => updateDoc(code.ref, normalizeFirestoreWriteData({ status: 'inactive', updatedAt: nowTimestamp() }))))
     }
     await adminAuditLogService.create(actor, 'alterar_status_afiliada', 'affiliate', affiliateId, before.exists() ? before.data() : null, { status })
   },
 
   async createReferralCode(actor: AdminActor, affiliate: AffiliateAccount) {
     const code = `${affiliate.name.split(' ')[0].toUpperCase()}${Math.floor(100 + Math.random() * 900)}`
+    const now = nowTimestamp()
     await setDoc(doc(db, COLLECTIONS.REFERRAL_CODES, code), {
       code,
       affiliateId: affiliate.id,
@@ -67,8 +86,8 @@ export const adminAffiliateService = {
       commissionRate: affiliate.commissionRate,
       usageCount: 0,
       activeSubscriptionsCount: 0,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      createdAt: now,
+      updatedAt: now,
     })
     await adminAuditLogService.create(actor, 'gerar_codigo_afiliada', 'referralCode', code, null, { affiliateId: affiliate.id })
     return code
@@ -78,13 +97,14 @@ export const adminAffiliateService = {
     const payoutRef = doc(db, COLLECTIONS.AFFILIATE_PAYOUTS, payoutId)
     const snap = await getDoc(payoutRef)
     if (!snap.exists()) return
-    await updateDoc(payoutRef, { status: 'paid', paidAt: new Date().toISOString() })
+    await updateDoc(payoutRef, normalizeFirestoreWriteData({ status: 'paid', paidAt: nowTimestamp() }))
     await adminAuditLogService.create(actor, 'marcar_payout_pago', 'payout', payoutId, snap.data(), { status: 'paid' })
   },
 
   async createPayout(actor: AdminActor, affiliateId: string, ledgerEntryIds: string[], amount: number) {
     const batch = writeBatch(db)
     const payoutId = `payout_${Date.now()}`
+    const now = nowTimestamp()
     batch.set(doc(db, COLLECTIONS.AFFILIATE_PAYOUTS, payoutId), {
       id: payoutId,
       affiliateId,
@@ -93,13 +113,13 @@ export const adminAffiliateService = {
       status: 'pending',
       ledgerEntryIds,
       payoutMethod: 'manual',
-      createdAt: new Date().toISOString(),
+      createdAt: now,
     })
-    ledgerEntryIds.forEach(id => batch.update(doc(db, COLLECTIONS.COMMISSION_LEDGER, id), { status: 'paid', paidAt: new Date().toISOString() }))
+    ledgerEntryIds.forEach(id => batch.update(doc(db, COLLECTIONS.COMMISSION_LEDGER, id), normalizeFirestoreWriteData({ status: 'paid', paidAt: now })))
     batch.update(doc(db, COLLECTIONS.AFFILIATE_ACCOUNTS, affiliateId), {
       totalCommissionPaid: increment(amount),
       pendingCommission: increment(-amount),
-      updatedAt: new Date().toISOString(),
+      updatedAt: now,
     })
     await batch.commit()
     await adminAuditLogService.create(actor, 'criar_payout', 'payout', payoutId, null, { affiliateId, amount, ledgerEntryIds })

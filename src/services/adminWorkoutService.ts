@@ -1,6 +1,7 @@
 import { collection, doc, getDocs, orderBy, query, setDoc, writeBatch } from 'firebase/firestore'
 import { db } from '../lib/firebase/firebase'
-import { createAdminCrudService, nowIso, makeId } from './adminCrudService'
+import { createAdminCrudService, makeId, nowFirestoreTimestamp } from './adminCrudService'
+import { normalizeFirestoreWriteData, toFirestoreDate } from '../lib/firebase/date'
 import type { Exercise, Workout, WorkoutSummary } from '../types/domain'
 import { COLLECTIONS } from '../lib/firebase/paths'
 
@@ -17,15 +18,17 @@ export const adminWorkoutService = {
     const versionRef = doc(db, COLLECTIONS.WORKOUTS, workout.id, 'versions', versionId)
 
     const summary = calculateWorkoutSummary(workout)
-    const publishedPlan: Workout = {
+    const now = nowFirestoreTimestamp()
+    const publishedPlan = normalizeFirestoreWriteData({
       ...workout,
+      createdAt: toFirestoreDate(workout.createdAt) ?? now,
       status: 'published',
       version: workout.version + 1,
-      publishedAt: nowIso(),
+      publishedAt: now,
       publishedBy: actor.email,
-      updatedAt: nowIso(),
+      updatedAt: now,
       summary
-    }
+    })
 
     batch.set(workoutRef, publishedPlan, { merge: true })
     batch.set(versionRef, { ...publishedPlan, isCurrentVersion: true })
@@ -42,15 +45,17 @@ export const adminWorkoutService = {
 
   async rollback(actor: any, workoutId: string, version: Workout): Promise<void> {
     const workoutRef = doc(db, COLLECTIONS.WORKOUTS, workoutId)
-    const rollbackDraft: Workout = {
-      ...version,
-      status: 'draft',
-      updatedAt: nowIso(),
-      updatedBy: actor.email
+    const now = nowFirestoreTimestamp()
+    const { isCurrentVersion: _isCurrentVersion, publishedAt: _publishedAt, publishedBy: _publishedBy, ...rollbackVersion } = version as Workout & {
+      isCurrentVersion?: boolean
     }
-    delete (rollbackDraft as any).isCurrentVersion
-    delete rollbackDraft.publishedAt
-    delete rollbackDraft.publishedBy
+    const rollbackDraft = normalizeFirestoreWriteData({
+      ...rollbackVersion,
+      createdAt: toFirestoreDate(version.createdAt) ?? now,
+      status: 'draft',
+      updatedAt: now,
+      updatedBy: actor.email
+    })
 
     await setDoc(workoutRef, rollbackDraft, { merge: true })
   }
@@ -80,11 +85,20 @@ export function createEmptyWorkout(): Workout {
     daysPerWeek: 3,
     focus: [],
     tags: [],
+    recommendationMetadata: {
+      goals: ['hypertrophy'],
+      sexes: ['unisex'],
+      frequencies: [3],
+      levels: ['beginner'],
+      locations: ['gym'],
+      equipmentProfile: 'full_gym',
+      tags: [],
+    },
     status: 'draft',
     days: [],
     version: 0,
-    createdAt: nowIso(),
-    updatedAt: nowIso(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   }
 }
 
@@ -98,7 +112,7 @@ export function createEmptyExercise(): Exercise {
     level: 'beginner',
     tags: [],
     status: 'active',
-    createdAt: nowIso(),
-    updatedAt: nowIso(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   }
 }

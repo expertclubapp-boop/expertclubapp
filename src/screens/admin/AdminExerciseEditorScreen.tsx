@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { toastError } from '../../components/ui/Toast'
 import { useNavigate, useParams } from 'react-router-dom'
 import { PageShell } from '../../components/ui/Premium'
 import { Button } from '../../components/ui/Button'
@@ -45,7 +46,7 @@ export function AdminExerciseEditorScreen() {
       }
       navigate('/admin/exercises')
     } catch (error) {
-      alert('Erro ao salvar exercício.')
+      toastError('Erro ao salvar exercício.')
       console.error(error)
     } finally {
       setIsLoading(false)
@@ -113,6 +114,9 @@ export function AdminExerciseEditorScreen() {
         <Field label="Grupo Muscular Principal">
           <TextInput value={exercise.primaryMuscleGroup || ''} onChange={e => setExercise({ ...exercise, primaryMuscleGroup: e.target.value })} placeholder="peito" />
         </Field>
+        <Field label="Músculos Secundários (separados por vírgula)">
+          <TextInput value={(exercise.secondaryMuscles || []).join(', ')} onChange={e => setExercise({ ...exercise, secondaryMuscles: sanitizeTags(e.target.value) })} placeholder="ombro frontal, triceps" />
+        </Field>
 
         <div className="md:col-span-2 lg:col-span-3 mt-4"><h3 className="font-bold text-white uppercase italic tracking-wider">Mídia & Instruções</h3></div>
         
@@ -128,6 +132,12 @@ export function AdminExerciseEditorScreen() {
         <div className="md:col-span-2 lg:col-span-3">
           <Field label="Instruções de Execução">
             <TextArea value={exercise.instructions || ''} onChange={e => setExercise({ ...exercise, instructions: e.target.value })} className="min-h-24" placeholder="1. Deite no banco..." />
+          </Field>
+          <Field label="Erros Comuns (separados por vírgula)">
+            <TextInput value={(exercise.commonMistakes || []).join(', ')} onChange={e => setExercise({ ...exercise, commonMistakes: sanitizeTags(e.target.value) })} placeholder="lombar fora do banco, cotovelos muito abertos" />
+          </Field>
+          <Field label="Cues / Dicas (separadas por vírgula)">
+            <TextInput value={(exercise.cues || []).join(', ')} onChange={e => setExercise({ ...exercise, cues: sanitizeTags(e.target.value) })} placeholder="estufe o peito, empurre o chão" />
           </Field>
         </div>
 

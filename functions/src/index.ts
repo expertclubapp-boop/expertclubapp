@@ -20,6 +20,15 @@ const COLLECTIONS = {
   AFFILIATE_PAYOUTS: 'affiliatePayouts',
 };
 
+function durationMsForPlan(interval: string, durationMonths?: number): number {
+  const months = durationMonths || (
+    interval === 'quarterly' ? 3 :
+    interval === 'semester' ? 6 :
+    interval === 'annual' ? 12 : 1
+  )
+  return months * 30 * 24 * 60 * 60 * 1000
+}
+
 /**
  * Helper to normalize Mercado Pago status to Expert Club status
  */
@@ -129,6 +138,8 @@ export const createMercadoPagoCheckout = functions
       accessToken: process.env.MERCADO_PAGO_ACCESS_TOKEN!,
     });
 
+    const appUrl = (process.env.APP_URL || 'https://expertclub.com.br').replace(/\/$/, '');
+
     try {
       let checkoutUrl = '';
       let providerPreferenceId = '';
@@ -146,37 +157,37 @@ export const createMercadoPagoCheckout = functions
               transaction_amount: plan.price,
               currency_id: 'BRL',
             },
-            back_url: 'https://expertclub.com.br/billing/success', // Should be dynamic
+            back_url: `${appUrl}/billing/success`,
             payer_email: email,
             external_reference: uid,
             status: 'pending',
           },
         });
-        
+
         checkoutUrl = response.init_point!;
         providerPreapprovalId = response.id!;
       } else {
-        // Create One-time payment (Preference)
+        // Create One-time payment (Preference) for quarterly/semester/annual
         const preference = new Preference(client);
         const response = await preference.create({
           body: {
             items: [{
-              id: plan.id,
+              id: planId,
               title: plan.name,
               quantity: 1,
               unit_price: plan.price,
               currency_id: 'BRL',
             }],
             back_urls: {
-              success: 'https://expertclub.com.br/billing/success',
-              failure: 'https://expertclub.com.br/billing/failure',
-              pending: 'https://expertclub.com.br/billing/pending',
+              success: `${appUrl}/billing/success`,
+              failure: `${appUrl}/billing/failure`,
+              pending: `${appUrl}/billing/pending`,
             },
             auto_return: 'all',
             external_reference: uid,
           },
         });
-        
+
         checkoutUrl = response.init_point!;
         providerPreferenceId = response.id!;
       }
@@ -255,9 +266,26 @@ export const mercadoPagoWebhook = functions
       return;
     }
 
-    // 2. Prevent duplicates (Idempotency)
-    const eventDoc = await db.collection(COLLECTIONS.BILLING_EVENTS).doc(billingEventId).get();
-    if (eventDoc.exists) {
+    // 2. Idempotency — atomic claim via Firestore transaction (prevents race condition on concurrent retries)
+    const eventRef = db.collection(COLLECTIONS.BILLING_EVENTS).doc(billingEventId);
+    let claimed = false;
+
+    await db.runTransaction(async (tx) => {
+      const snap = await tx.get(eventRef);
+      const status = snap.data()?.status as string | undefined;
+      // Allow reclaim only if previous attempt explicitly failed (not if processing or processed)
+      if (snap.exists && status !== 'failed') return;
+      claimed = true;
+      tx.set(eventRef, {
+        status: 'processing',
+        claimedAt: admin.firestore.FieldValue.serverTimestamp(),
+        provider: 'mercadopago',
+        resourceId,
+        eventType: eventType || 'unknown',
+      }, { merge: false });
+    });
+
+    if (!claimed) {
       res.status(200).send('Already processed');
       return;
     }
@@ -334,6 +362,7 @@ export const mercadoPagoWebhook = functions
             amount,
             expectedAmount,
           });
+          await eventRef.update({ status: 'processed', processedAt: new Date().toISOString(), note: 'amount_mismatch' });
           res.status(200).send('Processed (Amount mismatch)');
           return;
         }
@@ -374,12 +403,14 @@ export const mercadoPagoWebhook = functions
 
       if (normalizedStatus === 'active' && (!sessionsSnap || sessionsSnap.empty)) {
         console.warn('Active Mercado Pago event without matching checkout session', { resourceId, uid });
+        await eventRef.update({ status: 'processed', processedAt: new Date().toISOString(), note: 'no_checkout_session' });
         res.status(200).send('Processed (No matching checkout)');
         return;
       }
 
       if (!uid) {
         console.warn('Webhook received but no UID found for resource:', resourceId);
+        await eventRef.update({ status: 'processed', processedAt: new Date().toISOString(), note: 'no_uid' });
         res.status(200).send('Processed (No UID)');
         return;
       }
@@ -389,17 +420,21 @@ export const mercadoPagoWebhook = functions
       const existingSubscription = await subRef.get();
       const existingData = existingSubscription.exists ? existingSubscription.data() || {} : {};
       const nowIso = new Date().toISOString();
-      const nextPeriodEndIso = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
       let planData: any = {};
       if (attributionData.planId) {
         const planSnap = await db.collection(COLLECTIONS.PLANS).doc(attributionData.planId).get();
         planData = planSnap.exists ? planSnap.data() || {} : {};
       }
 
+      const resolvedInterval = planData.interval || existingData.interval || 'monthly';
+      const periodMs = durationMsForPlan(resolvedInterval, planData.durationMonths);
+      const nextPeriodEndIso = new Date(Date.now() + periodMs).toISOString();
+
       await subRef.set({
         uid,
-        planId: attributionData.planId || existingData.planId || planData.id || 'founder',
+        planId: attributionData.planId || existingData.planId || 'founder',
         planName: attributionData.planName || existingData.planName || planData.name || 'Expert Club Fundador',
+        planTier: planData.tier || existingData.planTier || null,
         status: normalizedStatus,
         provider: 'mercadopago',
         providerSubscriptionId: providerPreapprovalId || providerPreferenceId || existingData.providerSubscriptionId || null,
@@ -407,7 +442,7 @@ export const mercadoPagoWebhook = functions
         checkoutSessionId: attributionData.checkoutSessionId || existingData.checkoutSessionId || null,
         price: amount || existingData.price || planData.price || 49,
         currency: 'BRL',
-        interval: planData.interval || existingData.interval || 'monthly',
+        interval: resolvedInterval,
         startedAt: existingData.startedAt || nowIso,
         currentPeriodStart: normalizedStatus === 'active' ? nowIso : existingData.currentPeriodStart || nowIso,
         currentPeriodEnd: normalizedStatus === 'active' ? nextPeriodEndIso : existingData.currentPeriodEnd || nextPeriodEndIso,
@@ -417,9 +452,9 @@ export const mercadoPagoWebhook = functions
         ...attributionData
       }, { merge: true });
 
-      // 5. Log Billing Event
-      const eventRef = db.collection(COLLECTIONS.BILLING_EVENTS).doc(billingEventId);
+      // 5. Mark Billing Event as processed with full details
       await eventRef.set({
+        status: 'processed',
         provider: 'mercadopago',
         providerEventId: resourceId,
         idempotencyKey: billingEventId,
@@ -432,7 +467,7 @@ export const mercadoPagoWebhook = functions
         processedAt: new Date().toISOString(),
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
         rawPayload: req.body,
-      });
+      }, { merge: true });
 
       // 6. Generate Commission Ledger Entry if approved
       if (normalizedStatus === 'active' && attributionData.affiliateId) {
@@ -475,7 +510,17 @@ export const mercadoPagoWebhook = functions
       res.status(200).send('OK');
     } catch (error) {
       console.error('Webhook Error:', error);
+      try {
+        await eventRef.update({
+          status: 'failed',
+          failedAt: new Date().toISOString(),
+          error: String(error),
+        });
+      } catch (updateErr) {
+        console.error('Failed to mark billing event as failed:', updateErr);
+      }
       res.status(500).send('Internal Server Error');
     }
   });
 export * from './notifications';
+export * from './scheduled';

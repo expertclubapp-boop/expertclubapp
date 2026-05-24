@@ -9,10 +9,15 @@ import {
   limit
 } from 'firebase/firestore'
 import { db } from '../lib/firebase/firebase'
-import { nowTimestamp, toFirestoreDate } from '../lib/firebase/date'
+import { FirestoreDateInput, nowTimestamp, toFirestoreDate } from '../lib/firebase/date'
 import { COLLECTIONS } from '../lib/firebase/paths'
 import type { DailyCheckin, WeeklyCheckin } from '../types/domain'
 import { challengeScoringService } from './challengeScoringService'
+import { streakService } from './streakService'
+
+function resolveFirestoreTimestamp(value: FirestoreDateInput) {
+  return toFirestoreDate(value) ?? nowTimestamp()
+}
 
 export const checkinService = {
   // Daily Checkins
@@ -26,16 +31,17 @@ export const checkinService = {
     const docRef = doc(db, COLLECTIONS.USERS, uid, 'dailyCheckins', checkin.dateKey)
     await setDoc(docRef, {
       ...checkin,
-      createdAt: toFirestoreDate(checkin.createdAt as any) ?? nowTimestamp(),
+      createdAt: resolveFirestoreTimestamp(checkin.createdAt),
       updatedAt: nowTimestamp()
     }, { merge: true })
 
-    // Non-blocking scoring
+    // Non-blocking scoring + streak
     challengeScoringService.processUserAction({
       uid,
       sourceType: 'daily_checkin',
       sourceId: checkin.dateKey
     }).catch(console.error)
+    streakService.recordActivity(uid).catch(console.error)
   },
 
   async getRecentDailyCheckins(uid: string, limitCount = 30) {
@@ -56,7 +62,7 @@ export const checkinService = {
     const docRef = doc(db, COLLECTIONS.USERS, uid, 'weeklyCheckins', checkin.weekKey)
     await setDoc(docRef, {
       ...checkin,
-      createdAt: toFirestoreDate(checkin.createdAt as any) ?? nowTimestamp(),
+      createdAt: resolveFirestoreTimestamp(checkin.createdAt),
       updatedAt: nowTimestamp()
     }, { merge: true })
 

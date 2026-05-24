@@ -1,11 +1,19 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { useProfile } from '../hooks/useProfile'
 import { useSubscription } from '../hooks/useSubscription'
-import { getDefaultRouteForUser, getUserRole, isOnboardingCompleted } from './utils'
+import {
+  getDefaultRouteForUser,
+  getSubscriptionStatus,
+  getUserRole,
+  hasActiveSubscriptionStatus,
+  isOnboardingCompleted,
+} from './utils'
 import { RouteLoader } from './RouteLoader'
 
 export function OnboardingRoute() {
   const { firebaseUser, user, isLoading } = useAuth()
+  const { profile, isLoading: isProfileLoading } = useProfile()
   const { subscription, isLoading: isSubscriptionLoading } = useSubscription()
   const location = useLocation()
 
@@ -27,12 +35,20 @@ export function OnboardingRoute() {
     return <Navigate to={getDefaultRouteForUser(user, null, subscription)} replace />
   }
 
-  if (isOnboardingCompleted(user)) {
-    if (isSubscriptionLoading) {
-      return <RouteLoader />
-    }
+  if (isSubscriptionLoading) {
+    return <RouteLoader />
+  }
 
-    return <Navigate to={getDefaultRouteForUser(user, null, subscription)} replace />
+  if (isProfileLoading) {
+    return <RouteLoader />
+  }
+
+  if (!hasActiveSubscriptionStatus(getSubscriptionStatus(user, subscription))) {
+    return <Navigate to="/app/billing/lock" replace />
+  }
+
+  if (isOnboardingCompleted(user, profile)) {
+    return <Navigate to={getDefaultRouteForUser(user, profile, subscription)} replace />
   }
 
   return <Outlet />

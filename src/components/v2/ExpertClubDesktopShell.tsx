@@ -1,45 +1,62 @@
 import { type ReactNode } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { 
-  Home, 
-  Users, 
-  CalendarCheck, 
-  Dumbbell, 
-  Utensils, 
-  Calendar, 
-  CircleDollarSign, 
-  Trophy, 
-  BarChart3, 
+import {
+  Home,
+  Users,
+  CalendarCheck,
+  Dumbbell,
+  Utensils,
+  Calendar,
+  CircleDollarSign,
+  Trophy,
+  BarChart3,
   Settings,
-  Building2,
   BookOpen,
   HelpCircle,
   Search,
   Bell,
   ChevronDown,
-  Star
+  Star,
+  ShieldCheck,
+  LogOut,
+  Zap,
+  Tag,
+  ShoppingBag,
+  DollarSign,
+  UserCheck,
+  Activity,
 } from 'lucide-react'
 import { ExpertLogo } from '../ui/ExpertLogo'
 import { V2Avatar, V2IconBubble, V2Card, cx } from './ExpertClubV2Base'
 import { useAuth } from '../../contexts/AuthContext'
 
 export type ActiveNav =
-  | 'Visão geral'
+  | 'Dashboard'
   | 'Alunos'
   | 'Check-ins'
   | 'Treinos'
   | 'Dietas'
-  | 'Agenda'
+  | 'Conteúdo'
+  | 'Desafios'
+  | 'Assinaturas'
+  | 'Produtos'
+  | 'Afiliados'
+  | 'Influenciadores'
+  | 'Saques'
+  | 'Loja'
   | 'Financeiro'
+  | 'Suporte'
+  | 'Configurações'
+  | 'Presets'
+  | 'Visão geral'
+  | 'Agenda'
   | 'Influencers'
   | 'Relatórios'
-  | 'Configurações'
   | 'Workspaces'
-  | 'Assinaturas'
   | 'Usuários'
-  | 'Conteúdo'
-  | 'Suporte'
   | 'Métricas SaaS'
+  | 'Economia'
+  | 'Auditoria'
 
 const mentorNav = [
   { label: 'Visão geral', icon: Home, href: '/mentor/dashboard' },
@@ -55,16 +72,25 @@ const mentorNav = [
 ] as const
 
 const adminNav = [
-  { label: 'Visão geral', icon: Home, href: '/admin/dashboard' },
-  { label: 'Workspaces', icon: Building2, href: '/admin/workspaces' },
-  { label: 'Assinaturas', icon: CalendarCheck, href: '/admin/subscriptions' },
-  { label: 'Usuários', icon: Users, href: '/admin/users' },
-  { label: 'Influencers', icon: Trophy, href: '/admin/affiliates' },
+  { label: 'Dashboard', icon: Home, href: '/admin/dashboard' },
+  { label: 'Alunos', icon: Users, href: '/admin/users' },
+  { label: 'Check-ins', icon: CalendarCheck, href: '/admin/checkins' },
+  { label: 'Treinos', icon: Dumbbell, href: '/admin/workouts' },
+  { label: 'Dietas', icon: Utensils, href: '/admin/diets' },
+  { label: 'Presets', icon: Zap, href: '/admin/presets' },
   { label: 'Conteúdo', icon: BookOpen, href: '/admin/content' },
+  { label: 'Desafios', icon: Trophy, href: '/admin/challenges' },
+  { label: 'Assinaturas', icon: ShieldCheck, href: '/admin/subscriptions' },
+  { label: 'Produtos', icon: Tag, href: '/admin/produtos' },
+  { label: 'Afiliados', icon: Users, href: '/admin/affiliates' },
+  { label: 'Influenciadores', icon: UserCheck, href: '/admin/influencers-v2' },
+  { label: 'Saques', icon: DollarSign, href: '/admin/payouts-v2' },
+  { label: 'Loja', icon: ShoppingBag, href: '/admin/store' },
   { label: 'Financeiro', icon: CircleDollarSign, href: '/admin/financeiro' },
   { label: 'Suporte', icon: HelpCircle, href: '/admin/support' },
-  { label: 'Métricas SaaS', icon: BarChart3, href: '/admin/metrics' },
   { label: 'Configurações', icon: Settings, href: '/admin/settings' },
+  { label: 'Economia', icon: Zap, href: '/admin/economia' },
+  { label: 'Auditoria', icon: Activity, href: '/admin/auditoria' },
 ] as const
 
 // === SIDEBAR ===
@@ -118,7 +144,7 @@ export function ExpertClubSidebar({ active, admin = false }: { active: ActiveNav
 
 // === TOPBAR ===
 export function ExpertClubDesktopTop({ admin = false }: { admin?: boolean }) {
-  const { firebaseUser } = useAuth()
+  const { firebaseUser, logout } = useAuth()
   const role = admin ? 'Administrador' : 'Mentor'
 
   return (
@@ -169,12 +195,21 @@ export function ExpertClubDesktopTop({ admin = false }: { admin?: boolean }) {
       </button>
 
       <div className="flex items-center gap-3 pl-4">
-        <div className="text-right">
+        <div className="text-right hidden md:block">
           <strong className="block text-sm text-white">{firebaseUser?.displayName || 'User'}</strong>
           <span className="block text-[10px] text-text-muted uppercase tracking-widest">{role}</span>
         </div>
         <V2Avatar uid={firebaseUser?.uid} name={firebaseUser?.displayName || 'User'} size="md" />
-        <ChevronDown size={16} className="text-text-muted" />
+        <div className="h-8 w-px bg-white/5 mx-2" />
+        <button
+          type="button"
+          onClick={() => logout()}
+          className="flex items-center gap-2 p-2 rounded-xl text-text-muted hover:text-accent-red hover:bg-accent-red/10 transition-colors"
+          title="Sair da conta"
+        >
+          <LogOut size={20} />
+          <span className="text-xs font-bold uppercase tracking-widest hidden md:inline">Sair</span>
+        </button>
       </div>
     </div>
   )

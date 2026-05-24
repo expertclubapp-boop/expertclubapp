@@ -12,9 +12,6 @@ export const referralUtils = {
     if (source) localStorage.setItem('referralSource', source)
     if (campaign) localStorage.setItem('referralCampaign', campaign)
 
-    if (referralCode || couponCode || source || campaign) {
-      console.log('✅ Referral params captured:', { referralCode, couponCode, source, campaign })
-    }
   },
 
   getStoredReferral(): { referralCode?: string, couponCode?: string, source?: string, campaign?: string } {

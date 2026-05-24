@@ -91,6 +91,11 @@ Nao e pronto para escala.
 | `/app/challenges` | 1440x900 | `qa/student-mobile-recovery/student-challenges-1440.png` | Sim, centralizado | Parcial | CTA visivel | ATENCAO |
 | `/app/content` | 1440x900 | `qa/student-mobile-recovery/student-content-1440-pass2.png` | Sim, centralizado | Sim | Acoes controladas | PASS |
 | `/app/challenges` | 1440x900 | `qa/student-mobile-recovery/student-challenges-1440-pass2.png` | Sim, centralizado | Sim | CTA/estado validado | PASS |
+| `/app/diets/today` | 390x844 | `qa/diet-real-validation/student-diet-today-real-390.png` | Sim | Sim | Marcacao de refeicao | PASS |
+| `/app/diets/today` | 430x932 | `qa/diet-real-validation/student-diet-today-real-430.png` | Sim | Sim | Marcacao de refeicao | PASS |
+| `/app/diets/today` | 1440x900 | `qa/diet-real-validation/student-diet-today-real-1440.png` | Sim, centralizado | Sim | Marcacao de refeicao | PASS |
+| `/app/diets` | 390x844 | `qa/diet-real-validation/student-diets-real-390.png` | Sim | Sim | Sim | PASS |
+| `/app/today` | 390x844 | `qa/diet-real-validation/student-today-diet-progress-390.png` | Sim | Sim | Progress reflete dietDay | PASS |
 
 ## Fluxo de treino real
 
@@ -118,5 +123,5 @@ Nao e pronto para escala.
 
 | Item | Gravidade | Motivo |
 |---|---|---|
-| Dieta completa com refeicoes reais | Importante | Empty state esta correto quando nao ha refeicoes; ainda vale validar um plano com refeicoes reais antes de usuarios reais. |
+| (Resolvido) Dieta completa com refeicoes reais | Concluído | Validado em 2026-05-10 via dieta QA com 4 refeições e atualização no Firestore. |
 | Conteudo e desafios em profundidade editorial | Melhoria futura | Passaram no recorte mobile/PWA, mas ainda podem receber refinamento visual dedicado fora deste gate. |

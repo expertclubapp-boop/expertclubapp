@@ -1,7 +1,7 @@
 import * as admin from 'firebase-admin';
 
 // Re-defining domain types for functions scope
-export type NotificationType = 
+export type NotificationType =
   | "badge_unlocked"
   | "xp_earned"
   | "content_published"
@@ -9,7 +9,10 @@ export type NotificationType =
   | "challenge_mission_completed"
   | "ranking_updated"
   | "official_post"
-  | "comment_reply";
+  | "comment_reply"
+  | "streak_at_risk"
+  | "student_inactive"
+  | "billing_expiring";
 
 export interface CreateNotificationParams {
   workspaceId: string;
@@ -47,6 +50,9 @@ function getFallbackUrl(type: NotificationType): string {
     case 'challenge_mission_completed': return '/app/challenges';
     case 'official_post': return '/app/community';
     case 'comment_reply': return '/app/community';
+    case 'streak_at_risk': return '/app/today';
+    case 'student_inactive': return '/app/today';
+    case 'billing_expiring': return '/app/billing/plans';
     default: return '/app/today';
   }
 }

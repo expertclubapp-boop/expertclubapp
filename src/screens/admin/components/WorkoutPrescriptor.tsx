@@ -55,6 +55,8 @@ export function WorkoutPrescriptor({ workout, onChange }: WorkoutPrescriptorProp
       sets: 3,
       reps: '12',
       restSeconds: 60,
+      rpeTarget: '',
+      rirTarget: '',
       notes: '',
       substitutionOptions: []
     }
@@ -255,6 +257,51 @@ export function WorkoutPrescriptor({ workout, onChange }: WorkoutPrescriptorProp
                                    className="w-16 bg-bg-primary border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white text-center font-black focus:border-ec-violet" 
                                  />
                                  <span className="text-[10px] text-text-muted font-black uppercase tracking-widest">Descanso</span>
+                              </div>
+                            </div>
+
+                            <div className="grid gap-3 pt-3 border-t border-white/5 md:grid-cols-3">
+                              <div>
+                                <p className="mb-1 text-[10px] font-black uppercase tracking-widest text-text-muted">RPE</p>
+                                <input
+                                  type="text"
+                                  value={ex.rpeTarget || ''}
+                                  onChange={e => {
+                                    const newDays = [...workout.days]
+                                    newDays[dIdx].exercises[eIdx].rpeTarget = e.target.value
+                                    onChange({ ...workout, days: newDays })
+                                  }}
+                                  placeholder="Ex: 8"
+                                  className="w-full bg-bg-primary border border-white/10 rounded-lg px-3 py-2 text-xs text-white font-bold focus:border-ec-violet"
+                                />
+                              </div>
+                              <div>
+                                <p className="mb-1 text-[10px] font-black uppercase tracking-widest text-text-muted">RIR</p>
+                                <input
+                                  type="text"
+                                  value={ex.rirTarget || ''}
+                                  onChange={e => {
+                                    const newDays = [...workout.days]
+                                    newDays[dIdx].exercises[eIdx].rirTarget = e.target.value
+                                    onChange({ ...workout, days: newDays })
+                                  }}
+                                  placeholder="Ex: 2"
+                                  className="w-full bg-bg-primary border border-white/10 rounded-lg px-3 py-2 text-xs text-white font-bold focus:border-ec-violet"
+                                />
+                              </div>
+                              <div className="md:col-span-1">
+                                <p className="mb-1 text-[10px] font-black uppercase tracking-widest text-text-muted">Notas do exercício</p>
+                                <input
+                                  type="text"
+                                  value={ex.notes || ''}
+                                  onChange={e => {
+                                    const newDays = [...workout.days]
+                                    newDays[dIdx].exercises[eIdx].notes = e.target.value
+                                    onChange({ ...workout, days: newDays })
+                                  }}
+                                  placeholder="Dica técnica, amplitude, cadência..."
+                                  className="w-full bg-bg-primary border border-white/10 rounded-lg px-3 py-2 text-xs text-white font-medium focus:border-ec-violet"
+                                />
                               </div>
                             </div>
                           </div>

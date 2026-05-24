@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
+import { toastError } from '../../components/ui/Toast'
 import { useNavigate } from 'react-router-dom'
 import { Plus, Search, Archive, Edit2, Copy } from 'lucide-react'
 import { PageShell } from '../../components/ui/Premium'
@@ -41,7 +42,6 @@ export function AdminDietsScreen() {
   }), [items, search, goalFilter, statusFilter])
 
   async function duplicateDiet(item: Diet) {
-    if (!window.confirm('Duplicar esta dieta?')) return
     try {
       const clone = { ...item, title: `${item.title} (cópia)`, status: 'draft' as const, version: 1 }
       delete (clone as any).id
@@ -51,7 +51,7 @@ export function AdminDietsScreen() {
       const newId = await dietService.create(clone)
       navigate(`/admin/diets/${newId}`)
     } catch (err) {
-      alert('Erro ao duplicar.')
+      toastError('Erro ao duplicar.')
     }
   }
 
@@ -60,7 +60,7 @@ export function AdminDietsScreen() {
       await dietService.update(id, { status: 'archived' })
       loadDiets()
     } catch (err) {
-      alert('Erro ao arquivar dieta.')
+      toastError('Erro ao arquivar dieta.')
     }
   }
 
@@ -145,7 +145,9 @@ export function AdminDietsScreen() {
                     </td>
                     <td className="p-4 flex justify-end gap-2">
                       <button className="rounded-lg border border-white/10 bg-white/5 p-2 text-white hover:bg-white/10" onClick={() => navigate(`/admin/diets/${item.id}`)}><Edit2 className="h-4 w-4" /></button>
-                      <button className="rounded-lg border border-white/10 bg-white/5 p-2 text-white hover:bg-white/10" onClick={() => duplicateDiet(item)}><Copy className="h-4 w-4" /></button>
+                      <ConfirmButton message="Duplicar dieta?" onConfirm={() => duplicateDiet(item)}>
+                        <Copy className="h-4 w-4" />
+                      </ConfirmButton>
                       {item.status !== 'archived' && (
                         <ConfirmButton variant="destructive" message="Arquivar dieta?" onConfirm={async () => archiveDiet(item.id)}>
                           <Archive className="h-4 w-4" />

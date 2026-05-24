@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
+import { toastError } from '../../components/ui/Toast'
 import { useNavigate } from 'react-router-dom'
 import { Plus, Search, Archive, Edit2, Copy } from 'lucide-react'
 import { PageShell } from '../../components/ui/Premium'
@@ -41,7 +42,6 @@ export function AdminFoodsScreen() {
   }), [items, search, categoryFilter, statusFilter])
 
   async function duplicateFood(item: Food) {
-    if (!window.confirm('Duplicar este alimento?')) return
     try {
       const clone = { ...item, name: `${item.name} (cópia)`, status: 'inactive' as const }
       delete (clone as any).id
@@ -50,7 +50,7 @@ export function AdminFoodsScreen() {
       const newId = await foodService.createFood(clone)
       navigate(`/admin/foods/${newId}`)
     } catch (err) {
-      alert('Erro ao duplicar.')
+      toastError('Erro ao duplicar.')
     }
   }
 
@@ -59,7 +59,7 @@ export function AdminFoodsScreen() {
       await foodService.updateFood(id, { status: current === 'active' ? 'inactive' : 'active' })
       loadFoods()
     } catch (err) {
-      alert('Erro ao alterar status.')
+      toastError('Erro ao alterar status.')
     }
   }
 
@@ -133,9 +133,11 @@ export function AdminFoodsScreen() {
                     <td className="p-4 text-xs text-text-secondary capitalize">{item.category}</td>
                     <td className="p-4 text-xs text-text-muted">{item.basePortion.amount}{item.basePortion.unit} ({item.basePortion.label})</td>
                     <td className="p-4">
-                      <div className="flex gap-2 text-[10px] font-mono">
+                      <div className="flex flex-wrap gap-2 text-[10px] font-mono">
+                        <span className="text-white font-black">{item.macrosPerBasePortion.calories} kcal</span>
+                        <span className="text-text-muted">·</span>
                         <span className="text-accent-blue">{item.macrosPerBasePortion.protein}g P</span>
-                        <span className="text-ec-violet font-bold">{item.macrosPerBasePortion.carbs}g C</span>
+                        <span className="text-ec-violet">{item.macrosPerBasePortion.carbs}g C</span>
                         <span className="text-accent-yellow">{item.macrosPerBasePortion.fat}g G</span>
                       </div>
                     </td>
@@ -149,7 +151,9 @@ export function AdminFoodsScreen() {
                     </td>
                     <td className="p-4 flex justify-end gap-2">
                       <button className="rounded-lg border border-white/10 bg-white/5 p-2 text-white hover:bg-white/10" onClick={() => navigate(`/admin/foods/${item.id}`)}><Edit2 className="h-4 w-4" /></button>
-                      <button className="rounded-lg border border-white/10 bg-white/5 p-2 text-white hover:bg-white/10" onClick={() => duplicateFood(item)}><Copy className="h-4 w-4" /></button>
+                      <ConfirmButton message="Duplicar alimento?" onConfirm={() => duplicateFood(item)}>
+                        <Copy className="h-4 w-4" />
+                      </ConfirmButton>
                       <ConfirmButton variant="destructive" message="Arquivar alimento?" onConfirm={async () => { await foodService.archiveFood(item.id); loadFoods() }}>
                         <Archive className="h-4 w-4" />
                       </ConfirmButton>

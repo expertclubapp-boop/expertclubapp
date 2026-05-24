@@ -1,237 +1,446 @@
-import { motion } from 'framer-motion'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { 
-  Dumbbell, 
-  Ruler, 
-  Accessibility,
-  Camera,
-  Activity,
-  Utensils,
-  TrendingUp
-} from 'lucide-react'
+import { Activity, Camera, CalendarClock, Droplets, Dumbbell, HeartPulse, Scale, Target, TrendingUp, Utensils } from 'lucide-react'
+import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
-import { useAuth } from '../../contexts/AuthContext'
-import { useProgress } from '../../hooks/useProgress'
+import { FilterChip } from '../../components/ui/FilterChip'
+import { ProgressBar } from '../../components/ui/ProgressBar'
 import { PageShell, SectionHeader } from '../../components/ui/Premium'
+
+type EvolutionTab = 'PESO' | 'FORÇA' | 'MEDIDAS' | 'FOTOS'
+import { useAuth } from '../../contexts/AuthContext'
+import { fromFirestoreDate } from '../../lib/firebase/date'
+import { studentEvolutionReportService, type StudentEvolutionReport } from '../../services/studentEvolutionReportService'
+import { consistencyLevelPt, evolutionPeriodPt } from '../../utils/labels'
+
+type PeriodOption = 15 | 30
+
+function formatDate(value?: unknown) {
+  const date = fromFirestoreDate(value as Parameters<typeof fromFirestoreDate>[0])
+  return date ? date.toLocaleDateString('pt-BR') : '-'
+}
+
+function formatWeight(value?: number) {
+  if (typeof value !== 'number') return 'Sem dado real'
+  return `${value.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} kg`
+}
+
+function formatPercent(value?: number) {
+  if (typeof value !== 'number') return 'Sem dado real'
+  return `${value}%`
+}
+
+function formatSignedKg(value?: number) {
+  if (typeof value !== 'number') return 'Dados iniciais'
+  return `${value > 0 ? '+' : ''}${value.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} kg`
+}
 
 export function EvolutionScreen() {
   const navigate = useNavigate()
   const { firebaseUser } = useAuth()
-  const { 
-    weeklyHistory, 
-    dailyHistory, 
-    recentSessions, 
-    bodyCheckins,
-    dietDays,
-    isLoading 
-  } = useProgress(firebaseUser?.uid)
+  const [periodDays, setPeriodDays] = useState<PeriodOption>(15)
+  const [activeTab, setActiveTab] = useState<EvolutionTab>('PESO')
+  const [report, setReport] = useState<StudentEvolutionReport | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  // Aggregated Stats
-  const currentWeight = bodyCheckins[0]?.weightKg || weeklyHistory[0]?.weightKg || 0
-  const prevWeight = bodyCheckins[1]?.weightKg || weeklyHistory[1]?.weightKg || 0
-  const weightDiff = currentWeight && prevWeight ? (currentWeight - prevWeight).toFixed(1) : '0.0'
-  const isWeightDown = Number(weightDiff) <= 0
+  useEffect(() => {
+    const currentUid = firebaseUser?.uid
+    if (!currentUid) {
+      setReport(null)
+      setIsLoading(false)
+      return
+    }
+    const uid = currentUid
 
-  const totalSessions = recentSessions.length
-  const dietAdherence = dietDays.length > 0
-    ? Math.round(dietDays.reduce((sum, item) => sum + item.adherencePercent, 0) / dietDays.length)
-    : dailyHistory.length > 0 
-    ? Math.round((dailyHistory.filter(d => d.followedDiet).length / dailyHistory.length) * 100)
-    : 0
+    let cancelled = false
 
-  const hasPhotos = bodyCheckins.some(b => Object.keys(b.photoUrls || {}).length > 0)
+    async function loadReport() {
+      setIsLoading(true)
+      setError(null)
+      try {
+        const nextReport = await studentEvolutionReportService.getStudentEvolutionReport(uid, { periodDays })
+        if (!cancelled) setReport(nextReport)
+      } catch (loadError) {
+        if (!cancelled) {
+          setReport(null)
+          setError(loadError instanceof Error ? loadError.message : 'Não foi possível carregar seu relatório agora.')
+        }
+      } finally {
+        if (!cancelled) setIsLoading(false)
+      }
+    }
 
-  // Timeline items
-  const timeline = [
-    ...bodyCheckins.map(b => ({ type: 'checkin', date: new Date(b.date), title: 'Check-in Evolutivo', data: `${b.weightKg}kg` })),
-    ...recentSessions.map(s => ({ type: 'workout', date: new Date(s.startedAt as any), title: 'Treino Concluído', data: `${Math.floor((s.durationSeconds || 0) / 60)}min` })),
-    ...dietDays.map(d => ({ type: 'diet', date: new Date(d.dateKey), title: 'Dieta Registrada', data: `${d.adherencePercent}% aderência` }))
-  ].sort((a, b) => b.date.getTime() - a.date.getTime()).slice(0, 10)
+    void loadReport()
+
+    return () => {
+      cancelled = true
+    }
+  }, [firebaseUser?.uid, periodDays])
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-[60vh]">
-        <div className="w-10 h-10 border-4 border-ec-violet/30 border-t-ec-violet rounded-full animate-spin" />
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-ec-violet/30 border-t-ec-violet" />
       </div>
     )
   }
 
-  return (
-    <PageShell wide>
-        <section className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
-          <SectionHeader
-            eyebrow="Dados de progresso"
-            title="Evolução"
-            description="Sua jornada de alta performance documentada em dados."
-            tone="violet"
-          />
-          <div className="flex gap-4">
-            <div className="ec-card p-4 rounded-xl flex items-center gap-4">
-              <div className="p-3 bg-ec-violet/10 rounded-lg">
-                <TrendingUp className="w-6 h-6 text-ec-violet" />
-              </div>
-              <div>
-                <p className="text-[10px] text-text-muted uppercase tracking-widest font-bold">Streak Check-ins</p>
-                <p className="font-display text-h3 text-text-primary">{dailyHistory.length} Total</p>
-              </div>
-            </div>
-            <Button variant="primary" onClick={() => navigate('/app/evolution/checkin')} className="flex-1 md:flex-none px-8">
-              Novo Check-in
+  if (error || !report) {
+    return (
+      <PageShell wide>
+        <section className="rounded-3xl border border-white/10 bg-[#0b111c] p-6">
+          <Badge color="red">Relatório de evolução</Badge>
+          <h1 className="mt-4 text-3xl font-black uppercase italic text-white">Não deu para abrir seu relatório agora.</h1>
+          <p className="mt-3 text-sm leading-relaxed text-text-secondary">{error || 'Tente novamente em instantes.'}</p>
+          <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+            <Button className="sm:w-auto" onClick={() => window.location.reload()}>
+              Tentar novamente
+            </Button>
+            <Button variant="ghost" className="sm:w-auto" onClick={() => navigate('/app/today')}>
+              Voltar para hoje
             </Button>
           </div>
         </section>
+      </PageShell>
+    )
+  }
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          {/* Curva de Peso */}
-          <div className="ec-card md:col-span-2 rounded-2xl p-6 relative overflow-hidden group">
-            <div className="flex justify-between items-start mb-8 relative z-10">
-              <div>
-                <h3 className="font-display text-white uppercase text-lg italic font-bold">Curva de Peso</h3>
-                <p className="text-text-muted text-sm font-body-md mt-1 max-w-sm">Peso sobe e desce diariamente devido à hidratação e sono. Olhe a tendência de longo prazo.</p>
-              </div>
-              <div className="text-right">
-                <p className={`font-display text-h2 italic font-black ${isWeightDown ? 'text-accent-lime' : 'text-red-500'}`}>
-                  {isWeightDown ? '' : '+'}{weightDiff}kg
-                </p>
-                <p className="text-[10px] text-text-muted uppercase font-bold tracking-widest">Diferença Total</p>
-              </div>
-            </div>
-            
-            <div className="h-48 w-full flex items-end gap-1.5 relative z-10">
-              {[80, 78, 82, 75, 72, 70, 68, 65, 62].map((h, i) => (
-                <motion.div 
-                  key={i}
-                  initial={{ height: 0 }}
-                  animate={{ height: `${h}%` }}
-                  transition={{ delay: i * 0.05, duration: 0.5 }}
-                  className={`
-                    flex-1 rounded-t-sm relative group/bar transition-all 
-                    ${i > 5 ? 'bg-ec-violet/40' : 'bg-white/5'}
-                    ${i === 8 ? 'bg-ec-violet shadow-[0_-4px_12px_rgba(91,75,255,0.3)]' : ''}
-                  `}
-                />
-              ))}
-            </div>
-          </div>
+  const bodyEmpty = !report.body.hasEnoughBodyData
+  const hasPhotos = (report.body.latestPhotos || []).length > 0
+  const primaryCtaLabel = report.automatedSummary.ctaLabel || 'Continuar plano'
+  const primaryCtaTo = report.automatedSummary.ctaTo || '/app/today'
 
-          <div className="flex flex-col gap-6">
-            <div className="ec-card flex-1 rounded-2xl p-6 hover:border-accent-lime/30 transition-colors">
-              <p className="text-[10px] text-text-muted uppercase tracking-widest font-bold mb-4">Treinos concluídos</p>
-              <div className="flex items-end justify-between">
-                <span className="font-display text-h1 text-text-primary italic leading-none">{totalSessions}</span>
-                <Dumbbell className="text-accent-lime w-6 h-6" />
-              </div>
-              <p className="mt-2 text-text-muted text-[11px]">Sua consistência na musculação constrói o resultado.</p>
-            </div>
-            <div className="ec-card flex-1 rounded-2xl p-6 hover:border-accent-sky/30 transition-colors">
-              <p className="text-[10px] text-text-muted uppercase tracking-widest font-bold mb-4">Adesão à dieta</p>
-              <div className="flex items-end justify-between">
-                <span className="font-display text-h1 text-text-primary italic leading-none">{dietAdherence}%</span>
-                <Utensils className="text-accent-sky w-6 h-6" />
-              </div>
-              <p className="mt-2 text-text-muted text-[11px]">Aderência mostra o quanto você conseguiu seguir o plano. Não precisa ser perfeito, 80% já traz resultado.</p>
-            </div>
-          </div>
+  return (
+    <PageShell wide>
+      {/* Tab pills + period filter */}
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex gap-2">
+          {(['PESO', 'FORÇA', 'MEDIDAS', 'FOTOS'] as EvolutionTab[]).map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              onClick={() => setActiveTab(tab)}
+              className={`rounded-full px-3 py-1.5 font-mono text-xs font-bold uppercase tracking-[0.1em] transition-all ${
+                activeTab === tab
+                  ? 'bg-volt-600 text-white'
+                  : 'border border-white/15 bg-transparent text-text-muted hover:text-white'
+              }`}
+            >
+              {tab}
+            </button>
+          ))}
         </div>
+        <div className="flex items-center gap-2">
+          <FilterChip label="15 dias" isSelected={periodDays === 15} onClick={() => setPeriodDays(15)} />
+          <FilterChip label="30 dias" isSelected={periodDays === 30} onClick={() => setPeriodDays(30)} />
+        </div>
+      </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          
-          {/* LADO ESQUERDO: TIMELINE */}
-          <div className="lg:col-span-5 ec-card rounded-2xl p-8">
-            <h3 className="font-display text-white uppercase text-lg italic font-bold mb-6">Timeline</h3>
-            {timeline.length === 0 ? (
-              <p className="text-sm text-text-muted p-4 border border-white/10 border-dashed rounded-xl text-center">
-                Você ainda não tem registros. Faça treinos ou check-ins para vê-los aqui.
+      {/* Weight delta card — shown on PESO tab */}
+      {activeTab === 'PESO' && !report.body.hasEnoughBodyData === false && typeof report.body.latestWeightKg === 'number' && (
+        <div className="mb-6 rounded-2xl border border-volt-600/25 bg-ink-700 p-4 flex items-center justify-between gap-4">
+          <div>
+            <p className="font-mono text-[10px] text-text-muted tracking-[0.15em] uppercase">Peso · {evolutionPeriodPt(report.periodDays)}</p>
+            <p className="font-display text-3xl font-bold text-white mt-1">{formatWeight(report.body.latestWeightKg)}</p>
+            {typeof report.body.weightDeltaKg === 'number' && (
+              <p className={`font-mono text-sm font-bold mt-1 ${report.body.weightDeltaKg <= 0 ? 'text-lime-ok' : 'text-[#FF3D6E]'}`}>
+                {formatSignedKg(report.body.weightDeltaKg)} desde o início
               </p>
-            ) : (
-              <div className="space-y-6 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-white/10 before:to-transparent">
-                {timeline.map((item, i) => (
-                  <div key={i} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
-                    <div className="flex items-center justify-center w-10 h-10 rounded-full border border-white/20 bg-bg-primary text-text-muted shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
-                      {item.type === 'checkin' && <Activity className="w-4 h-4 text-accent-purple" />}
-                      {item.type === 'workout' && <Dumbbell className="w-4 h-4 text-accent-lime" />}
-                      {item.type === 'diet' && <Utensils className="w-4 h-4 text-accent-sky" />}
-                    </div>
-                    <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-4 rounded-2xl border border-white/5 bg-white/[0.02] shadow">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="font-bold text-white text-sm">{item.title}</span>
-                        <time className="text-[10px] uppercase font-bold text-text-muted">{item.date.toLocaleDateString('pt-BR')}</time>
-                      </div>
-                      <div className="text-xs text-text-secondary">{item.data}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
             )}
           </div>
+          <Button onClick={() => navigate('/app/evolution/checkin')}>Check-in</Button>
+        </div>
+      )}
 
-          {/* LADO DIREITO: FOTOS E MEDIDAS */}
-          <div className="lg:col-span-7 flex flex-col gap-6">
-            <div className="ec-card rounded-2xl p-8">
-              <div className="flex items-center justify-between mb-8">
-                <h3 className="font-display text-white uppercase text-lg italic font-bold">Registro Visual</h3>
+      {activeTab === 'PESO' && (
+      <section className="mb-8 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+        <SectionHeader
+          eyebrow="Sua evolução"
+          title="Sua evolução"
+          description={evolutionPeriodPt(report.periodDays)}
+          tone="violet"
+        />
+        <Button className="sm:w-auto" onClick={() => navigate('/app/evolution/checkin')}>
+          Fazer check-in de evolução
+        </Button>
+      </section>
+      )}
+
+      <section className="grid gap-5 xl:grid-cols-[1.15fr_0.85fr]">
+        <div className="rounded-3xl border border-accent-lime/15 bg-accent-lime/5 p-5 sm:p-6">
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge color={report.consistency.level === 'high' ? 'lime' : report.consistency.level === 'medium' ? 'yellow' : 'red'}>
+              {consistencyLevelPt(report.consistency.level)} consistência
+            </Badge>
+            {report.isPartial && <Badge color="sky">Relatório parcial</Badge>}
+          </div>
+          <h2 className="mt-4 text-2xl font-black uppercase italic text-white">{report.automatedSummary.title}</h2>
+          <p className="mt-3 text-sm leading-relaxed text-text-secondary">{report.automatedSummary.message}</p>
+
+          <div className="mt-5 grid gap-3 sm:grid-cols-3">
+            {report.automatedSummary.bullets.map((bullet) => (
+              <div key={bullet} className="rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-text-secondary">
+                {bullet}
               </div>
-              
-              {!hasPhotos ? (
-                <div className="bg-black/40 border border-white/10 border-dashed rounded-xl p-8 text-center flex flex-col items-center">
-                  <Camera className="w-12 h-12 text-text-muted mb-4 opacity-50" />
-                  <p className="text-white font-bold mb-2">Sem fotos registradas</p>
-                  <p className="text-sm text-text-muted max-w-sm mb-6">Adicione fotos no próximo check-in evolutivo para comparar sua evolução ao longo do tempo.</p>
-                  <Button variant="ghost" className="border-subtle" onClick={() => navigate('/app/evolution/checkin')}>Adicionar Fotos</Button>
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 gap-4 h-64 relative group">
-                  <div className="relative overflow-hidden rounded-xl border border-subtle">
-                    <img 
-                      src={bodyCheckins[1]?.photoUrls?.front || bodyCheckins[0]?.photoUrls?.front || "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=400"} 
-                      alt="Foto de evolução anterior" 
-                      className="w-full h-full object-cover grayscale opacity-60" 
-                    />
-                    <div className="absolute bottom-4 left-4 bg-black/60 backdrop-blur-md px-2 py-1 rounded text-[10px] font-bold uppercase tracking-widest text-white/70">
-                      {bodyCheckins[1]?.date ? new Date(bodyCheckins[1].date).toLocaleDateString('pt-BR') : 'Anterior'}
-                    </div>
-                  </div>
-                  <div className="relative overflow-hidden rounded-xl border border-accent-lime/30 shadow-[0_0_20px_rgba(183,255,60,0.1)]">
-                    <img 
-                      src={bodyCheckins[0]?.photoUrls?.front || "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=400"} 
-                      alt="Foto de evolução atual" 
-                      className="w-full h-full object-cover" 
-                    />
-                    <div className="absolute bottom-4 right-4 bg-accent-lime px-2 py-1 rounded text-[10px] font-black uppercase tracking-widest text-bg-primary">
-                      {bodyCheckins[0]?.date ? new Date(bodyCheckins[0].date).toLocaleDateString('pt-BR') : 'Atual'}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="ec-card rounded-2xl p-8">
-              <h3 className="font-display text-white uppercase text-lg italic font-bold mb-6">Métricas Corporais</h3>
-              <div className="space-y-6">
-                <MeasurementRow icon={<Ruler className="w-5 h-5" />} label="Cintura" value={bodyCheckins[0]?.measurements?.waistCm ? `${bodyCheckins[0].measurements.waistCm} cm` : weeklyHistory[0]?.waistCm ? `${weeklyHistory[0].waistCm} cm` : '--'} delta="" />
-                <MeasurementRow icon={<Dumbbell className="w-5 h-5" />} label="Braço" value={bodyCheckins[0]?.measurements?.armCm ? `${bodyCheckins[0].measurements.armCm} cm` : '--'} delta="" />
-                <MeasurementRow icon={<Accessibility className="w-5 h-5" />} label="Abdômen" value={bodyCheckins[0]?.measurements?.abdomenCm ? `${bodyCheckins[0].measurements.abdomenCm} cm` : '--'} delta="" />
-                <MeasurementRow icon={<Accessibility className="w-5 h-5" />} label="Quadril" value={bodyCheckins[0]?.measurements?.hipsCm ? `${bodyCheckins[0].measurements.hipsCm} cm` : '--'} delta="" />
-              </div>
-            </div>
-
+            ))}
           </div>
         </div>
-      </PageShell>
+
+        <div className="rounded-3xl border border-white/10 bg-[#0b111c] p-5 sm:p-6">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-sm font-bold uppercase tracking-[0.18em] text-ec-violet">Consistência</p>
+              <h2 className="mt-2 text-4xl font-black text-white">{report.consistency.score}</h2>
+            </div>
+            <div className="rounded-2xl bg-ec-violet/10 p-3 text-ec-violet">
+              <TrendingUp className="h-5 w-5" />
+            </div>
+          </div>
+
+          <p className="mt-3 text-sm text-text-secondary">{report.consistency.label}</p>
+          <div className="mt-4">
+            <ProgressBar value={report.consistency.score} max={100} color="violet" height={12} />
+          </div>
+
+          <div className="mt-5 space-y-2">
+            {report.consistency.reasons.map((reason) => (
+              <p key={reason} className="text-sm text-text-secondary">
+                {reason}
+              </p>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="mt-5 grid gap-5 lg:grid-cols-2">
+        <ReportCard
+          eyebrow="Corpo"
+          title={bodyEmpty ? 'Dados corporais iniciais' : 'Comparativo corporal'}
+          description={bodyEmpty
+            ? 'Ainda precisamos de pelo menos dois check-ins de evolução para comparar seu progresso corporal.'
+            : 'Use peso, fotos e medidas como comparação do ciclo, sem inventar interpretação além dos dados reais.'}
+          icon={<Scale className="h-5 w-5" />}
+        >
+          <div className="grid gap-4 sm:grid-cols-2">
+            <MetricBox label="Peso atual" value={formatWeight(report.body.latestWeightKg)} />
+            <MetricBox label="Peso anterior" value={formatWeight(report.body.previousWeightKg)} />
+            <MetricBox label="Diferença de peso" value={formatSignedKg(report.body.weightDeltaKg)} />
+            <MetricBox label="Gordura corporal" value={formatPercent(report.body.latestBodyFatPct)} />
+          </div>
+          <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-text-secondary">
+            {bodyEmpty
+              ? 'Seu próximo passo aqui é registrar mais um check-in de evolução com peso e, se possível, fotos.'
+              : typeof report.body.weightDeltaKg === 'number'
+                ? `Seu peso mudou ${formatSignedKg(report.body.weightDeltaKg)} desde o último registro.`
+                : 'Seu comparativo corporal já está ativo, mas ainda faltam mais pontos para ampliar a leitura.'}
+          </div>
+        </ReportCard>
+
+        <ReportCard
+          eyebrow="Treino"
+          title="Treinos concluídos"
+          description="Sessões completas, volume acumulado e highlights reais de progressão registrados no período."
+          icon={<Dumbbell className="h-5 w-5" />}
+        >
+          <div className="grid gap-4 sm:grid-cols-3">
+            <MetricBox label="Sessões" value={String(report.training.completedSessions)} />
+            <MetricBox label="Volume total" value={`${report.training.totalTonnage.toLocaleString('pt-BR')} kg`} />
+            <MetricBox label="Último treino" value={formatDate(report.training.lastWorkoutAt)} />
+          </div>
+
+          <div className="mt-4 space-y-3">
+            {report.training.bestHighlights.length > 0 ? report.training.bestHighlights.map((highlight) => (
+              <div key={`${highlight.exerciseName}-${highlight.metric}`} className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                <p className="text-sm font-bold text-white">{highlight.exerciseName}</p>
+                <p className="mt-1 text-sm text-text-secondary">{highlight.metric}</p>
+                <p className="mt-2 text-base font-black text-accent-lime">{highlight.value}</p>
+              </div>
+            )) : (
+              <EmptyBox message="Conclua treinos e registre suas cargas para liberar highlights reais de progressão." />
+            )}
+          </div>
+        </ReportCard>
+      </section>
+
+      <section className="mt-5 grid gap-5 lg:grid-cols-3">
+        <ReportCard
+          eyebrow="Dieta"
+          title="Aderência alimentar"
+          description="Dias registrados e média de aderência com base nas refeições ou itens realmente marcados."
+          icon={<Utensils className="h-5 w-5" />}
+        >
+          <div className="grid gap-4">
+            <MetricBox label="Dias registrados" value={`${report.diet.loggedDays}/${report.periodDays}`} />
+            <MetricBox label="Média de aderência" value={`${report.diet.averageAdherencePct}%`} />
+            <MetricBox label="Melhor dia" value={typeof report.diet.bestDayPct === 'number' ? `${report.diet.bestDayPct}%` : 'Sem dado real'} />
+          </div>
+        </ReportCard>
+
+        <ReportCard
+          eyebrow="Água"
+          title="Hidratação"
+          description="Média diária de consumo e percentual da meta considerando os dias realmente registrados."
+          icon={<Droplets className="h-5 w-5" />}
+        >
+          <div className="grid gap-4">
+            <MetricBox label="Média da meta" value={`${report.hydration.averagePct}%`} />
+            <MetricBox label="Média em ml" value={typeof report.hydration.averageMl === 'number' ? `${report.hydration.averageMl.toLocaleString('pt-BR')} ml` : 'Sem dado real'} />
+            <MetricBox label="Meta usada" value={typeof report.hydration.goalMl === 'number' ? `${report.hydration.goalMl.toLocaleString('pt-BR')} ml` : 'Sem dado real'} />
+          </div>
+        </ReportCard>
+
+        <ReportCard
+          eyebrow="Check-ins"
+          title="Ritmo de registros"
+          description="Check-ins diários e quinzenais usados para acompanhar energia, humor e consistência do ciclo."
+          icon={<HeartPulse className="h-5 w-5" />}
+        >
+          <div className="grid gap-4">
+            <MetricBox label="Diários" value={`${report.checkins.dailyCompleted}/${report.checkins.dailyExpected}`} />
+            <MetricBox label="Quinzenais" value={String(report.checkins.weeklyCompleted)} />
+            <MetricBox label="Último humor" value={report.checkins.latestMood || 'Sem dado real'} />
+            <MetricBox label="Última energia" value={report.checkins.latestEnergy || 'Sem dado real'} />
+          </div>
+        </ReportCard>
+      </section>
+
+      <section className="mt-5 grid gap-5 lg:grid-cols-[0.95fr_1.05fr]">
+        <ReportCard
+          eyebrow="Registro visual"
+          title="Fotos recentes"
+          description="Sem foto fake: só aparecem imagens reais do seu check-in de evolução mais recente."
+          icon={<Camera className="h-5 w-5" />}
+        >
+          {hasPhotos ? (
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {(report.body.latestPhotos || []).map((photo) => (
+                <div key={`${photo.type || 'other'}-${photo.url}`} className="overflow-hidden rounded-2xl border border-white/10 bg-black/20">
+                  <img src={photo.url} alt={`Foto ${photo.type || 'evolução'}`} className="h-36 w-full object-cover" />
+                  <div className="p-3">
+                    <p className="text-sm font-bold text-white">{photo.type === 'front' ? 'Frente' : photo.type === 'side' ? 'Lado' : photo.type === 'back' ? 'Costas' : 'Extra'}</p>
+                    <p className="mt-1 text-sm text-text-secondary">{formatDate(photo.createdAt)}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <EmptyBox message="Ainda não há fotos de evolução registradas. Adicione fotos no próximo check-in para enriquecer o comparativo." />
+          )}
+        </ReportCard>
+
+        <ReportCard
+          eyebrow="Próximo passo"
+          title="O que vale fazer agora"
+          description="O relatório não vira chat. Ele aponta a próxima ação prática para manter a rotina andando."
+          icon={<Target className="h-5 w-5" />}
+        >
+          <div className="grid gap-3">
+            <NextStep
+              icon={<CalendarClock className="h-4 w-4" />}
+              title="Atualizar evolução"
+              description="Enviar peso e fotos quando a janela de check-in estiver disponível."
+            />
+            <NextStep
+              icon={<Activity className="h-4 w-4" />}
+              title="Registrar check-in diário"
+              description="Manter humor, energia e consistência vivos no ciclo."
+            />
+            <NextStep
+              icon={<Droplets className="h-4 w-4" />}
+              title="Bater sua meta de água"
+              description="Melhorar leitura do ciclo sem depender de interpretação manual."
+            />
+          </div>
+
+          <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+            <Button className="sm:w-auto" onClick={() => navigate(primaryCtaTo)}>
+              {primaryCtaLabel}
+            </Button>
+            <Button variant="ghost" className="sm:w-auto" onClick={() => navigate('/app/today')}>
+              Continuar plano
+            </Button>
+          </div>
+        </ReportCard>
+      </section>
+
+      {report.warnings && report.warnings.length > 0 && (
+        <section className="mt-5 rounded-3xl border border-white/10 bg-[#0b111c] p-5 sm:p-6">
+          <p className="text-sm font-bold uppercase tracking-[0.18em] text-accent-yellow">Limitações do relatório</p>
+          <div className="mt-4 grid gap-3">
+            {report.warnings.map((warning) => (
+              <div key={warning} className="rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-text-secondary">
+                {warning}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+    </PageShell>
   )
 }
 
-function MeasurementRow({ icon, label, value, delta, isDown }: any) {
+function ReportCard({
+  eyebrow,
+  title,
+  description,
+  icon,
+  children,
+}: {
+  eyebrow: string
+  title: string
+  description: string
+  icon: React.ReactNode
+  children: React.ReactNode
+}) {
   return (
-    <div className="flex items-center justify-between border-b border-white/5 pb-4 last:border-0 last:pb-0">
-      <div className="flex items-center gap-4">
-        <div className="text-text-muted/30">{icon}</div>
-        <span className="font-body-md text-text-primary/80 font-medium">{label}</span>
+    <section className="rounded-3xl border border-white/10 bg-[#0b111c] p-5 sm:p-6">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-sm font-bold uppercase tracking-[0.18em] text-white/60">{eyebrow}</p>
+          <h2 className="mt-2 text-2xl font-black uppercase italic text-white">{title}</h2>
+        </div>
+        <div className="rounded-2xl bg-white/5 p-3 text-ec-violet">{icon}</div>
       </div>
-      <div className="text-right">
-        <p className="font-display font-bold text-text-primary text-sm">{value}</p>
-        <p className={`text-[10px] font-bold ${isDown ? 'text-red-400' : 'text-accent-lime'}`}>{delta}</p>
+      <p className="mt-4 text-sm leading-relaxed text-text-secondary">{description}</p>
+      <div className="mt-5">{children}</div>
+    </section>
+  )
+}
+
+function MetricBox({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+      <p className="text-sm font-semibold text-text-secondary">{label}</p>
+      <p className="mt-2 text-lg font-black text-white">{value}</p>
+    </div>
+  )
+}
+
+function EmptyBox({ message }: { message: string }) {
+  return (
+    <div className="rounded-2xl border border-dashed border-white/10 bg-black/20 p-5 text-sm leading-relaxed text-text-secondary">
+      {message}
+    </div>
+  )
+}
+
+function NextStep({
+  icon,
+  title,
+  description,
+}: {
+  icon: React.ReactNode
+  title: string
+  description: string
+}) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+      <div className="flex items-center gap-3 text-white">
+        <span className="rounded-xl bg-white/5 p-2 text-ec-violet">{icon}</span>
+        <p className="text-base font-bold">{title}</p>
       </div>
+      <p className="mt-3 text-sm text-text-secondary">{description}</p>
     </div>
   )
 }

@@ -1,9 +1,13 @@
 import { doc, getDoc, setDoc } from 'firebase/firestore'
 import { db } from '../lib/firebase/firebase'
-import { nowTimestamp, toFirestoreDate } from '../lib/firebase/date'
+import { FirestoreDateInput, nowTimestamp, toFirestoreDate } from '../lib/firebase/date'
 import { COLLECTIONS, SUB_COLLECTIONS, getSubCollectionPath } from '../lib/firebase/paths'
 import type { DietDay, DietDayMealLog, Diet } from '../types/domain'
 import { challengeScoringService } from './challengeScoringService'
+
+function resolveFirestoreTimestamp(value: FirestoreDateInput) {
+  return toFirestoreDate(value) ?? nowTimestamp()
+}
 
 export const dietDayService = {
   async getToday(uid: string, dateKey: string): Promise<DietDay | null> {
@@ -18,7 +22,7 @@ export const dietDayService = {
     const docRef = doc(db, path, dietDay.dateKey)
     await setDoc(docRef, {
       ...dietDay,
-      createdAt: toFirestoreDate(dietDay.createdAt as any) ?? nowTimestamp(),
+      createdAt: resolveFirestoreTimestamp(dietDay.createdAt),
       updatedAt: nowTimestamp(),
     }, { merge: true })
 
@@ -69,9 +73,15 @@ export const dietDayService = {
       completedMealsCount: 0,
       completedItemsCount: 0,
       totalItemsCount: totalItems,
-      createdAt: nowTimestamp() as any,
-      updatedAt: nowTimestamp() as any,
+      createdAt: nowTimestamp(),
+      updatedAt: nowTimestamp(),
     }
+  },
+
+  needsRebuild(day: DietDay, diet: Diet): boolean {
+    if (day.dietId !== diet.id) return true
+    if (!Array.isArray(day.meals)) return true
+    return false
   },
 
   /** Recalculate consumed macros and adherence from meal logs */

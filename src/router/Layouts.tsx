@@ -6,19 +6,28 @@ export function AdminLayout() {
   
   // Map paths to active states
   const pathMap: Record<string, any> = {
-    '/admin/dashboard': 'Visão geral',
-    '/admin/users': 'Usuários',
-    '/admin/subscriptions': 'Assinaturas',
-    '/admin/affiliates': 'Influencers',
-    '/admin/financeiro': 'Financeiro',
+    '/admin/dashboard': 'Dashboard',
+    '/admin/users': 'Alunos',
+    '/admin/checkins': 'Check-ins',
+    '/admin/workouts': 'Treinos',
+    '/admin/diets': 'Dietas',
+    '/admin/presets': 'Presets',
     '/admin/content': 'Conteúdo',
+    '/admin/challenges': 'Desafios',
+    '/admin/subscriptions': 'Assinaturas',
+    '/admin/produtos': 'Produtos',
+    '/admin/affiliates': 'Afiliados',
+    '/admin/influencers-v2': 'Influenciadores',
+    '/admin/payouts-v2': 'Saques',
+    '/admin/store': 'Loja',
+    '/admin/economia': 'Economia',
+    '/admin/auditoria': 'Auditoria',
+    '/admin/financeiro': 'Financeiro',
     '/admin/support': 'Suporte',
-    '/admin/metrics': 'Métricas SaaS',
-    '/admin/settings': 'Configurações',
-    '/admin/workspaces': 'Workspaces'
+    '/admin/settings': 'Configurações'
   }
 
-  const active = pathMap[location.pathname] || 'Visão geral'
+  const active = pathMap[location.pathname] || 'Dashboard'
   
   return (
     <ExpertClubDesktopShell 

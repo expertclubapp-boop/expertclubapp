@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { safeDateKey } from '../lib/firebase/date'
 import { checkinService } from '../services/checkinService'
 import { workoutSessionService } from '../services/workoutSessionService'
 import { hydrationService } from '../services/hydrationService'
@@ -27,7 +28,7 @@ export function useProgress(uid: string | undefined) {
         const recentDateKeys = Array.from({ length: 14 }).map((_, index) => {
           const d = new Date(today)
           d.setDate(today.getDate() - index)
-          return d.toISOString().split('T')[0]
+          return safeDateKey(d)
         })
 
         const [weekly, daily, sessions, hydration, body, dietHistory] = await Promise.all([

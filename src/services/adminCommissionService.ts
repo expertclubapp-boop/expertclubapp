@@ -1,5 +1,6 @@
 import { collection, doc, getDoc, getDocs, increment, orderBy, query, runTransaction, updateDoc } from 'firebase/firestore'
 import { db } from '../lib/firebase/firebase'
+import { normalizeFirestoreWriteData, nowTimestamp } from '../lib/firebase/date'
 import { COLLECTIONS } from '../lib/firebase/paths'
 import type { AffiliatePayout, CommissionEntry } from '../types/domain'
 import { adminAuditLogService, type AdminActor } from './adminAuditLogService'
@@ -16,7 +17,7 @@ export const adminCommissionService = {
   },
 
   async updateCommissionStatus(actor: AdminActor, id: string, status: CommissionEntry['status']) {
-    await updateDoc(doc(db, COLLECTIONS.COMMISSION_LEDGER, id), { status, updatedAt: new Date().toISOString() })
+    await updateDoc(doc(db, COLLECTIONS.COMMISSION_LEDGER, id), normalizeFirestoreWriteData({ status, updatedAt: nowTimestamp() }))
     await adminAuditLogService.create(actor, 'alterar_comissao', 'commission', id, null, { status })
   },
 
@@ -45,6 +46,7 @@ export const adminCommissionService = {
 
       amount = entries.reduce((sum, entry) => sum + entry.commissionAmount, 0)
       if (amount <= 0) throw new Error('O valor do payout precisa ser maior que zero.')
+      const now = nowTimestamp()
 
       transaction.set(payoutRef, {
         id: payoutId,
@@ -54,13 +56,13 @@ export const adminCommissionService = {
         status: 'pending',
         ledgerEntryIds,
         payoutMethod: 'manual',
-        createdAt: new Date().toISOString(),
+        createdAt: now,
       })
-      ledgerRefs.forEach(ref => transaction.update(ref, { status: 'paid', paidAt: new Date().toISOString() }))
+      ledgerRefs.forEach(ref => transaction.update(ref, normalizeFirestoreWriteData({ status: 'paid', paidAt: now })))
       transaction.update(affiliateRef, {
         totalCommissionPaid: increment(amount),
         pendingCommission: increment(-amount),
-        updatedAt: new Date().toISOString(),
+        updatedAt: now,
       })
     })
 

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '../contexts/AuthContext'
+import { safeDateKey } from '../lib/firebase/date'
 import { dietDayService } from '../services/dietDayService'
 import { useDiet } from './useDiets'
 import { useProfile } from './useProfile'
@@ -12,19 +13,27 @@ export function useDietDay() {
   const [dietDay, setDietDay] = useState<DietDay | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
-  const dateKey = new Date().toISOString().split('T')[0]
+  const dateKey = safeDateKey()
 
   useEffect(() => {
+    setIsLoading(true)
+
     if (!firebaseUser || !diet) {
+      setDietDay(null)
       setIsLoading(false)
       return
     }
 
     async function load() {
+      const activeDiet = diet
+      if (!activeDiet) {
+        setDietDay(null)
+        return
+      }
       try {
         let existing = await dietDayService.getToday(firebaseUser!.uid, dateKey)
-        if (!existing) {
-          existing = dietDayService.buildFromDiet(firebaseUser!.uid, diet!, dateKey)
+        if (!existing || dietDayService.needsRebuild(existing, activeDiet)) {
+          existing = dietDayService.buildFromDiet(firebaseUser!.uid, activeDiet, dateKey)
           await dietDayService.saveDay(firebaseUser!.uid, existing)
         }
         setDietDay(existing)

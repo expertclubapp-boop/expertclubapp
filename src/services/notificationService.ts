@@ -1,5 +1,6 @@
 import { collection, doc, setDoc, getDocs, updateDoc, query, orderBy, limit, where, writeBatch } from 'firebase/firestore'
 import { db } from '../lib/firebase/firebase'
+import { normalizeFirestoreWriteData, nowTimestamp } from '../lib/firebase/date'
 import type { Notification } from '../types/domain'
 
 export const notificationService = {
@@ -7,14 +8,7 @@ export const notificationService = {
     const colRef = collection(db, `users/${uid}/notifications`)
     const q = query(colRef, orderBy('createdAt', 'desc'), limit(limitCount))
     const snap = await getDocs(q)
-    return snap.docs.map(d => {
-      const data = d.data()
-      return {
-        ...data,
-        id: d.id,
-        createdAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : data.createdAt
-      } as Notification
-    })
+    return snap.docs.map(d => ({ ...d.data(), id: d.id }) as Notification)
   },
 
   async markAsRead(uid: string, notificationId: string): Promise<void> {
@@ -40,13 +34,13 @@ export const notificationService = {
   async sendNotification(uid: string, notification: Omit<Notification, 'id' | 'uid' | 'createdAt' | 'isRead'>): Promise<void> {
     const colRef = collection(db, `users/${uid}/notifications`)
     const docRef = doc(colRef)
-    const newNotif: Notification = {
+    const newNotif = {
       ...notification,
       id: docRef.id,
       uid,
       isRead: false,
-      createdAt: new Date().toISOString()
+      createdAt: nowTimestamp()
     }
-    await setDoc(docRef, newNotif)
+    await setDoc(docRef, normalizeFirestoreWriteData(newNotif))
   }
 }

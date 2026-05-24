@@ -87,7 +87,7 @@ Regras:
 
 Enquanto o backfill `--apply` nao for executado, documentos legados em ISO string podem continuar existindo. O codigo novo escreve Timestamp e le legado com seguranca, mas a limpeza completa do dataset depende de apply controlado.
 
-## Dry-run em 2026-05-07
+## Dry-run em 2026-05-10
 
 Comando:
 
@@ -99,12 +99,12 @@ Resultado:
 
 | Item | Resultado |
 |---|---|
-| Documentos escaneados | 52 |
+| Documentos escaneados | 59 |
 | Documentos que seriam atualizados | 41 |
 | Documentos atualizados | 0 |
-| Campos ja Timestamp | 49 |
-| Campos ausentes | 68 |
-| Campos invalidos | 0 |
+| Campos já Timestamp | 80 |
+| Campos ausentes | 72 |
+| Campos inválidos | 0 |
 
 O dry-run confirmou dados legados em `workoutSessions`, `dietDays`, `dailyCheckins`, `bodyCheckins`, `hydrationDays`, `users` e `subscriptions`.
 

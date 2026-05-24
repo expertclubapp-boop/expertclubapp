@@ -227,10 +227,156 @@ async function seedCatalog() {
     id: 'qa-diet',
     title: 'Dieta QA Base',
     objective: 'hypertrophy',
-    totalKcal: 2200,
-    macros: { carbs: 220, protein: 170, fat: 70 },
+    goal: 'hypertrophy',
+    style: 'simple',
+    level: 'intermediate',
+    calories: 2200,
+    protein: 170,
+    carbs: 220,
+    fat: 70,
+    mealsPerDay: 4,
+    tags: ['qa', 'hipertrofia'],
     status: 'published',
-    meals: [],
+    version: 1,
+    isCurrentVersion: true,
+    meals: [
+      {
+        id: 'meal-1',
+        name: 'Café da Manhã',
+        timeSuggestion: '08:00',
+        order: 1,
+        items: [
+          {
+            id: 'item-1-1',
+            foodId: 'food-ovos',
+            foodName: 'Ovos inteiros',
+            quantity: 3,
+            unit: 'un',
+            macros: { calories: 210, protein: 18, carbs: 1, fat: 15 }
+          },
+          {
+            id: 'item-1-2',
+            foodId: 'food-banana',
+            foodName: 'Banana prata',
+            quantity: 100,
+            unit: 'g',
+            macros: { calories: 89, protein: 1, carbs: 23, fat: 0 }
+          },
+          {
+            id: 'item-1-3',
+            foodId: 'food-aveia',
+            foodName: 'Aveia em flocos',
+            quantity: 30,
+            unit: 'g',
+            macros: { calories: 114, protein: 4, carbs: 17, fat: 2 }
+          }
+        ]
+      },
+      {
+        id: 'meal-2',
+        name: 'Almoço',
+        timeSuggestion: '13:00',
+        order: 2,
+        items: [
+          {
+            id: 'item-2-1',
+            foodId: 'food-arroz',
+            foodName: 'Arroz branco cozido',
+            quantity: 150,
+            unit: 'g',
+            macros: { calories: 195, protein: 4, carbs: 42, fat: 0 }
+          },
+          {
+            id: 'item-2-2',
+            foodId: 'food-frango',
+            foodName: 'Peito de frango grelhado',
+            quantity: 120,
+            unit: 'g',
+            macros: { calories: 190, protein: 36, carbs: 0, fat: 4 }
+          },
+          {
+            id: 'item-2-3',
+            foodId: 'food-feijao',
+            foodName: 'Feijão carioca',
+            quantity: 100,
+            unit: 'g',
+            macros: { calories: 76, protein: 5, carbs: 14, fat: 0 }
+          },
+          {
+            id: 'item-2-4',
+            foodId: 'food-salada',
+            foodName: 'Salada verde',
+            quantity: 1,
+            unit: 'porção',
+            macros: { calories: 20, protein: 1, carbs: 3, fat: 0 }
+          }
+        ]
+      },
+      {
+        id: 'meal-3',
+        name: 'Lanche',
+        timeSuggestion: '16:30',
+        order: 3,
+        items: [
+          {
+            id: 'item-3-1',
+            foodId: 'food-iogurte',
+            foodName: 'Iogurte natural desnatado',
+            quantity: 170,
+            unit: 'g',
+            macros: { calories: 70, protein: 7, carbs: 10, fat: 0 }
+          },
+          {
+            id: 'item-3-2',
+            foodId: 'food-whey',
+            foodName: 'Whey Protein Isolado',
+            quantity: 30,
+            unit: 'g',
+            macros: { calories: 110, protein: 26, carbs: 1, fat: 0 }
+          },
+          {
+            id: 'item-3-3',
+            foodId: 'food-fruta',
+            foodName: 'Maçã',
+            quantity: 150,
+            unit: 'g',
+            macros: { calories: 78, protein: 0, carbs: 21, fat: 0 }
+          }
+        ]
+      },
+      {
+        id: 'meal-4',
+        name: 'Jantar',
+        timeSuggestion: '20:30',
+        order: 4,
+        items: [
+          {
+            id: 'item-4-1',
+            foodId: 'food-carne',
+            foodName: 'Carne moída (patinho)',
+            quantity: 120,
+            unit: 'g',
+            macros: { calories: 260, protein: 34, carbs: 0, fat: 12 }
+          },
+          {
+            id: 'item-4-2',
+            foodId: 'food-batata',
+            foodName: 'Batata inglesa cozida',
+            quantity: 200,
+            unit: 'g',
+            macros: { calories: 170, protein: 4, carbs: 38, fat: 0 }
+          },
+          {
+            id: 'item-4-3',
+            foodId: 'food-legumes',
+            foodName: 'Legumes variados no vapor',
+            quantity: 150,
+            unit: 'g',
+            macros: { calories: 50, protein: 2, carbs: 10, fat: 0 }
+          }
+        ]
+      }
+    ],
     createdAt: nowTimestamp(),
     updatedAt: nowTimestamp(),
   }, { merge: true })

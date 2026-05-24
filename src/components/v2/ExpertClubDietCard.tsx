@@ -16,7 +16,7 @@ export function ExpertClubDietCard({
     >
       <div className="flex justify-between items-start mb-6">
         <V2IconBubble icon={Utensils} tone="violet" size={16} />
-        <V2Badge tone="violet" className="uppercase font-black text-[9px]">{diet.goal || 'Performance'}</V2Badge>
+        <V2Badge tone="violet" className="px-2.5 py-1 text-xs font-black uppercase">{diet.goal || 'Performance'}</V2Badge>
       </div>
 
       <h3 className="text-xl font-black italic text-white uppercase mb-2 group-hover:text-ec-violet transition-colors">
@@ -27,11 +27,11 @@ export function ExpertClubDietCard({
       <div className="flex items-center gap-4 text-text-muted border-t border-white/5 pt-4 mt-auto">
         <div className="flex items-center gap-1.5">
           <Flame size={14} className="text-ec-violet" />
-          <span className="text-[10px] font-bold uppercase tracking-widest">{diet.calories} KCAL</span>
+          <span className="text-xs font-bold uppercase tracking-widest text-white">{diet.calories} KCAL</span>
         </div>
         <div className="flex items-center gap-1.5 border-l border-white/5 pl-4">
           <Clock size={14} className="text-ec-violet" />
-          <span className="text-[10px] font-bold uppercase tracking-widest">{diet.meals?.length || diet.mealsPerDay || 0} REFEIÇÕES</span>
+          <span className="text-xs font-bold uppercase tracking-widest text-white">{diet.meals?.length || diet.mealsPerDay || 0} REFEIÇÕES</span>
         </div>
         <div className="ml-auto text-ec-violet group-hover:translate-x-1 transition-transform">
           <ChevronRight size={20} />

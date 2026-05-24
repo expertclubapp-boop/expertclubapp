@@ -1,307 +1,320 @@
-import { 
-  User as UserIcon, Star, TrendingUp, Trophy, Award, Target, Dumbbell, 
-  Utensils, Droplets, Calendar, Ruler, Weight, MapPin,
-  Bell, HelpCircle, Headphones, CreditCard,
-  LogOut, ChevronRight, Edit3, ShieldCheck
+import { useMemo, useState } from 'react'
+import { motion } from 'framer-motion'
+import {
+  Bell,
+  Camera,
+  ChevronRight,
+  CreditCard,
+  Droplets,
+  Dumbbell,
+  Edit3,
+  Flame,
+  LogOut,
+  MessageSquare,
+  Settings,
+  Target,
+  TrendingUp,
+  Trophy,
+  Utensils,
+  UserRound,
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { Badge } from '../../components/ui/Badge'
+import { PageShell } from '../../components/ui/Premium'
+import { Button as UIButton } from '../../components/ui/Button'
+import { FormInput } from '../../components/ui/FormInput'
 import { useAuth } from '../../contexts/AuthContext'
+import { useDiet } from '../../hooks/useDiets'
 import { useProfile } from '../../hooks/useProfile'
 import { useSubscription } from '../../hooks/useSubscription'
 import { useWorkout } from '../../hooks/useWorkouts'
-import { useDiet } from '../../hooks/useDiets'
-import { PageShell } from '../../components/ui/Premium'
 import { profileService } from '../../services/profileService'
-import { FormInput } from '../../components/ui/FormInput'
-import { Button as UIButton } from '../../components/ui/Button'
-import { useState } from 'react'
-import { motion } from 'framer-motion'
+import { dietPreferencePt, formatDaysPerWeek, goalPt, levelPt, sexPt, trainingLocationPt } from '../../utils/labels'
+
+type ProfileForm = {
+  weightKg: string
+  goal: string
+  trainingFrequency: string
+  trainingLevel: string
+  trainingLocation: string
+  dietPreference: string
+  waterGoalMl: string
+}
 
 export function ProfileSettingsScreen() {
   const navigate = useNavigate()
-  const { user: authUser, logout } = useAuth()
+  const { firebaseUser, logout } = useAuth()
   const { profile } = useProfile()
   const { subscription } = useSubscription()
   const { workout } = useWorkout(profile?.selectedWorkoutId)
   const { diet } = useDiet(profile?.selectedDietId)
-
   const [isEditing, setIsEditing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
-  const [profileFeedback, setProfileFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
-  const [isConfirmingLogout, setIsConfirmingLogout] = useState(false)
-  const [formData, setFormData] = useState({
-    displayName: authUser?.displayName || '',
-    weight: profile?.weight || 0,
-    height: profile?.height || 0,
+  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
+  const [form, setForm] = useState<ProfileForm>({
+    weightKg: profile?.weightKg ? String(profile.weightKg) : profile?.weight ? String(profile.weight) : '',
     goal: profile?.goal || 'hypertrophy',
-    photoURL: authUser?.photoURL || ''
+    trainingFrequency: profile?.trainingFrequency ? String(profile.trainingFrequency) : '3',
+    trainingLevel: profile?.trainingLevel || profile?.experienceLevel || 'beginner',
+    trainingLocation: profile?.trainingLocation || 'gym',
+    dietPreference: profile?.dietPreference || 'flexible',
+    waterGoalMl: profile?.waterGoalMl ? String(profile.waterGoalMl) : '2500',
   })
 
-  const handleLogout = () => {
-    if (!isConfirmingLogout) {
-      setIsConfirmingLogout(true)
-      return
-    }
-    logout()
+  const onboardingSummary = useMemo(
+    () => [
+      { label: 'Sexo', value: sexPt(profile?.sex) },
+      { label: 'Objetivo', value: goalPt(profile?.goal) },
+      { label: 'Frequência', value: formatDaysPerWeek(profile?.trainingFrequency) },
+      { label: 'Nível', value: levelPt(profile?.trainingLevel || profile?.experienceLevel) },
+      { label: 'Local', value: trainingLocationPt(profile?.trainingLocation) },
+      { label: 'Preferência alimentar', value: dietPreferencePt(profile?.dietPreference) },
+      { label: 'Meta de água', value: profile?.waterGoalMl ? `${(profile.waterGoalMl / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} L/dia` : '-' },
+    ],
+    [profile]
+  )
+
+  function openEditor() {
+    setForm({
+      weightKg: profile?.weightKg ? String(profile.weightKg) : profile?.weight ? String(profile.weight) : '',
+      goal: profile?.goal || 'hypertrophy',
+      trainingFrequency: profile?.trainingFrequency ? String(profile.trainingFrequency) : '3',
+      trainingLevel: profile?.trainingLevel || profile?.experienceLevel || 'beginner',
+      trainingLocation: profile?.trainingLocation || 'gym',
+      dietPreference: profile?.dietPreference || 'flexible',
+      waterGoalMl: profile?.waterGoalMl ? String(profile.waterGoalMl) : '2500',
+    })
+    setFeedback(null)
+    setIsEditing(true)
   }
 
-  const handleSave = async () => {
-    if (!authUser) return
+  async function handleSave() {
+    if (!firebaseUser) return
+
+    const weightKg = Number(form.weightKg.replace(',', '.'))
+    const trainingFrequency = Number(form.trainingFrequency)
+    const waterGoalMl = Number(form.waterGoalMl.replace(',', '.'))
+
+    if (!Number.isFinite(weightKg) || weightKg <= 0) {
+      setFeedback({ type: 'error', message: 'Informe um peso válido.' })
+      return
+    }
+    if (![3, 4, 5, 6].includes(trainingFrequency)) {
+      setFeedback({ type: 'error', message: 'Escolha uma frequência de treino válida.' })
+      return
+    }
+    if (!Number.isFinite(waterGoalMl) || waterGoalMl <= 0) {
+      setFeedback({ type: 'error', message: 'Informe uma meta de água válida.' })
+      return
+    }
+
     setIsSaving(true)
-    setProfileFeedback(null)
+    setFeedback(null)
+
     try {
-      await profileService.updateProfile(authUser.uid, {
-        weight: Number(formData.weight),
-        height: Number(formData.height),
-        goal: formData.goal as any
+      await profileService.updateProfile(firebaseUser.uid, {
+        weightKg,
+        goal: form.goal as 'hypertrophy' | 'fat_loss' | 'maintenance' | 'performance',
+        trainingFrequency,
+        trainingLevel: form.trainingLevel as 'beginner' | 'intermediate' | 'advanced',
+        trainingLocation: form.trainingLocation as 'gym' | 'home' | 'mixed',
+        dietPreference: form.dietPreference as 'flexible' | 'economic' | 'low_carb' | 'vegetarian' | 'carnivore',
+        waterGoalMl,
+        recommendationsNeedRefresh: true,
       })
       setIsEditing(false)
-      setProfileFeedback({ type: 'success', message: 'Perfil atualizado com sucesso.' })
+      setFeedback({ type: 'success', message: 'Preferências atualizadas. Vamos usar isso nas próximas recomendações.' })
     } catch (error) {
-      console.error(error)
-      setProfileFeedback({ type: 'error', message: 'Erro ao salvar perfil. Revise os dados e tente novamente.' })
+      setFeedback({ type: 'error', message: error instanceof Error ? error.message : 'Não foi possível salvar suas preferências agora.' })
     } finally {
       setIsSaving(false)
     }
   }
 
   return (
-    <PageShell className="!max-w-[520px] pb-32">
-      {/* Header */}
-      <header className="flex items-center justify-between mb-8">
-        <h1 className="font-display text-heading-3 text-text-primary uppercase italic">Perfil</h1>
-        <button 
-          onClick={() => {
-            setFormData({
-              displayName: authUser?.displayName || '',
-              weight: profile?.weight || 0,
-              height: profile?.height || 0,
-              goal: profile?.goal || 'hypertrophy',
-              photoURL: authUser?.photoURL || ''
-            })
-            setIsEditing(true)
-          }}
-          className="ec-glass rounded-lg px-4 py-2 text-text-muted text-xs font-bold flex items-center gap-2 hover:text-white transition-colors"
-        >
-          <Edit3 className="w-4 h-4" />
-          Editar Perfil
-        </button>
+    <PageShell className="!max-w-[560px] pb-32">
+      <header className="mb-4">
+        <p className="font-mono text-[10px] text-text-muted tracking-[0.18em] uppercase">Perfil</p>
       </header>
 
-      {/* Profile Hero Card */}
-      <div className="ec-card rounded-card p-6 flex flex-col items-center text-center mb-4 relative overflow-hidden">
-        {/* Avatar */}
-        <div className="relative mb-4">
-          <div className="w-20 h-20 rounded-full border-2 border-ec-violet/30 overflow-hidden bg-bg-primary flex items-center justify-center">
-            {authUser?.photoURL ? (
-              <img src={authUser.photoURL} alt={authUser.displayName} className="w-full h-full object-cover" />
-            ) : (
-              <UserIcon className="w-10 h-10 text-text-disabled" />
-            )}
+      {/* User hero row */}
+      <div className="ec-card rounded-card mb-4 overflow-hidden p-5">
+        <div className="flex items-center gap-4">
+          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border border-volt-600/30 bg-volt-600/10 text-volt-400">
+            <UserRound className="h-8 w-8" />
           </div>
-          <div className="absolute bottom-1 right-1 w-6 h-6 bg-ec-violet rounded-full flex items-center justify-center border-2 border-bg-primary">
-            <Star className="w-3 h-3 text-white fill-current" />
+          <div className="flex-1 min-w-0">
+            <h2 className="font-display text-xl font-bold text-white truncate">
+              {firebaseUser?.displayName || 'Aluno'}
+            </h2>
+            <p className="font-mono text-xs text-text-muted truncate">{firebaseUser?.email || '-'}</p>
+            <div className="mt-2 flex flex-wrap items-center gap-1.5">
+              {(profile?.currentStreak ?? 0) > 0 && (
+                <div className="flex items-center gap-1 px-2 py-0.5 rounded-full border border-[#FF3D6E]/30 bg-[#FF3D6E]/10 text-[#FF3D6E]">
+                  <Flame className="h-2.5 w-2.5" />
+                  <span className="font-mono text-[9px] font-bold">{profile?.currentStreak}d</span>
+                </div>
+              )}
+              <div className="px-2 py-0.5 rounded-full border border-volt-600/30 bg-volt-600/10">
+                <span className="font-mono text-[9px] font-bold text-volt-400 uppercase">
+                  {subscription?.planName || 'Ativo'}
+                </span>
+              </div>
+            </div>
           </div>
-        </div>
-
-        <h2 className="font-display text-heading-2 text-text-primary mb-1 uppercase italic leading-tight">
-          {authUser?.displayName || 'Usuário'}
-        </h2>
-        <p className="text-sm text-text-muted mb-4">{authUser?.email || 'email@exemplo.com'}</p>
-
-        {/* Achievement Badges */}
-        <div className="flex gap-2 flex-wrap justify-center mb-6">
-          <Badge color="violet" className="text-[10px]">
-            <TrendingUp className="w-3 h-3 mr-1 fill-current" /> 8 dias streak
-          </Badge>
-          <Badge color="purple" className="text-[10px]">
-            <Award className="w-3 h-3 mr-1 fill-current" /> Nível 12
-          </Badge>
-          <Badge color="sky" className="text-[10px]">
-             Membro {subscription?.planId === 'founder_trial' ? 'PRO' : 'FREE'}
-          </Badge>
-        </div>
-
-        {/* Stats Row */}
-        <div className="grid grid-cols-4 gap-2 w-full">
-          <StatBox val="--" lbl="Treinos" color="violet" />
-          <StatBox val="--" lbl="Check-ins" />
-          <StatBox val="--" lbl="XP Total" color="purple" />
-          <StatBox val="--" lbl="Desafios" color="violet" />
+          <button type="button" onClick={openEditor} className="rounded-xl border border-white/10 bg-white/5 p-2 text-text-muted hover:text-white transition-colors shrink-0">
+            <Edit3 className="h-4 w-4" />
+          </button>
         </div>
       </div>
 
-      {/* Plan Card */}
-      <div className="ec-card ec-highlight-ring rounded-2xl p-4 flex items-center gap-4 mb-8">
-        <div className="w-11 h-11 bg-ec-violet/15 rounded-xl flex items-center justify-center shrink-0">
-          <Award className="w-6 h-6 text-ec-violet fill-current" />
+      <div className="ec-card rounded-2xl mb-6 p-5">
+        <p className="text-xs font-black uppercase tracking-widest text-text-secondary">Planos atuais</p>
+        <div className="mt-4 grid gap-3">
+          <SummaryRow icon={<Dumbbell className="h-4 w-4" />} label="Treino selecionado" value={workout?.title || 'Ainda não escolhido'} />
+          <SummaryRow icon={<Utensils className="h-4 w-4" />} label="Dieta selecionada" value={diet?.title || 'Ainda não escolhida'} />
+          <SummaryRow icon={<CreditCard className="h-4 w-4" />} label="Assinatura" value={subscription?.status || 'active'} />
         </div>
-        <div className="flex-1">
-          <h4 className="font-display text-sm font-bold text-text-primary uppercase">{subscription?.planName || 'Assinatura Expert'}</h4>
-          <p className="text-[11px] text-text-muted font-medium">Expira em: {subscription?.expiresAt ? new Date(subscription.expiresAt).toLocaleDateString('pt-BR') : '--'}</p>
+      </div>
+
+      <div className="ec-card rounded-2xl mb-6 p-5">
+        <p className="text-xs font-black uppercase tracking-widest text-text-secondary">Base de preferências</p>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          {onboardingSummary.map((item) => (
+            <div key={item.label} className="rounded-xl border border-white/8 bg-white/[0.03] px-4 py-3">
+              <p className="text-xs font-black uppercase tracking-widest text-text-secondary">{item.label}</p>
+              <p className="mt-1 text-sm font-bold text-white">{item.value}</p>
+            </div>
+          ))}
         </div>
+      </div>
+
+      {/* Menu list */}
+      <div className="ec-card rounded-2xl mb-6 overflow-hidden">
+        {profile?.recommendationsNeedRefresh && (
+          <div className="border-b border-white/5 px-4 py-3 bg-volt-600/8">
+            <p className="text-xs text-volt-400 font-bold">Preferências mudaram — novos planos disponíveis</p>
+          </div>
+        )}
+        {[
+          { icon: TrendingUp, label: 'Evolução', sub: `${profile?.currentStreak ?? 0}d de sequência`, to: '/app/evolution' },
+          { icon: Trophy, label: 'Conquistas', sub: 'Badges e marcos', to: '/app/challenges' },
+          { icon: MessageSquare, label: 'Chat com coach', sub: 'Mentoria 1:1', to: '/app/community' },
+          { icon: Target, label: 'Recomendações', sub: 'Treinos e dietas sugeridos', to: '/app/recommendations' },
+          { icon: Camera, label: 'Fotos de evolução', sub: 'Antes e depois', to: '/app/evolution/checkin' },
+          { icon: CreditCard, label: 'Plano e pagamentos', sub: subscription?.planName || 'Ver assinatura', to: '/app/meu-plano' },
+          { icon: Bell, label: 'Notificações', sub: 'Lembretes e alertas', to: '/app/profile' },
+          { icon: Settings, label: 'Configurações', sub: 'Preferências gerais', to: '/app/profile', onClick: openEditor },
+        ].map(({ icon: Icon, label, sub, to, onClick: menuClick }) => (
+          <button
+            key={label}
+            type="button"
+            onClick={menuClick ?? (() => navigate(to))}
+            className="flex w-full items-center gap-3 border-b border-white/5 px-4 py-3.5 text-left last:border-b-0 hover:bg-white/[0.03] active:opacity-70 transition-all"
+          >
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/5 text-text-muted">
+              <Icon className="h-4 w-4" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-white">{label}</p>
+              <p className="font-mono text-[10px] text-text-muted mt-0.5 truncate">{sub}</p>
+            </div>
+            <ChevronRight className="h-4 w-4 text-text-muted shrink-0" />
+          </button>
+        ))}
         <button
           type="button"
-          onClick={() => navigate('/app/billing')}
-          className="bg-ec-violet/12 border border-ec-violet/22 text-ec-violet text-[11px] font-bold rounded-lg px-4 py-2 uppercase tracking-widest hover:bg-ec-violet/20 transition-all"
+          onClick={() => logout()}
+          className="flex w-full items-center gap-3 px-4 py-3.5 text-left hover:bg-accent-red/5 active:opacity-70 transition-all"
         >
-          Gerenciar
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent-red/10 text-accent-red">
+            <LogOut className="h-4 w-4" />
+          </div>
+          <span className="text-sm font-bold text-accent-red">Sair da conta</span>
         </button>
       </div>
 
-      {/* Program Settings */}
-      <div className="mb-8">
-        <label className="block text-[11px] font-bold text-text-muted tracking-widest uppercase mb-3 px-1">Meu Programa</label>
-        <div className="ec-card rounded-2xl p-2">
-          <SettingsRow 
-            icon={<Target className="w-4 h-4" />} 
-            label="Objetivo Atual" 
-            value={profile?.goal || '--'} 
-            color="violet" 
-          />
-          <SettingsDivider />
-          <SettingsRow 
-            icon={<Dumbbell className="w-4 h-4" />} 
-            label="Treino Selecionado" 
-            value={workout?.title || 'Selecione'} 
-            color="sky" 
-          />
-          <SettingsDivider />
-          <SettingsRow 
-            icon={<Utensils className="w-4 h-4" />} 
-            label="Dieta Selecionada" 
-            value={diet?.title || 'Selecione'} 
-            color="violet" 
-          />
-          <SettingsDivider />
-          <SettingsRow 
-            icon={<Droplets className="w-4 h-4" />} 
-            label="Meta de Água" 
-            value={`${(profile?.waterGoalMl || 0) / 1000}L/dia`} 
-            color="sky" 
-          />
-        </div>
-      </div>
-
-      {/* Profile Data */}
-      <div className="mb-8">
-        <label className="block text-[11px] font-bold text-text-muted tracking-widest uppercase mb-3 px-1">Dados do Perfil</label>
-        <div className="ec-card rounded-2xl p-2">
-          <SettingsRow icon={<Calendar className="w-4 h-4" />} label="Data de Nascimento" value={profile?.birthDate || '--'} />
-          <SettingsDivider />
-          <SettingsRow icon={<Ruler className="w-4 h-4" />} label="Altura" value={`${profile?.height || '--'} cm`} />
-          <SettingsDivider />
-          <SettingsRow icon={<Weight className="w-4 h-4" />} label="Peso Atual" value={`${profile?.weight || '--'} kg`} />
-          <SettingsDivider />
-          <SettingsRow icon={<MapPin className="w-4 h-4" />} label="Cidade" value={profile?.city || '--'} />
-        </div>
-      </div>
-
-      {/* Notifications */}
-      <div className="mb-8">
-        <label className="block text-[11px] font-bold text-text-muted tracking-widest uppercase mb-3 px-1">Notificações</label>
-        <div className="ec-card rounded-2xl p-2">
-          <ToggleRow icon={<Bell className="w-4 h-4" />} label="Lembrete de treino" checked={profile?.notificationsEnabled?.training} color="violet" />
-          <SettingsDivider />
-          <ToggleRow icon={<Droplets className="w-4 h-4" />} label="Lembretes de água" checked={profile?.notificationsEnabled?.water} color="sky" />
-          <SettingsDivider />
-          <ToggleRow icon={<Trophy className="w-4 h-4" />} label="Novidades e Desafios" checked={profile?.notificationsEnabled?.community} color="violet" />
-        </div>
-      </div>
-
-      {/* Account Actions */}
-      <div className="mb-12">
-        <label className="block text-[11px] font-bold text-text-muted tracking-widest uppercase mb-3 px-1">Conta & Suporte</label>
-        <div className="ec-card rounded-2xl p-2">
-          {authUser?.role === 'admin' && (
-            <>
-              <SettingsRow icon={<ShieldCheck className="w-4 h-4 text-ec-violet" />} label="Painel Admin" color="violet" onClick={() => navigate('/admin/subscriptions')} />
-              <SettingsDivider />
-            </>
-          )}
-          <SettingsRow icon={<HelpCircle className="w-4 h-4" />} label="Central de Ajuda" />
-          <SettingsDivider />
-          <SettingsRow icon={<Headphones className="w-4 h-4" />} label="Falar com Suporte" value="WhatsApp" />
-          <SettingsDivider />
-          <SettingsRow icon={<CreditCard className="w-4 h-4" />} label="Gerenciar Assinatura" value="Ativa" onClick={() => navigate('/app/billing')} />
-          <SettingsDivider />
-          <SettingsRow icon={<LogOut className="w-4 h-4 text-accent-red" />} label="Sair da Conta" onClick={handleLogout} />
-          {isConfirmingLogout && (
-            <div className="mx-4 mb-3 rounded-xl border border-accent-yellow/35 bg-accent-yellow/10 p-3">
-              <p className="text-xs font-bold text-text-primary">Confirmar saída da conta?</p>
-              <div className="mt-3 flex gap-2">
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  className="rounded-lg bg-accent-red px-3 py-2 text-[11px] font-black uppercase tracking-widest text-white"
-                >
-                  Sair
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsConfirmingLogout(false)}
-                  className="rounded-lg border border-white/12 px-3 py-2 text-[11px] font-black uppercase tracking-widest text-text-primary"
-                >
-                  Cancelar
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {profileFeedback && (
-        <div className={`mb-6 rounded-2xl border px-4 py-3 text-sm font-bold ${
-          profileFeedback.type === 'success'
-            ? 'border-accent-lime/35 bg-accent-lime/10 text-accent-lime'
-            : 'border-accent-red/35 bg-accent-red/10 text-accent-red'
-        }`}>
-          {profileFeedback.message}
+      {feedback && (
+        <div
+          className={`rounded-2xl border px-4 py-3 text-sm font-bold ${
+            feedback.type === 'success'
+              ? 'border-accent-lime/35 bg-accent-lime/10 text-accent-lime'
+              : 'border-accent-red/35 bg-accent-red/10 text-accent-red'
+          }`}
+        >
+          {feedback.message}
         </div>
       )}
 
-      <p className="text-center text-[10px] text-text-muted uppercase font-bold tracking-widest">Expert Club v2.5.0 • ID: {authUser?.uid || '--'}</p>
-
-      {/* Edit Modal */}
       {isEditing && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="ec-card max-w-md w-full p-8 rounded-3xl relative overflow-hidden"
+            className="ec-card w-full max-w-md rounded-3xl p-6"
           >
-            <div className="absolute top-0 right-0 p-8 opacity-10">
-              <UserIcon className="w-32 h-32 text-ec-violet" />
-            </div>
-            
-            <h2 className="font-display text-2xl font-black italic uppercase text-white mb-6">Editar Perfil</h2>
-            
-            <div className="space-y-4 mb-8">
-              <FormInput label="Nome Completo" value={formData.displayName} onChange={e => setFormData({...formData, displayName: e.target.value})} />
-              <div className="grid grid-cols-2 gap-4">
-                <FormInput label="Peso (kg)" type="number" value={formData.weight} onChange={e => setFormData({...formData, weight: Number(e.target.value)})} />
-                <FormInput label="Altura (cm)" type="number" value={formData.height} onChange={e => setFormData({...formData, height: Number(e.target.value)})} />
-              </div>
-              <div>
-                <label className="block text-[10px] font-black uppercase tracking-widest text-text-muted mb-2">Objetivo Principal</label>
-                <select 
-                  className="ec-input w-full rounded-xl px-4 py-3 text-sm text-white"
-                  value={formData.goal}
-                  onChange={(e) => setFormData({ ...formData, goal: e.target.value as any })}
-                >
-                  <option value="fat_loss">Emagrecimento</option>
-                  <option value="hypertrophy">Hipertrofia</option>
-                  <option value="recomposition">Recomposição</option>
-                  <option value="health">Saúde / Bem-estar</option>
-                </select>
-              </div>
-              <FormInput label="URL da Foto" value={formData.photoURL} onChange={e => setFormData({...formData, photoURL: e.target.value})} placeholder="https://..." />
+            <h2 className="font-display text-2xl font-black uppercase italic text-white">Atualizar preferências</h2>
+            <p className="mt-2 text-sm text-text-secondary">
+              Se você mudar essas respostas, vamos marcar suas recomendações para atualização.
+            </p>
+
+            <div className="mt-6 space-y-4">
+              <FormInput
+                label="Peso atual (kg)"
+                type="number"
+                value={form.weightKg}
+                onChange={(event) => setForm((prev) => ({ ...prev, weightKg: event.target.value }))}
+              />
+
+              <SelectField label="Objetivo principal" value={form.goal} onChange={(value) => setForm((prev) => ({ ...prev, goal: value }))}>
+                <option value="hypertrophy">Hipertrofia</option>
+                <option value="fat_loss">Emagrecimento</option>
+                <option value="maintenance">Manutenção</option>
+                <option value="performance">Performance</option>
+              </SelectField>
+
+              <SelectField label="Frequência semanal" value={form.trainingFrequency} onChange={(value) => setForm((prev) => ({ ...prev, trainingFrequency: value }))}>
+                <option value="3">3x/semana</option>
+                <option value="4">4x/semana</option>
+                <option value="5">5x/semana</option>
+                <option value="6">6x/semana</option>
+              </SelectField>
+
+              <SelectField label="Nível de treino" value={form.trainingLevel} onChange={(value) => setForm((prev) => ({ ...prev, trainingLevel: value }))}>
+                <option value="beginner">Iniciante</option>
+                <option value="intermediate">Intermediário</option>
+                <option value="advanced">Avançado</option>
+              </SelectField>
+
+              <SelectField label="Local de treino" value={form.trainingLocation} onChange={(value) => setForm((prev) => ({ ...prev, trainingLocation: value }))}>
+                <option value="gym">Academia</option>
+                <option value="home">Casa</option>
+                <option value="mixed">Misto</option>
+              </SelectField>
+
+              <SelectField label="Preferência alimentar" value={form.dietPreference} onChange={(value) => setForm((prev) => ({ ...prev, dietPreference: value }))}>
+                <option value="flexible">Flexível</option>
+                <option value="economic">Econômica</option>
+                <option value="low_carb">Low carb</option>
+                <option value="vegetarian">Vegetariana</option>
+                <option value="carnivore">Carnívora</option>
+              </SelectField>
+
+              <FormInput
+                label="Meta diária de água (ml)"
+                type="number"
+                value={form.waterGoalMl}
+                onChange={(event) => setForm((prev) => ({ ...prev, waterGoalMl: event.target.value }))}
+                icon={<Droplets className="h-4 w-4" />}
+              />
             </div>
 
-            <div className="flex gap-3">
-              <UIButton variant="ghost" className="flex-1" onClick={() => setIsEditing(false)}>Cancelar</UIButton>
-              <UIButton className="flex-1" onClick={handleSave} isLoading={isSaving}>Salvar Alterações</UIButton>
+            <div className="mt-6 flex gap-3">
+              <UIButton variant="ghost" className="flex-1" onClick={() => setIsEditing(false)}>
+                Cancelar
+              </UIButton>
+              <UIButton className="flex-1" onClick={handleSave} isLoading={isSaving}>
+                Salvar
+              </UIButton>
             </div>
           </motion.div>
         </div>
@@ -310,74 +323,39 @@ export function ProfileSettingsScreen() {
   )
 }
 
-function StatBox({ val, lbl, color }: { val: string; lbl: string; color?: 'violet' | 'purple' | 'yellow' }) {
-  const colorMap = {
-    violet: 'text-ec-violet',
-    purple: 'text-accent-purple',
-    yellow: 'text-accent-yellow',
-  }
+function SummaryRow({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
-    <div className="flex-1 bg-white/[0.02] border border-white/5 rounded-xl py-4 px-2 text-center">
-      <div className={`font-display text-xl font-bold uppercase italic leading-none ${color ? colorMap[color] : 'text-text-primary'}`}>
-        {val}
-      </div>
-      <div className="text-[9px] text-text-muted font-bold uppercase tracking-widest mt-2">{lbl}</div>
-    </div>
-  )
-}
-
-function SettingsRow({ icon, label, value, color, onClick }: { icon: React.ReactNode; label: string; value?: string; color?: string; onClick?: () => void }) {
-  const colorMap: any = {
-    violet: 'bg-ec-violet/10 text-ec-violet',
-    sky: 'bg-accent-sky/10 text-accent-sky',
-    purple: 'bg-accent-purple/10 text-accent-purple',
-    yellow: 'bg-accent-yellow/10 text-accent-yellow',
-  }
-
-  const content = (
-    <>
-      <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${color ? colorMap[color] : 'bg-white/5 text-text-muted'}`}>
-        {icon}
-      </div>
-      <span className="flex-1 text-sm font-medium text-text-primary text-left">{label}</span>
-      {value && <span className="text-xs text-text-muted font-bold mr-2 uppercase">{value}</span>}
-      {onClick && <ChevronRight className="w-4 h-4 text-text-disabled group-hover:text-white transition-colors" />}
-    </>
-  )
-
-  if (!onClick) {
-    return (
-      <div className="flex items-center gap-4 w-full p-4 rounded-xl">
-        {content}
-      </div>
-    )
-  }
-
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="flex items-center gap-4 w-full p-4 rounded-xl hover:bg-white/[0.04] transition-all group"
-    >
-      {content}
-    </button>
-  )
-}
-
-function ToggleRow({ icon, label, checked, color }: { icon: React.ReactNode; label: string; checked?: boolean; color?: string }) {
-  return (
-    <div className="flex items-center gap-4 w-full p-4 rounded-xl">
-      <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${color ? 'bg-white/5 text-ec-violet' : 'bg-white/5 text-text-muted'}`}>
-        {icon}
-      </div>
-      <span className="flex-1 text-sm font-medium text-text-primary">{label}</span>
-      <div className={`w-10 h-5 rounded-full relative transition-colors ${checked ? 'bg-ec-violet' : 'bg-white/10'}`}>
-        <div className={`absolute top-1 w-3 h-3 rounded-full bg-white transition-all ${checked ? 'left-6' : 'left-1'}`} />
+    <div className="flex items-center gap-3 rounded-xl border border-white/8 bg-white/[0.03] px-4 py-3">
+      <div className="text-ec-violet">{icon}</div>
+      <div>
+        <p className="text-xs font-black uppercase tracking-widest text-text-secondary">{label}</p>
+        <p className="mt-1 text-sm font-bold text-white">{value}</p>
       </div>
     </div>
   )
 }
 
-function SettingsDivider() {
-  return <div className="h-px bg-white/[0.05] mx-4" />
+function SelectField({
+  label,
+  value,
+  onChange,
+  children,
+}: {
+  label: string
+  value: string
+  onChange: (value: string) => void
+  children: React.ReactNode
+}) {
+  return (
+    <div>
+      <label className="mb-2 block text-xs font-black uppercase tracking-widest text-text-secondary">{label}</label>
+      <select
+        className="ec-input w-full rounded-xl px-4 py-3 text-sm text-white"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+      >
+        {children}
+      </select>
+    </div>
+  )
 }

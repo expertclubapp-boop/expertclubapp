@@ -1,5 +1,6 @@
 import { doc, getDoc, setDoc } from 'firebase/firestore'
 import { db } from '../lib/firebase/firebase'
+import { normalizeFirestoreWriteData } from '../lib/firebase/date'
 import { COLLECTIONS, SUB_COLLECTIONS, getSubCollectionPath } from '../lib/firebase/paths'
 import { challengeService } from './challengeService'
 import type { ChallengeParticipant } from '../types/domain'
@@ -55,10 +56,11 @@ export const challengeScoringService = {
         }
 
         // Add points
+        const now = new Date().toISOString()
         pointsEarned += mission.points
         participant.completedMissions.push({
           missionId: mission.id,
-          completedAt: new Date().toISOString(),
+          completedAt: now,
           points: mission.points,
           sourceType: sourceType,
           sourceId: sourceId
@@ -68,9 +70,12 @@ export const challengeScoringService = {
 
       // 4. Update participant if there are changes
       if (hasUpdates) {
-        participant.points += pointsEarned
-        participant.updatedAt = new Date().toISOString()
-        await setDoc(participantRef, participant)
+        const updatedParticipant = {
+          ...participant,
+          points: participant.points + pointsEarned,
+          updatedAt: new Date(),
+        }
+        await setDoc(participantRef, normalizeFirestoreWriteData(updatedParticipant))
       }
 
     } catch (error) {

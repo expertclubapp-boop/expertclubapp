@@ -18,6 +18,9 @@ import {
   LogOut,
   X,
   Link2,
+  Gift,
+  Wallet,
+  ShoppingBag,
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 
@@ -34,7 +37,10 @@ const moreItems = [
   { to: '/app/challenges', icon: Trophy, label: 'Desafios', color: 'text-ec-violet' },
   { to: '/app/content', icon: PlayCircle, label: 'Conteúdos', color: 'text-ec-violet' },
   { to: '/app/community', icon: Users, label: 'Comunidade', color: 'text-ec-violet' },
-  { to: '/app/billing', icon: CreditCard, label: 'Meu plano', color: 'text-text-muted' },
+  { to: '/app/meu-plano', icon: CreditCard, label: 'Meu plano', color: 'text-text-muted' },
+  { to: '/app/indicar', icon: Gift, label: 'Indicar', color: 'text-volt-400' },
+  { to: '/app/carteira', icon: Wallet, label: 'Carteira', color: 'text-volt-400' },
+  { to: '/app/loja', icon: ShoppingBag, label: 'Loja', color: 'text-volt-400' },
   { to: '/app/profile', icon: User, label: 'Perfil', color: 'text-text-muted' },
 ]
 
@@ -74,7 +80,7 @@ export function MobileBottomNav() {
               <div className="mx-3 mb-3 rounded-3xl bg-surface-1 border border-white/[0.08] shadow-2xl overflow-hidden">
                 {/* Header */}
                 <div className="flex items-center justify-between px-5 pt-5 pb-3">
-                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-text-muted">Menu</span>
+                  <span className="text-xs font-black uppercase tracking-[0.2em] text-text-secondary">Menu</span>
                   <button
                     onClick={() => setShowMore(false)}
                     className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-text-muted hover:text-white transition-colors"
@@ -96,8 +102,8 @@ export function MobileBottomNav() {
                         }`}
                       >
                         <Icon className={`w-5 h-5 ${isActive ? 'text-ec-violet' : color}`} />
-                        <span className={`text-[9px] font-bold uppercase tracking-wide text-center leading-tight ${
-                          isActive ? 'text-ec-violet' : 'text-text-secondary'
+                        <span className={`text-xs font-bold uppercase tracking-wide text-center leading-tight ${
+                          isActive ? 'text-ec-violet' : 'text-white/80'
                         }`}>
                           {label}
                         </span>
@@ -113,14 +119,14 @@ export function MobileBottomNav() {
                     className="flex items-center gap-2 text-text-muted hover:text-white transition-colors"
                   >
                     <HelpCircle className="w-4 h-4" />
-                    <span className="text-[10px] font-bold uppercase tracking-widest">Suporte</span>
+                    <span className="text-xs font-bold uppercase tracking-widest">Suporte</span>
                   </button>
                   <button
                     onClick={() => { setShowMore(false); logout() }}
                     className="flex items-center gap-2 text-accent-red/70 hover:text-accent-red transition-colors"
                   >
                     <LogOut className="w-4 h-4" />
-                    <span className="text-[10px] font-bold uppercase tracking-widest">Sair</span>
+                    <span className="text-xs font-bold uppercase tracking-widest">Sair</span>
                   </button>
                 </div>
               </div>
@@ -141,12 +147,12 @@ export function MobileBottomNav() {
                 className={`flex min-h-[52px] min-w-[52px] flex-col items-center justify-center gap-[3px] rounded-lg px-2 py-1.5 transition-all duration-200 active:scale-95 ${
                   isActive
                     ? 'bg-ec-violet text-white shadow-[0_10px_30px_rgba(91,75,255,0.20)]'
-                    : 'text-white/58 hover:bg-white/[0.045] hover:text-white'
+                    : 'text-white/80 hover:bg-white/[0.06] hover:text-white'
                 }`}
                 aria-label={label}
               >
                 <Icon className="h-5 w-5" fill={isActive ? 'currentColor' : 'none'} />
-                <span className="max-w-[52px] truncate font-display text-[8px] font-black uppercase leading-none tracking-[0.08em]">
+                <span className="max-w-[52px] truncate font-display text-xs font-black uppercase leading-none tracking-[0.08em]">
                   {label}
                 </span>
               </NavLink>
@@ -159,12 +165,12 @@ export function MobileBottomNav() {
             className={`flex min-h-[52px] min-w-[52px] flex-col items-center justify-center gap-[3px] rounded-lg px-2 py-1.5 transition-all duration-200 active:scale-95 ${
               showMore
                 ? 'bg-ec-violet text-white shadow-[0_10px_30px_rgba(91,75,255,0.20)]'
-                : 'text-white/58 hover:bg-white/[0.045] hover:text-white'
+                : 'text-white/80 hover:bg-white/[0.06] hover:text-white'
             }`}
             aria-label="Mais"
           >
             <MoreHorizontal className="h-5 w-5" />
-            <span className="max-w-[52px] truncate font-display text-[8px] font-black uppercase leading-none tracking-[0.08em]">
+            <span className="max-w-[52px] truncate font-display text-xs font-black uppercase leading-none tracking-[0.08em]">
               Mais
             </span>
           </button>

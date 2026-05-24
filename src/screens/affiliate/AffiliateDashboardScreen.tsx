@@ -3,6 +3,7 @@ import { ArrowLeft, Copy, Link2, Users, WalletCards, CheckCircle2, Clock } from 
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { Button } from '../../components/ui/Button'
+import { toastSuccess } from '../../components/ui/Toast'
 import { affiliateDashboardService, type AffiliateDashboardSummary } from '../../services/affiliateDashboardService'
 import type { AffiliateAccount } from '../../types/domain'
 
@@ -38,7 +39,7 @@ export function AffiliateDashboardScreen() {
   const copyLink = async () => {
     if (!publicLink) return
     await navigator.clipboard.writeText(publicLink)
-    alert('Link copiado.')
+    toastSuccess('Link copiado com sucesso.')
   }
 
   if (isLoading) {

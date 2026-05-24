@@ -9,7 +9,17 @@ import {
   GitBranch,
   Info,
   ExternalLink,
+  TrendingUp,
+  AlertTriangle,
+  Clock,
+  Users,
+  CheckCircle2,
+  XCircle,
+  Tag,
 } from 'lucide-react'
+import { collection, getDocs, query, orderBy } from 'firebase/firestore'
+import { db } from '../../lib/firebase/firebase'
+import { COLLECTIONS } from '../../lib/firebase/paths'
 import { PageShell } from '../../components/ui/Premium'
 import { AdminState, AdminToolbar } from './AdminShared'
 import { adminMetricsService } from '../../services/adminMetricsService'
@@ -17,7 +27,7 @@ import { adminCommissionService } from '../../services/adminCommissionService'
 import { communityFeedService } from '../../services/communityFeedService'
 import { adminUserService } from '../../services/adminUserService'
 import type { AdminMetrics } from '../../services/adminMetricsService'
-import type { AffiliatePayout, CommissionEntry, CommunityPost } from '../../types/domain'
+import type { AffiliatePayout, CommissionEntry, CommunityPost, Subscription, PlanTier } from '../../types/domain'
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0)
@@ -145,10 +155,57 @@ export function AdminWorkspacesScreen() {
 }
 
 // ═══════════════════════════════════════════════
-// FINANCE
+// FINANCE — Full dashboard
 // ═══════════════════════════════════════════════
+
+const TIER_LABELS: Partial<Record<PlanTier, string>> = {
+  low_ticket: 'Expert Club',
+  mentoring_quarterly: 'Mentoria Trimestral',
+  mentoring_semester: 'Mentoria Semestral',
+  mentoring_annual: 'Mentoria Anual',
+}
+
+const STATUS_LABELS: Record<string, string> = {
+  active: 'Ativo',
+  trialing: 'Trial',
+  past_due: 'Inadimplente',
+  cancelled: 'Cancelado',
+  expired: 'Expirado',
+  pending: 'Pendente',
+}
+
+const STATUS_COLOR: Record<string, string> = {
+  active: 'text-accent-lime bg-accent-lime/10 border-accent-lime/20',
+  trialing: 'text-accent-sky bg-accent-sky/10 border-accent-sky/20',
+  past_due: 'text-amber-400 bg-amber-400/10 border-amber-400/20',
+  cancelled: 'text-text-muted bg-white/5 border-white/10',
+  expired: 'text-red-400 bg-red-400/10 border-red-400/20',
+  pending: 'text-text-muted bg-white/5 border-white/10',
+}
+
+function computeMRR(subs: Subscription[]): number {
+  return subs
+    .filter((s) => s.status === 'active' || s.status === 'trialing')
+    .reduce((sum, s) => {
+      const price = s.price || 0
+      switch (s.interval) {
+        case 'monthly': return sum + price
+        case 'quarterly': return sum + price / 3
+        case 'semester': return sum + price / 6
+        case 'annual': return sum + price / 12
+        default: return sum + price
+      }
+    }, 0)
+}
+
+function daysFromNow(isoDate?: string): number | null {
+  if (!isoDate) return null
+  const diff = new Date(isoDate).getTime() - Date.now()
+  return Math.ceil(diff / (1000 * 60 * 60 * 24))
+}
+
 export function AdminFinanceOverviewScreen() {
-  const [metrics, setMetrics] = useState<AdminMetrics | null>(null)
+  const [subscriptions, setSubscriptions] = useState<Subscription[]>([])
   const [commissions, setCommissions] = useState<CommissionEntry[]>([])
   const [payouts, setPayouts] = useState<AffiliatePayout[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -156,61 +213,277 @@ export function AdminFinanceOverviewScreen() {
 
   useEffect(() => {
     Promise.all([
-      adminMetricsService.getDashboard(),
+      getDocs(query(collection(db, COLLECTIONS.SUBSCRIPTIONS), orderBy('updatedAt', 'desc'))),
       adminCommissionService.listCommissions(),
       adminCommissionService.listPayouts(),
     ])
-      .then(([dashboard, commissionRows, payoutRows]) => {
-        setMetrics(dashboard)
+      .then(([subSnap, commissionRows, payoutRows]) => {
+        setSubscriptions(subSnap.docs.map((d) => ({ ...(d.data() as Subscription) })))
         setCommissions(commissionRows)
         setPayouts(payoutRows)
       })
-      .catch((loadError) => {
-        console.error(loadError)
-        setError('Nao foi possivel carregar o financeiro.')
+      .catch((err) => {
+        console.error(err)
+        setError('Não foi possível carregar o financeiro.')
       })
       .finally(() => setIsLoading(false))
   }, [])
 
-  const approvedVolume = useMemo(
-    () =>
-      commissions
-        .filter((entry) => entry.status === 'approved')
-        .reduce((sum, entry) => sum + entry.commissionAmount, 0),
-    [commissions],
+  const mrr = useMemo(() => computeMRR(subscriptions), [subscriptions])
+
+  const byStatus = useMemo(() => {
+    const map: Record<string, number> = {}
+    subscriptions.forEach((s) => { map[s.status] = (map[s.status] || 0) + 1 })
+    return map
+  }, [subscriptions])
+
+  const byTier = useMemo(() => {
+    const map: Record<string, number> = {}
+    subscriptions.filter((s) => s.status === 'active' || s.status === 'trialing').forEach((s) => {
+      const tier = (s as any).tier || 'low_ticket'
+      map[tier] = (map[tier] || 0) + 1
+    })
+    return map
+  }, [subscriptions])
+
+  const expiringIn7 = useMemo(() =>
+    subscriptions.filter((s) => {
+      if (s.status !== 'active' && s.status !== 'trialing') return false
+      const days = daysFromNow(s.currentPeriodEnd || s.renewalDate)
+      return days !== null && days >= 0 && days <= 7
+    }),
+    [subscriptions]
+  )
+
+  const pastDue = useMemo(() =>
+    subscriptions.filter((s) => s.status === 'past_due'),
+    [subscriptions]
+  )
+
+  const approvedVolume = useMemo(() =>
+    commissions.filter((e) => e.status === 'approved').reduce((sum, e) => sum + e.commissionAmount, 0),
+    [commissions]
+  )
+
+  const recentActive = useMemo(() =>
+    subscriptions.filter((s) => s.status === 'active').slice(0, 10),
+    [subscriptions]
   )
 
   return (
     <PageShell wide>
       <AdminToolbar
         title="Financeiro"
-        eyebrow="Operacao"
-        description="Resumo consolidado de assinaturas, comissoes e repasses ja gravados no Firestore."
+        eyebrow="Gestão"
+        description="Receita, assinaturas, inadimplência e renovações em tempo real."
+        action={
+          <Link
+            to="/admin/produtos"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-xs font-bold uppercase tracking-widest text-text-muted hover:text-white transition-colors"
+          >
+            <Tag className="w-3.5 h-3.5" />
+            Gerenciar produtos
+          </Link>
+        }
       />
-      <AdminState isLoading={isLoading} error={error} empty={!metrics}>
-        {metrics && (
-          <div className="space-y-6">
-            <MetricsWarnings warnings={metrics.queryWarnings} />
-            <section className="grid gap-4 md:grid-cols-4">
-              <MetricCard label="MRR estimado" value={formatCurrency(metrics.estimatedMrr)} />
-              <MetricCard label="Comissao pendente" value={formatCurrency(metrics.pendingCommissions)} />
-              <MetricCard label="Comissao aprovada" value={formatCurrency(approvedVolume)} />
-              <MetricCard label="Payouts pagos" value={String(payouts.filter((p) => p.status === 'paid').length)} />
-            </section>
-            <section className="grid gap-3 md:grid-cols-2">
-              <WorkspaceLink
-                to="/admin/commissions"
-                title="Gerir comissoes"
-                description="Aprovar, revisar e acompanhar saldo por afiliada."
-              />
-              <WorkspaceLink
-                to="/admin/payouts"
-                title="Gerir repasses"
-                description="Auditar payout pendente ou pago."
-              />
-            </section>
+
+      <AdminState isLoading={isLoading} error={error} empty={false}>
+        <div className="space-y-8">
+
+          {/* KPI row */}
+          <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div className="ec-card rounded-2xl p-5 border border-accent-lime/20 bg-gradient-to-b from-accent-lime/5 to-transparent">
+              <div className="flex items-center gap-2 mb-1">
+                <TrendingUp className="w-4 h-4 text-accent-lime" />
+                <p className="text-[10px] font-black uppercase tracking-widest text-text-muted">MRR</p>
+              </div>
+              <p className="text-3xl font-black italic text-white">{formatCurrency(mrr)}</p>
+              <p className="text-[10px] text-text-muted mt-1">Receita mensal recorrente</p>
+            </div>
+
+            <div className="ec-card rounded-2xl p-5">
+              <div className="flex items-center gap-2 mb-1">
+                <CheckCircle2 className="w-4 h-4 text-accent-lime" />
+                <p className="text-[10px] font-black uppercase tracking-widest text-text-muted">Ativos</p>
+              </div>
+              <p className="text-3xl font-black italic text-white">
+                {(byStatus['active'] || 0) + (byStatus['trialing'] || 0)}
+              </p>
+              <p className="text-[10px] text-text-muted mt-1">Assinantes ativos + trial</p>
+            </div>
+
+            <div className="ec-card rounded-2xl p-5 border border-amber-500/20 bg-gradient-to-b from-amber-500/5 to-transparent">
+              <div className="flex items-center gap-2 mb-1">
+                <Clock className="w-4 h-4 text-amber-400" />
+                <p className="text-[10px] font-black uppercase tracking-widest text-text-muted">Vencendo</p>
+              </div>
+              <p className="text-3xl font-black italic text-white">{expiringIn7.length}</p>
+              <p className="text-[10px] text-text-muted mt-1">Renovam em até 7 dias</p>
+            </div>
+
+            <div className="ec-card rounded-2xl p-5 border border-red-500/20 bg-gradient-to-b from-red-500/5 to-transparent">
+              <div className="flex items-center gap-2 mb-1">
+                <AlertTriangle className="w-4 h-4 text-red-400" />
+                <p className="text-[10px] font-black uppercase tracking-widest text-text-muted">Inadimplentes</p>
+              </div>
+              <p className="text-3xl font-black italic text-white">{pastDue.length}</p>
+              <p className="text-[10px] text-text-muted mt-1">Status past_due</p>
+            </div>
+          </section>
+
+          <div className="grid gap-6 lg:grid-cols-3">
+            {/* By tier */}
+            <div className="ec-card rounded-2xl p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <Users className="w-4 h-4 text-ec-violet" />
+                <p className="text-[10px] font-black uppercase tracking-widest text-text-muted">Ativos por plano</p>
+              </div>
+              <div className="space-y-3">
+                {Object.entries(byTier).length === 0 ? (
+                  <p className="text-sm text-text-muted">Sem dados.</p>
+                ) : (
+                  Object.entries(byTier).map(([tier, count]) => (
+                    <div key={tier} className="flex items-center gap-3">
+                      <div className="flex-1">
+                        <p className="text-xs font-bold text-white">{TIER_LABELS[tier as PlanTier] ?? tier}</p>
+                        <div className="mt-1 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-ec-violet rounded-full"
+                            style={{ width: `${Math.min(100, (count / Math.max(1, subscriptions.length)) * 100)}%` }}
+                          />
+                        </div>
+                      </div>
+                      <span className="text-sm font-black text-white w-6 text-right">{count}</span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* By status */}
+            <div className="ec-card rounded-2xl p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <WalletCards className="w-4 h-4 text-ec-violet" />
+                <p className="text-[10px] font-black uppercase tracking-widest text-text-muted">Por status</p>
+              </div>
+              <div className="space-y-2">
+                {Object.entries(byStatus).map(([status, count]) => (
+                  <div key={status} className="flex items-center justify-between">
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${STATUS_COLOR[status] ?? 'text-text-muted bg-white/5 border-white/10'}`}>
+                      {STATUS_LABELS[status] ?? status}
+                    </span>
+                    <span className="text-sm font-black text-white">{count}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Commissions */}
+            <div className="ec-card rounded-2xl p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <TrendingUp className="w-4 h-4 text-ec-violet" />
+                <p className="text-[10px] font-black uppercase tracking-widest text-text-muted">Afiliados</p>
+              </div>
+              <div className="space-y-3">
+                <div>
+                  <p className="text-[10px] text-text-muted">Comissão aprovada</p>
+                  <p className="text-xl font-black text-white">{formatCurrency(approvedVolume)}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-text-muted">Repasses pagos</p>
+                  <p className="text-xl font-black text-white">{payouts.filter((p) => p.status === 'paid').length}</p>
+                </div>
+              </div>
+              <div className="mt-4 pt-4 border-t border-white/5 flex flex-col gap-2">
+                <Link to="/admin/commissions" className="text-[10px] font-bold text-ec-violet hover:underline">Ver comissões →</Link>
+                <Link to="/admin/payouts" className="text-[10px] font-bold text-ec-violet hover:underline">Ver repasses →</Link>
+              </div>
+            </div>
           </div>
-        )}
+
+          {/* Expiring in 7 days */}
+          {expiringIn7.length > 0 && (
+            <div className="ec-card rounded-2xl p-5 border border-amber-500/15">
+              <div className="flex items-center gap-2 mb-4">
+                <Clock className="w-4 h-4 text-amber-400" />
+                <p className="text-[10px] font-black uppercase tracking-widest text-amber-400">Vencendo nos próximos 7 dias ({expiringIn7.length})</p>
+              </div>
+              <div className="space-y-2">
+                {expiringIn7.map((s) => {
+                  const days = daysFromNow(s.currentPeriodEnd || s.renewalDate)
+                  return (
+                    <div key={s.uid} className="flex items-center justify-between rounded-xl bg-white/[0.03] px-4 py-2.5">
+                      <div>
+                        <p className="text-sm font-bold text-white">{s.planName}</p>
+                        <p className="text-[10px] text-text-muted">{s.uid}</p>
+                      </div>
+                      <div className="text-right">
+                        <span className={`text-xs font-black ${days !== null && days <= 2 ? 'text-red-400' : 'text-amber-400'}`}>
+                          {days === 0 ? 'Hoje' : days === 1 ? 'Amanhã' : `${days} dias`}
+                        </span>
+                        <p className="text-[10px] text-text-muted">{formatCurrency(s.price)}</p>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Past due */}
+          {pastDue.length > 0 && (
+            <div className="ec-card rounded-2xl p-5 border border-red-500/15">
+              <div className="flex items-center gap-2 mb-4">
+                <XCircle className="w-4 h-4 text-red-400" />
+                <p className="text-[10px] font-black uppercase tracking-widest text-red-400">Inadimplentes ({pastDue.length})</p>
+              </div>
+              <div className="space-y-2">
+                {pastDue.map((s) => (
+                  <div key={s.uid} className="flex items-center justify-between rounded-xl bg-white/[0.03] px-4 py-2.5">
+                    <div>
+                      <p className="text-sm font-bold text-white">{s.planName}</p>
+                      <p className="text-[10px] text-text-muted">{s.uid}</p>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-xs font-black text-red-400">Past due</span>
+                      <p className="text-[10px] text-text-muted">{formatCurrency(s.price)}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Recent active */}
+          <div className="ec-card rounded-2xl p-5">
+            <p className="text-[10px] font-black uppercase tracking-widest text-text-muted mb-4">Assinaturas recentes ativas</p>
+            <div className="space-y-2">
+              {recentActive.length === 0 ? (
+                <p className="text-sm text-text-muted">Nenhuma assinatura ativa.</p>
+              ) : (
+                recentActive.map((s) => (
+                  <div key={s.uid} className="flex items-center justify-between rounded-xl bg-white/[0.03] px-4 py-2.5">
+                    <div>
+                      <p className="text-sm font-bold text-white">{s.planName || '—'}</p>
+                      <p className="text-[10px] text-text-muted">{s.uid} · renova {s.renewalDate ? new Date(s.renewalDate).toLocaleDateString('pt-BR') : '—'}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-black text-white">{formatCurrency(s.price)}</p>
+                      <p className="text-[10px] text-text-muted">{s.interval}</p>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          <section className="grid gap-3 md:grid-cols-3">
+            <WorkspaceLink to="/admin/subscriptions" title="Todas as assinaturas" description="Ver e editar status de qualquer assinatura." />
+            <WorkspaceLink to="/admin/produtos" title="Produtos & links de venda" description="Criar e gerenciar planos com checkout." />
+            <WorkspaceLink to="/admin/commissions" title="Comissões de afiliados" description="Aprovar e acompanhar repasses." />
+          </section>
+
+        </div>
       </AdminState>
     </PageShell>
   )

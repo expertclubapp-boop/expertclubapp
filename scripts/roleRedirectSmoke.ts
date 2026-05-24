@@ -5,7 +5,7 @@ import {
   getSubscriptionStatus,
   isOnboardingCompleted,
 } from '../src/router/utils'
-import type { Subscription, User } from '../src/types/domain'
+import type { Subscription, User, UserProfile } from '../src/types/domain'
 
 function user(overrides: Partial<User>): User {
   return {
@@ -40,10 +40,30 @@ function subscription(status: Subscription['status']): Subscription {
   }
 }
 
+function profile(overrides: Partial<UserProfile> = {}): UserProfile {
+  return {
+    uid: overrides.uid ?? 'uid-smoke',
+    goal: overrides.goal ?? 'hypertrophy',
+    trainingFrequency: overrides.trainingFrequency ?? 4,
+    trainingLevel: overrides.trainingLevel ?? 'intermediate',
+    trainingLocation: overrides.trainingLocation ?? 'gym',
+    dietPreference: overrides.dietPreference ?? 'flexible',
+    sex: overrides.sex ?? 'male',
+    weightKg: overrides.weightKg ?? 80,
+    heightCm: overrides.heightCm ?? 175,
+    waterGoalMl: overrides.waterGoalMl ?? 2800,
+    onboardingCompleted: overrides.onboardingCompleted ?? true,
+    selectedWorkoutId: 'selectedWorkoutId' in overrides ? overrides.selectedWorkoutId : 'qa-workout',
+    selectedDietId: 'selectedDietId' in overrides ? overrides.selectedDietId : 'qa-diet',
+    recommendationsNeedRefresh: overrides.recommendationsNeedRefresh ?? false,
+  }
+}
+
 const cases = [
   {
     label: 'admin',
     user: user({ role: 'admin', email: 'admin@expertclub.com' }),
+    profile: null,
     subscription: null,
     expectedRoute: '/admin/dashboard',
   },
@@ -55,39 +75,77 @@ const cases = [
       affiliateId: 'mari_smoke',
       referralCode: 'MARI384',
     }),
+    profile: null,
     subscription: subscription('pending'),
+    expectedRoute: '/affiliate/dashboard',
+  },
+  {
+    label: 'affiliate with active subscription (still not a student)',
+    user: user({
+      role: 'affiliate',
+      email: 'influencer2@expertclub.com',
+      affiliateId: 'ana_smoke',
+      referralCode: 'ANA999',
+    }),
+    profile: null,
+    subscription: subscription('active'),
     expectedRoute: '/affiliate/dashboard',
   },
   {
     label: 'mentor',
     user: user({ role: 'mentor', email: 'mentor@expertclub.com.br' }),
+    profile: null,
     subscription: null,
     expectedRoute: '/mentor/overview',
   },
   {
     label: 'member active',
     user: user({ role: 'member', email: 'aluno.ativo@expertclub.com' }),
+    profile: profile(),
     subscription: subscription('active'),
     expectedRoute: '/app/today',
   },
   {
     label: 'member blocked',
     user: user({ role: 'member', email: 'aluno.bloqueado@expertclub.com' }),
+    profile: profile(),
     subscription: subscription('past_due'),
     expectedRoute: '/app/billing/lock',
   },
   {
-    label: 'new member',
+    label: 'new member active',
     user: user({ role: 'member', email: 'novo@example.com', onboardingCompleted: false }),
+    profile: profile({ onboardingCompleted: false, selectedWorkoutId: undefined, selectedDietId: undefined }),
+    subscription: subscription('active'),
+    expectedRoute: '/onboarding',
+  },
+  {
+    label: 'new member blocked',
+    user: user({ role: 'member', email: 'novo.bloqueado@example.com', onboardingCompleted: false }),
+    profile: profile({ onboardingCompleted: false, selectedWorkoutId: undefined, selectedDietId: undefined }),
     subscription: subscription('pending'),
-    expectedRoute: '/onboarding/goal',
+    expectedRoute: '/app/billing/lock',
+  },
+  {
+    label: 'member active without selections',
+    user: user({ role: 'member', email: 'sem.plano@expertclub.com' }),
+    profile: profile({ selectedWorkoutId: undefined, selectedDietId: undefined }),
+    subscription: subscription('active'),
+    expectedRoute: '/app/recommendations',
+  },
+  {
+    label: 'member active with refresh pending',
+    user: user({ role: 'member', email: 'refresh@expertclub.com' }),
+    profile: profile({ recommendationsNeedRefresh: true }),
+    subscription: subscription('active'),
+    expectedRoute: '/app/today',
   },
 ]
 
 for (const smokeCase of cases) {
   const actualRoute = getDefaultRouteForUser(
     smokeCase.user,
-    null,
+    smokeCase.profile,
     smokeCase.subscription,
   )
 
@@ -105,8 +163,13 @@ for (const smokeCase of cases) {
 }
 
 const routerSource = readFileSync(resolve(process.cwd(), 'src/router/AppRouter.tsx'), 'utf8')
+const appRouteSource = readFileSync(resolve(process.cwd(), 'src/router/AppRoute.tsx'), 'utf8')
 const mentorScreenSource = readFileSync(
   resolve(process.cwd(), 'src/screens/mentor/MentorWorkspaceScreens.tsx'),
+  'utf8',
+)
+const dietDaySource = readFileSync(
+  resolve(process.cwd(), 'src/screens/diets/DietDayScreen.tsx'),
   'utf8',
 )
 
@@ -133,4 +196,22 @@ if (mentorScreenSource.includes('ExpertClubV2Screens')) {
   throw new Error('Mentor workspace screens still reference ExpertClubV2Screens.')
 }
 
+// P0: AppRoute must block affiliate from /app/*
+if (!appRouteSource.includes("role === 'affiliate'")) {
+  throw new Error('AppRoute does not contain affiliate gate check.')
+}
+if (!appRouteSource.includes('/affiliate/dashboard')) {
+  throw new Error('AppRoute does not redirect affiliate to /affiliate/dashboard.')
+}
+
+// P0: DietDayScreen must not contain mock substitution options
+if (dietDaySource.includes('Opção A') || dietDaySource.includes('Opção B')) {
+  throw new Error('DietDayScreen still contains mock substitution options (Opção A/B).')
+}
+// Check specifically for the dangerous substitution payload cast pattern
+if (dietDaySource.includes('} as any)') || dietDaySource.includes('substituteFood(')) {
+  throw new Error('DietDayScreen still contains unsafe substitution payload cast or active substituteFood call.')
+}
+
 console.log('Role redirect smoke passed.')
+console.log('P0 flow integrity guards passed.')

@@ -1,13 +1,64 @@
 import { useState, useEffect } from 'react'
+import { toastError } from '../../components/ui/Toast'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Plus, Trash2, Search, Copy, ArrowUp, ArrowDown, Calculator, Utensils, ExternalLink } from 'lucide-react'
 import { PageShell } from '../../components/ui/Premium'
 import { Button } from '../../components/ui/Button'
-import { AdminToolbar, Field, TextInput, TextArea } from './AdminShared'
+import { AdminToolbar, Field, TextInput, TextArea, ConfirmButton } from './AdminShared'
 import { dietService } from '../../services/dietService'
 import { foodService } from '../../services/foodService'
 import { sanitizeTags } from '../../services/adminCrudService'
-import type { Diet, DietMeal, DietMealItem, Food } from '../../types/domain'
+import type {
+  Diet,
+  DietComplexity,
+  DietMeal,
+  DietMealItem,
+  DietProteinLevel,
+  DietRecommendationGoal,
+  DietRecommendationMetadata,
+  Food,
+} from '../../types/domain'
+
+const DIET_GOAL_OPTIONS: Array<{ value: DietRecommendationGoal; label: string }> = [
+  { value: 'fat_loss', label: 'Emagrecimento' },
+  { value: 'hypertrophy', label: 'Hipertrofia' },
+  { value: 'maintenance', label: 'Manutenção' },
+  { value: 'performance', label: 'Performance' },
+]
+
+const DIET_SEX_OPTIONS = [
+  { value: 'male', label: 'Masculino' },
+  { value: 'female', label: 'Feminino' },
+  { value: 'unisex', label: 'Unissex' },
+] as const
+
+const DIET_PREFERENCE_OPTIONS = [
+  { value: 'flexible', label: 'Flexível' },
+  { value: 'economic', label: 'Econômica' },
+  { value: 'low_carb', label: 'Low carb' },
+  { value: 'vegetarian', label: 'Vegetariana' },
+  { value: 'carnivore', label: 'Carnívora' },
+] as const
+
+function toggleDietOption<T extends string>(list: T[] | undefined, value: T): T[] {
+  const current = list || []
+  return current.includes(value) ? current.filter((item) => item !== value) : [...current, value]
+}
+
+function ensureDietMetadata(diet: Omit<Diet, 'id' | 'createdAt' | 'updatedAt' | 'publishedAt'>): DietRecommendationMetadata {
+  return {
+    goals: diet.recommendationMetadata?.goals?.length ? diet.recommendationMetadata.goals : [],
+    sexes: diet.recommendationMetadata?.sexes?.length ? diet.recommendationMetadata.sexes : ['unisex'],
+    preferences: diet.recommendationMetadata?.preferences?.length ? diet.recommendationMetadata.preferences : [],
+    caloriesRange: diet.recommendationMetadata?.caloriesRange ?? {
+      min: Math.max(1200, diet.calories - 150),
+      max: Math.max(1400, diet.calories + 150),
+    },
+    proteinLevel: diet.recommendationMetadata?.proteinLevel || 'standard',
+    complexity: diet.recommendationMetadata?.complexity || 'easy',
+    tags: diet.recommendationMetadata?.tags?.length ? diet.recommendationMetadata.tags : [],
+  }
+}
 
 const emptyDiet: Omit<Diet, 'id' | 'createdAt' | 'updatedAt' | 'publishedAt'> = {
   title: '',
@@ -21,6 +72,15 @@ const emptyDiet: Omit<Diet, 'id' | 'createdAt' | 'updatedAt' | 'publishedAt'> = 
   fat: 0,
   mealsPerDay: 0,
   tags: [],
+  recommendationMetadata: {
+    goals: ['fat_loss'],
+    sexes: ['unisex'],
+    preferences: ['flexible'],
+    caloriesRange: { min: 1650, max: 1950 },
+    proteinLevel: 'standard',
+    complexity: 'easy',
+    tags: [],
+  },
   meals: [],
   shoppingList: [],
   notes: '',
@@ -79,20 +139,17 @@ export function AdminDietEditorScreen() {
   }, [diet.meals])
 
   async function save(statusToSave: Diet['status'] = diet.status) {
-    if (!diet.title || !diet.goal) return alert('Título e Objetivo são obrigatórios.')
-    if (statusToSave === 'published' && diet.meals.length === 0) return alert('Não é possível publicar sem refeições.')
+    if (!diet.title || !diet.goal) return toastError('Título e Objetivo são obrigatórios.')
+    if (statusToSave === 'published' && diet.meals.length === 0) return toastError('Não é possível publicar sem refeições.')
     
     // Add simple validation rule: published requires at least 1 food
     if (statusToSave === 'published' && !diet.meals.some(m => m.items.length > 0)) {
-      return alert('Não é possível publicar uma dieta sem alimentos.')
+      return toastError('Não é possível publicar uma dieta sem alimentos.')
     }
 
     try {
       setIsLoading(true)
       const dataToSave = { ...diet, status: statusToSave }
-      if (statusToSave === 'published' && diet.status !== 'published') {
-        (dataToSave as any).publishedAt = new Date().toISOString()
-      }
 
       if (dietId && dietId !== 'new') {
         await dietService.update(dietId, dataToSave)
@@ -101,7 +158,7 @@ export function AdminDietEditorScreen() {
       }
       navigate('/admin/diets')
     } catch (error) {
-      alert('Erro ao salvar dieta.')
+      toastError('Erro ao salvar dieta.')
       console.error(error)
     } finally {
       setIsLoading(false)
@@ -116,7 +173,7 @@ export function AdminDietEditorScreen() {
       const newId = await dietService.create(copy)
       navigate(`/admin/diets/${newId}`)
     } catch (err) {
-      alert('Erro ao duplicar dieta')
+      toastError('Erro ao duplicar dieta')
     } finally {
       setIsLoading(false)
     }
@@ -161,7 +218,7 @@ export function AdminDietEditorScreen() {
       setShowCaloricVariation(false)
       navigate(`/admin/diets/${newId}`)
     } catch (err) {
-      alert('Erro ao criar variação')
+      toastError('Erro ao criar variação')
     } finally {
       setIsLoading(false)
     }
@@ -294,7 +351,11 @@ export function AdminDietEditorScreen() {
             {dietId !== 'new' && (
               <>
                 <Button variant="ghost" onClick={() => window.open(`/app/diets/${dietId}`, '_blank')} disabled={isLoading} icon={<ExternalLink className="w-4 h-4"/>}>Ver como Aluno</Button>
-                <Button variant="ghost" onClick={duplicateDiet} disabled={isLoading} icon={<Copy className="w-4 h-4"/>}>Duplicar</Button>
+                <div className="flex items-center">
+                  <ConfirmButton variant="ghost" message="Duplicar esta dieta?" onConfirm={duplicateDiet}>
+                    <Copy className="h-4 w-4 mr-2" /> Duplicar
+                  </ConfirmButton>
+                </div>
                 <Button variant="ghost" onClick={() => setShowCaloricVariation(true)} disabled={isLoading} icon={<Calculator className="w-4 h-4"/>}>Variação Calórica</Button>
               </>
             )}
@@ -508,29 +569,224 @@ export function AdminDietEditorScreen() {
               
               <div className="grid grid-cols-2 gap-3">
                 <Field label="Objetivo">
-                  <select className="ec-input w-full rounded-xl px-3 py-2 text-xs text-white focus:outline-none" value={diet.goal} onChange={e => setDiet({ ...diet, goal: e.target.value as any })}>
+                  <select className="ec-input w-full rounded-xl px-3 py-2 text-xs text-white focus:outline-none" value={diet.goal} onChange={e => setDiet({ ...diet, goal: e.target.value as Diet['goal'] })}>
                     <option value="fat_loss">Emagrecimento</option><option value="hypertrophy">Hipertrofia</option><option value="recomposition">Recomp</option><option value="health">Saúde</option>
                   </select>
                 </Field>
                 <Field label="Estilo">
-                  <select className="ec-input w-full rounded-xl px-3 py-2 text-xs text-white focus:outline-none" value={diet.style} onChange={e => setDiet({ ...diet, style: e.target.value as any })}>
+                  <select className="ec-input w-full rounded-xl px-3 py-2 text-xs text-white focus:outline-none" value={diet.style} onChange={e => setDiet({ ...diet, style: e.target.value as Diet['style'] })}>
                     <option value="simple">Simples</option><option value="low_carb">Low Carb</option><option value="intermittent_fasting">Jejum</option><option value="vegetarian">Veg</option><option value="economic">Econômica</option>
                   </select>
                 </Field>
               </div>
 
               <Field label="Nível">
-                <select className="ec-input w-full rounded-xl px-3 py-2 text-xs text-white focus:outline-none" value={diet.level} onChange={e => setDiet({ ...diet, level: e.target.value as any })}>
+                <select className="ec-input w-full rounded-xl px-3 py-2 text-xs text-white focus:outline-none" value={diet.level} onChange={e => setDiet({ ...diet, level: e.target.value as Diet['level'] })}>
                   <option value="beginner">Iniciante</option><option value="intermediate">Intermediário</option><option value="advanced">Avançado</option>
                 </select>
               </Field>
 
               <Field label="Tags"><TextInput value={diet.tags.join(', ')} onChange={e => setDiet({ ...diet, tags: sanitizeTags(e.target.value) })} placeholder="barato, pratico" /></Field>
               <Field label="Observações"><TextArea value={diet.notes || ''} onChange={e => setDiet({ ...diet, notes: e.target.value })} className="min-h-20 text-xs" placeholder="Beber muita água..." /></Field>
+              <button
+                type="button"
+                onClick={() => setDiet(prev => ({ ...prev, accessTier: prev.accessTier === 'mentoring' ? 'all' : 'mentoring' }))}
+                className={`flex items-center gap-3 w-full rounded-xl border px-3 py-2.5 transition-all ${diet.accessTier === 'mentoring' ? 'bg-amber-500/10 border-amber-500/30 text-amber-400' : 'bg-white/5 border-white/10 text-text-muted hover:text-white hover:border-white/20'}`}
+              >
+                <span className="text-[10px] font-black uppercase tracking-widest flex-1 text-left">Exclusivo Mentoria 1:1</span>
+                <div className={`w-8 h-4 rounded-full transition-all relative ${diet.accessTier === 'mentoring' ? 'bg-amber-500' : 'bg-white/20'}`}>
+                  <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white shadow transition-all ${diet.accessTier === 'mentoring' ? 'left-4' : 'left-0.5'}`} />
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <div className="ec-card rounded-2xl p-5">
+            <h2 className="font-display text-lg font-bold uppercase italic text-white mb-4">Metadata de Recomendação</h2>
+            <div className="space-y-4">
+              <ToggleGroup
+                label="Objetivos compatíveis"
+                options={DIET_GOAL_OPTIONS}
+                values={ensureDietMetadata(diet).goals || []}
+                onToggle={(value) =>
+                  setDiet((prev) => ({
+                    ...prev,
+                    recommendationMetadata: {
+                      ...ensureDietMetadata(prev),
+                      goals: toggleDietOption(ensureDietMetadata(prev).goals, value as DietRecommendationGoal),
+                    },
+                  }))
+                }
+              />
+
+              <ToggleGroup
+                label="Sexo recomendado"
+                options={DIET_SEX_OPTIONS}
+                values={ensureDietMetadata(diet).sexes || []}
+                onToggle={(value) =>
+                  setDiet((prev) => ({
+                    ...prev,
+                    recommendationMetadata: {
+                      ...ensureDietMetadata(prev),
+                      sexes: toggleDietOption(ensureDietMetadata(prev).sexes, value as 'male' | 'female' | 'unisex'),
+                    },
+                  }))
+                }
+              />
+
+              <ToggleGroup
+                label="Preferências alimentares"
+                options={DIET_PREFERENCE_OPTIONS}
+                values={ensureDietMetadata(diet).preferences || []}
+                onToggle={(value) =>
+                  setDiet((prev) => ({
+                    ...prev,
+                    recommendationMetadata: {
+                      ...ensureDietMetadata(prev),
+                      preferences: toggleDietOption(
+                        ensureDietMetadata(prev).preferences,
+                        value as 'flexible' | 'economic' | 'low_carb' | 'vegetarian' | 'carnivore',
+                      ),
+                    },
+                  }))
+                }
+              />
+
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="Kcal mínimas">
+                  <TextInput
+                    type="number"
+                    value={ensureDietMetadata(diet).caloriesRange?.min || 0}
+                    onChange={(event) =>
+                      setDiet((prev) => ({
+                        ...prev,
+                        recommendationMetadata: {
+                          ...ensureDietMetadata(prev),
+                          caloriesRange: {
+                            min: Number(event.target.value),
+                            max: ensureDietMetadata(prev).caloriesRange?.max || Number(event.target.value),
+                          },
+                        },
+                      }))
+                    }
+                  />
+                </Field>
+                <Field label="Kcal máximas">
+                  <TextInput
+                    type="number"
+                    value={ensureDietMetadata(diet).caloriesRange?.max || 0}
+                    onChange={(event) =>
+                      setDiet((prev) => ({
+                        ...prev,
+                        recommendationMetadata: {
+                          ...ensureDietMetadata(prev),
+                          caloriesRange: {
+                            min: ensureDietMetadata(prev).caloriesRange?.min || Number(event.target.value),
+                            max: Number(event.target.value),
+                          },
+                        },
+                      }))
+                    }
+                  />
+                </Field>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="Nível de proteína">
+                  <select
+                    className="ec-input w-full rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
+                    value={ensureDietMetadata(diet).proteinLevel || 'standard'}
+                    onChange={(event) =>
+                      setDiet((prev) => ({
+                        ...prev,
+                        recommendationMetadata: {
+                          ...ensureDietMetadata(prev),
+                          proteinLevel: event.target.value as DietProteinLevel,
+                        },
+                      }))
+                    }
+                  >
+                    <option value="standard">Padrão</option>
+                    <option value="high">Alta proteína</option>
+                  </select>
+                </Field>
+                <Field label="Complexidade">
+                  <select
+                    className="ec-input w-full rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
+                    value={ensureDietMetadata(diet).complexity || 'easy'}
+                    onChange={(event) =>
+                      setDiet((prev) => ({
+                        ...prev,
+                        recommendationMetadata: {
+                          ...ensureDietMetadata(prev),
+                          complexity: event.target.value as DietComplexity,
+                        },
+                      }))
+                    }
+                  >
+                    <option value="easy">Fácil</option>
+                    <option value="medium">Intermediária</option>
+                    <option value="advanced">Avançada</option>
+                  </select>
+                </Field>
+              </div>
+
+              <Field label="Tags de recomendação">
+                <TextInput
+                  value={(ensureDietMetadata(diet).tags || []).join(', ')}
+                  onChange={(event) =>
+                    setDiet((prev) => ({
+                      ...prev,
+                      recommendationMetadata: {
+                        ...ensureDietMetadata(prev),
+                        tags: sanitizeTags(event.target.value),
+                      },
+                    }))
+                  }
+                  placeholder="prática, proteína, rotina corrida"
+                />
+              </Field>
             </div>
           </div>
         </aside>
       </div>
     </PageShell>
+  )
+}
+
+function ToggleGroup({
+  label,
+  options,
+  values,
+  onToggle,
+}: {
+  label: string
+  options: ReadonlyArray<{ value: string; label: string }>
+  values: string[]
+  onToggle: (value: string) => void
+}) {
+  return (
+    <div>
+      <p className="mb-2 text-[10px] font-black uppercase tracking-widest text-text-muted">{label}</p>
+      <div className="flex flex-wrap gap-2">
+        {options.map((option) => {
+          const selected = values.includes(option.value)
+          return (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => onToggle(option.value)}
+              className={`rounded-full border px-3 py-2 text-[11px] font-bold transition-colors ${
+                selected
+                  ? 'border-ec-violet bg-ec-violet/10 text-white'
+                  : 'border-white/10 bg-white/[0.03] text-text-muted hover:border-white/20'
+              }`}
+            >
+              {option.label}
+            </button>
+          )
+        })}
+      </div>
+    </div>
   )
 }

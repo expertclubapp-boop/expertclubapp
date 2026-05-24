@@ -1,6 +1,6 @@
 import { collection, deleteDoc, doc, getDoc, getDocs, setDoc, updateDoc } from 'firebase/firestore'
 import { db } from '../lib/firebase/firebase'
-import { dateMillis, nowTimestamp } from '../lib/firebase/date'
+import { dateMillis, normalizeFirestoreWriteData, nowTimestamp, removeUndefinedFields, toFirestoreDate } from '../lib/firebase/date'
 import { adminAuditLogService, type AdminActor } from './adminAuditLogService'
 
 export type AdminStatus = 'draft' | 'published' | 'archived' | 'active' | 'inactive'
@@ -26,7 +26,7 @@ export function sanitizeTags(value: string | string[] | undefined): string[] {
   return (value || '').split(',').map(v => v.trim()).filter(Boolean)
 }
 
-export function createAdminCrudService<T extends { id: string; createdAt?: string; updatedAt?: string }>(
+export function createAdminCrudService<T extends { id: string; createdAt?: unknown; updatedAt?: unknown }>(
   collectionName: string,
   targetType: string,
   defaultOrderField = 'updatedAt',
@@ -41,8 +41,8 @@ export function createAdminCrudService<T extends { id: string; createdAt?: strin
         .sort((a, b) => {
           const leftValue = (a as Record<string, unknown>)[orderField] ?? a.updatedAt ?? a.createdAt
           const rightValue = (b as Record<string, unknown>)[orderField] ?? b.updatedAt ?? b.createdAt
-          const leftMillis = dateMillis(leftValue as any)
-          const rightMillis = dateMillis(rightValue as any)
+          const leftMillis = dateMillis(leftValue as Parameters<typeof dateMillis>[0])
+          const rightMillis = dateMillis(rightValue as Parameters<typeof dateMillis>[0])
           if (leftMillis || rightMillis) return rightMillis - leftMillis
           return String(rightValue ?? '').localeCompare(String(leftValue ?? ''))
         })
@@ -55,23 +55,29 @@ export function createAdminCrudService<T extends { id: string; createdAt?: strin
 
     async save(actor: AdminActor, item: T): Promise<void> {
       const previous = await this.get(item.id)
-      await setDoc(doc(db, collectionName, item.id), {
+      const createdAt = toFirestoreDate((item.createdAt ?? previous?.createdAt) as Parameters<typeof toFirestoreDate>[0]) ?? nowFirestoreTimestamp()
+      const payload = normalizeFirestoreWriteData(removeUndefinedFields({
         ...item,
         updatedAt: nowFirestoreTimestamp(),
-        createdAt: item.createdAt || previous?.createdAt || nowFirestoreTimestamp(),
-      }, { merge: true })
+        createdAt,
+      }))
+      await setDoc(doc(db, collectionName, item.id), payload, { merge: true })
       await adminAuditLogService.create(actor, previous ? 'admin_update' : 'admin_create', targetType, item.id, previous, item)
     },
 
     async patch(actor: AdminActor, id: string, data: Partial<T>): Promise<void> {
       const previous = await this.get(id)
-      await updateDoc(doc(db, collectionName, id), { ...data, updatedAt: nowFirestoreTimestamp() })
+      const payload = normalizeFirestoreWriteData(removeUndefinedFields({ ...data, updatedAt: nowFirestoreTimestamp() }))
+      await updateDoc(doc(db, collectionName, id), payload as Record<string, unknown>)
       await adminAuditLogService.create(actor, 'admin_update', targetType, id, previous, data)
     },
 
     async archive(actor: AdminActor, id: string): Promise<void> {
       const previous = await this.get(id)
-      await updateDoc(doc(db, collectionName, id), { status: 'archived', updatedAt: nowFirestoreTimestamp() })
+      await updateDoc(
+        doc(db, collectionName, id),
+        normalizeFirestoreWriteData({ status: 'archived', updatedAt: nowFirestoreTimestamp() }),
+      )
       await adminAuditLogService.create(actor, 'admin_archive', targetType, id, previous, { status: 'archived' })
     },
 

@@ -14,16 +14,23 @@ import {
   Coffee
 } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
+import { track } from '../../lib/analytics'
 import { useAuth } from '../../contexts/AuthContext'
+import { safeDateKey } from '../../lib/firebase/date'
 import { checkinService } from '../../services/checkinService'
 import { useDailyCheckin } from '../../hooks/useDailyCheckin'
 import { useProgress } from '../../hooks/useProgress'
 import type { DailyCheckin } from '../../types/domain'
 
+type AdminFeedbackCheckin = {
+  adminFeedback?: string
+  reviewStatus?: 'reviewed' | 'changes_requested'
+}
+
 export function DailyCheckinScreen() {
   const navigate = useNavigate()
   const { firebaseUser } = useAuth()
-  const dateKey = new Date().toISOString().split('T')[0]
+  const dateKey = safeDateKey()
   const { checkin: existingCheckin, isLoading } = useDailyCheckin(firebaseUser?.uid, dateKey)
   const { dailyHistory, isLoading: progressLoading } = useProgress(firebaseUser?.uid)
 
@@ -37,6 +44,8 @@ export function DailyCheckinScreen() {
   const [notes, setNotes] = useState('')
   const [isSaving, setIsSaving] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
+
+  const reviewMeta = existingCheckin as (DailyCheckin & AdminFeedbackCheckin) | null
 
   useEffect(() => {
     if (existingCheckin) {
@@ -57,7 +66,7 @@ export function DailyCheckinScreen() {
     for (let i = 0; i < 30; i++) {
       const d = new Date(today)
       d.setDate(today.getDate() - i)
-      const key = d.toISOString().split('T')[0]
+      const key = safeDateKey(d)
       if (dailyHistory.some(h => h.dateKey === key)) streak++
       else if (i > 0) break // stop at first missed day (allow missing today)
     }
@@ -80,10 +89,11 @@ export function DailyCheckinScreen() {
         hunger,
         soreness: existingCheckin?.soreness || 2, // Default
         notes,
-        createdAt: existingCheckin?.createdAt || new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        createdAt: existingCheckin?.createdAt,
+        updatedAt: existingCheckin?.updatedAt
       }
       await checkinService.saveDailyCheckin(firebaseUser.uid, checkinData)
+      track('daily_checkin_submitted', { date_key: checkinData.dateKey })
       setShowSuccess(true)
     } catch (error) {
       console.error("Error saving checkin:", error)
@@ -94,14 +104,14 @@ export function DailyCheckinScreen() {
 
   if (isLoading || progressLoading) {
     return (
-      <div className="ec-student-standalone min-h-screen flex items-center justify-center">
-        <div className="w-10 h-10 border-4 border-ec-violet/30 border-t-ec-violet rounded-full animate-spin" />
+      <div className="min-h-screen bg-ink-900 flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-volt-600/30 border-t-volt-600 rounded-full animate-spin" />
       </div>
     )
   }
 
   return (
-    <div className="ec-student-standalone ec-app-bg min-h-screen text-text-primary pb-32">
+    <div className="bg-ink-900 min-h-screen text-white pb-32">
       <AnimatePresence>
         {showSuccess && (
           <motion.div 
@@ -138,6 +148,18 @@ export function DailyCheckinScreen() {
           <p className="text-text-muted text-sm max-w-sm mx-auto">Não precisa ser perfeito. O importante é registrar. <span className="text-accent-lime">Leva menos de 1 minuto.</span></p>
         </section>
 
+        {reviewMeta?.adminFeedback && (
+          <div className="mb-8 p-6 rounded-3xl border border-ec-violet/30 bg-ec-violet/5">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-xs font-black uppercase tracking-widest text-ec-violet">Feedback do Administrador</span>
+              <span className={`rounded-full border px-2.5 py-1 text-xs font-bold ${(reviewMeta?.reviewStatus === 'reviewed' ? 'bg-accent-lime/10 border-accent-lime/20 text-accent-lime' : 'bg-accent-red/10 border-accent-red/20 text-accent-red')}`}>
+                {reviewMeta?.reviewStatus === 'reviewed' ? 'Revisado' : 'Ajuste Solicitado'}
+              </span>
+            </div>
+            <p className="text-sm text-white italic">"{reviewMeta.adminFeedback}"</p>
+          </div>
+        )}
+
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <ToggleCard icon={<Dumbbell className="w-6 h-6 text-accent-lime" />} label="Treinou hoje?" checked={trained} onChange={setTrained} />
@@ -166,7 +188,7 @@ export function DailyCheckinScreen() {
           </div>
 
           <div className="space-y-3 ec-card p-6 rounded-3xl bg-black/40 border border-white/5">
-            <label className="block font-bold text-[10px] text-text-muted uppercase tracking-widest">Observação Rápida</label>
+            <label className="block text-xs font-bold uppercase tracking-widest text-text-secondary">Observação Rápida</label>
             <textarea 
               value={notes} onChange={(e) => setNotes(e.target.value)}
               className="w-full bg-transparent border border-white/10 rounded-xl focus:border-accent-lime focus:ring-0 text-white p-4 placeholder:text-text-muted/30 transition-all outline-none resize-none" 
@@ -184,7 +206,7 @@ export function DailyCheckinScreen() {
           <div className="ec-card p-6 rounded-3xl relative overflow-hidden group border border-accent-lime/20 bg-accent-lime/5">
             <div className="relative z-10 flex items-center justify-between">
               <div>
-                <h4 className="font-bold text-[10px] uppercase tracking-widest text-text-muted mb-1">Sua Constância</h4>
+                <h4 className="mb-1 text-xs font-bold uppercase tracking-widest text-text-secondary">Sua Constância</h4>
                 <div className="flex items-end gap-2">
                   <span className="text-5xl font-black text-white italic font-display leading-none">{streakCheckins}</span>
                   <span className="text-accent-lime font-bold uppercase text-xs pb-1 tracking-widest">Dias</span>
@@ -220,7 +242,7 @@ function SliderSection({ icon, title, value, min, max, onChange, labels }: { ico
         <span className="ml-auto text-xs font-bold text-accent-lime bg-accent-lime/10 px-2 py-1 rounded">{value}/{max}</span>
       </div>
       <input type="range" min={min} max={max} value={value} onChange={(e) => onChange(Number(e.target.value))} className="w-full h-2 bg-black rounded-lg appearance-none cursor-pointer accent-accent-lime" />
-      <div className="flex justify-between mt-3 text-[10px] text-text-muted uppercase tracking-widest font-bold">
+      <div className="mt-3 flex justify-between text-xs font-bold uppercase tracking-widest text-text-secondary">
         <span>{labels[0]}</span>
         {labels[1] && <span>{labels[1]}</span>}
         <span>{labels[2] || labels[1]}</span>
