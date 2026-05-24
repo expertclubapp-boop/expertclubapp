@@ -10,7 +10,7 @@ import {
   User as FirebaseUser
 } from 'firebase/auth'
 import { auth, db, firebaseEnvReady } from './firebase'
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore'
+import { doc, getDoc, setDoc, serverTimestamp, Timestamp } from 'firebase/firestore'
 import { COLLECTIONS } from './paths'
 
 const googleProvider = new GoogleAuthProvider()
@@ -116,5 +116,27 @@ export async function ensureUserExists(user: FirebaseUser, fallbackDisplayName =
       updatedAt: serverTimestamp(),
     })
   }
-  // Subscriptions are created by the payment webhook or admin — never client-side
+  // Create a pending subscription so admin can see and activate the user
+  // Status 'pending' matches the Firestore rule for user-created subscriptions
+  const subscriptionRef = doc(db, COLLECTIONS.SUBSCRIPTIONS, user.uid)
+  const subscriptionSnap = await getDoc(subscriptionRef)
+  if (!subscriptionSnap.exists()) {
+    const now = Timestamp.now()
+    const nextMonth = Timestamp.fromDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000))
+    await setDoc(subscriptionRef, {
+      uid: user.uid,
+      planId: 'founder',
+      planName: 'Expert Club Fundador',
+      status: 'pending',
+      provider: 'manual',
+      price: 49,
+      currency: 'BRL',
+      interval: 'monthly',
+      startedAt: now,
+      currentPeriodStart: now,
+      currentPeriodEnd: nextMonth,
+      createdAt: now,
+      updatedAt: now,
+    })
+  }
 }
