@@ -9,7 +9,8 @@ import {
   hasActiveSubscriptionStatus,
   isMentoringPlan,
   isOnboardingCompleted,
-  needsPlanSelection,
+  hasPlanConfigured,
+  isAccessibleWithoutPlan,
 } from './utils'
 import { RouteLoader } from './RouteLoader'
 
@@ -17,80 +18,61 @@ interface AppRouteProps {
   children: React.ReactNode
 }
 
-const BILLING_FALLBACK_PATHS = new Set(['/app/billing/lock', '/app/billing/plans'])
-const PLAN_SETUP_ALLOWED_PATHS = new Set(['/app/today', '/app/recommendations', '/app/profile'])
+const BILLING_PATHS_PREFIX = '/app/billing'
 
 export function AppRoute({ children }: AppRouteProps) {
   const { firebaseUser, user, isLoading } = useAuth()
   const { profile, isLoading: isProfileLoading } = useProfile()
   const { subscription, isLoading: isSubscriptionLoading } = useSubscription()
   const location = useLocation()
+  const pathname = location.pathname
 
-  if (isLoading) {
-    return <RouteLoader />
-  }
-
-  if (!firebaseUser) {
-    return <Navigate to="/login" state={{ from: location }} replace />
-  }
-
-  if (!user) {
-    return <RouteLoader />
-  }
+  // ── 1. Auth loading ─────────────────────────────────────────────────────────
+  if (isLoading) return <RouteLoader />
+  if (!firebaseUser) return <Navigate to="/login" state={{ from: location }} replace />
+  if (!user) return <RouteLoader />
 
   const role = getUserRole(user)
 
-  if (role === 'admin') {
-    return <>{children}</>
-  }
+  // ── 2. Role redirect — non-member roles don't belong in /app/* ───────────────
+  if (role === 'admin') return <>{children}</>
+  if (role === 'affiliate') return <Navigate to="/affiliate/dashboard" replace />
+  if (role === 'mentor') return <Navigate to="/mentor/overview" replace />
 
-  // P0: affiliate must not access /app/* — redirect to affiliate dashboard
-  if (role === 'affiliate') {
-    return <Navigate to="/affiliate/dashboard" replace />
-  }
+  // ── 3. Wait for subscription + profile ──────────────────────────────────────
+  if (isSubscriptionLoading) return <RouteLoader />
+  if (isProfileLoading) return <RouteLoader />
 
-  // mentor should also not land inside /app/* student routes
-  if (role === 'mentor') {
-    return <Navigate to="/mentor/overview" replace />
-  }
-
-  if (isSubscriptionLoading) {
-    return <RouteLoader />
-  }
-
-  if (isProfileLoading && role === 'member') {
-    return <RouteLoader />
-  }
-
+  // ── 4. Subscription gate ─────────────────────────────────────────────────────
   const hasActiveSub = hasActiveSubscriptionStatus(getSubscriptionStatus(user, subscription))
-
-  if (role === 'member' && !hasActiveSub) {
-    if (!BILLING_FALLBACK_PATHS.has(location.pathname)) {
+  if (!hasActiveSub) {
+    if (!pathname.startsWith(BILLING_PATHS_PREFIX)) {
       return <Navigate to="/app/billing/lock" replace />
     }
-    // On billing pages with no active subscription: render immediately.
-    // Must not fall through — the onboarding/anamnesis checks would loop with OnboardingRoute.
+    // Billing pages render without further checks to prevent circular redirects.
     return <>{children}</>
   }
 
-  if (role === 'member' && !isOnboardingCompleted(user, profile)) {
+  // ── 5. Onboarding gate ───────────────────────────────────────────────────────
+  if (!isOnboardingCompleted(user, profile)) {
     return <Navigate to="/onboarding" replace />
   }
 
-  if (role === 'member' && needsPlanSelection(profile)) {
-    if (!PLAN_SETUP_ALLOWED_PATHS.has(location.pathname)) {
-      return <Navigate to="/app/recommendations" replace />
-    }
-  }
-
-  // 1:1 mentoring members must complete the extended anamnesis before accessing the app
+  // ── 6. Mentoring anamnesis gate ──────────────────────────────────────────────
+  // Must run BEFORE plan-configuration gate so /app/anamnese-mentoria is reachable.
   if (
-    role === 'member' &&
     isMentoringPlan(getPlanTier(subscription)) &&
     !profile?.mentoringAnamnesisCompleted &&
-    !location.pathname.startsWith('/app/anamnese-mentoria')
+    !pathname.startsWith('/app/anamnese-mentoria')
   ) {
     return <Navigate to="/app/anamnese-mentoria" replace />
+  }
+
+  // ── 7. Plan-configuration nudge ──────────────────────────────────────────────
+  // Users without a selected workout + diet are guided to recommendations,
+  // but they can still browse most of the app in read-only mode.
+  if (!hasPlanConfigured(profile) && !isAccessibleWithoutPlan(pathname)) {
+    return <Navigate to="/app/recommendations" replace />
   }
 
   return <>{children}</>

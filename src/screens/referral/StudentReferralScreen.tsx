@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { Copy, Share2, Users, Gift, TrendingUp, CheckCircle, Clock, AlertCircle } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { referralService } from '../../services/referralService'
+import { track } from '../../lib/analytics'
 import { walletService } from '../../services/walletService'
 import { Button } from '../../components/ui/Button'
 import {
@@ -40,6 +41,7 @@ export function StudentReferralScreen() {
       setReferrals(refs)
     } catch (err) {
       console.error('Error loading referral data:', err)
+      track('error_referral_load')
     } finally {
       setIsLoading(false)
     }

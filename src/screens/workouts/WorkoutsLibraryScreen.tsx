@@ -128,7 +128,7 @@ export function WorkoutsLibraryScreen() {
           <button
             onClick={() => setShowFilters((value) => !value)}
             className={cx(
-              'absolute right-3 top-1/2 -translate-y-1/2 rounded-xl p-2 transition-all',
+              'absolute right-3 top-1/2 -translate-y-1/2 rounded-xl p-2 min-h-[44px] min-w-[44px] flex items-center justify-center transition-all',
               showFilters ? 'bg-ec-violet text-white' : 'bg-white/5 text-text-muted hover:text-white'
             )}
           >
@@ -250,7 +250,7 @@ function FilterRow({
             key={id}
             onClick={() => onChange(id)}
             className={cx(
-              'whitespace-nowrap rounded-xl px-4 py-2.5 text-xs font-black uppercase tracking-widest transition-all',
+              'whitespace-nowrap rounded-xl px-4 py-2.5 min-h-[44px] text-xs font-black uppercase tracking-widest transition-all',
               value === id ? 'bg-ec-violet text-white shadow-lg shadow-ec-violet/20' : 'bg-white/5 text-text-muted hover:text-white'
             )}
           >

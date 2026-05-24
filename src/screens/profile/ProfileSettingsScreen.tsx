@@ -82,7 +82,7 @@ export function ProfileSettingsScreen() {
             })
             setIsEditing(true)
           }}
-          className="ec-glass rounded-lg px-4 py-2 text-text-muted text-xs font-bold flex items-center gap-2 hover:text-white transition-colors"
+          className="ec-glass rounded-lg px-4 py-2 min-h-[44px] text-text-muted text-xs font-bold flex items-center gap-2 hover:text-white transition-colors"
         >
           <Edit3 className="w-4 h-4" />
           Editar Perfil
@@ -144,7 +144,7 @@ export function ProfileSettingsScreen() {
         <button
           type="button"
           onClick={() => navigate('/app/billing')}
-          className="bg-ec-violet/12 border border-ec-violet/22 text-ec-violet text-[11px] font-bold rounded-lg px-4 py-2 uppercase tracking-widest hover:bg-ec-violet/20 transition-all"
+          className="bg-ec-violet/12 border border-ec-violet/22 text-ec-violet text-[11px] font-bold rounded-lg px-4 py-2 min-h-[44px] uppercase tracking-widest hover:bg-ec-violet/20 transition-all"
         >
           Gerenciar
         </button>
@@ -234,14 +234,14 @@ export function ProfileSettingsScreen() {
                 <button
                   type="button"
                   onClick={handleLogout}
-                  className="rounded-lg bg-accent-red px-3 py-2 text-[11px] font-black uppercase tracking-widest text-white"
+                  className="rounded-lg bg-accent-red px-3 py-2 min-h-[44px] text-[11px] font-black uppercase tracking-widest text-white"
                 >
                   Sair
                 </button>
                 <button
                   type="button"
                   onClick={() => setIsConfirmingLogout(false)}
-                  className="rounded-lg border border-white/12 px-3 py-2 text-[11px] font-black uppercase tracking-widest text-text-primary"
+                  className="rounded-lg border border-white/12 px-3 py-2 min-h-[44px] text-[11px] font-black uppercase tracking-widest text-text-primary"
                 >
                   Cancelar
                 </button>

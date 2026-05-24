@@ -136,14 +136,16 @@ export function DietDayScreen() {
                     {mealLogs.map((log: any) => (
                       <div key={log.foodId} className="flex items-center justify-between py-2 border-t border-white/5 first:border-t-0">
                         <div className="flex items-center gap-3">
-                           <button 
+                           <button
                              onClick={() => toggleFood(mealId, log.foodId)}
-                             className={cx(
+                             className="min-h-[44px] min-w-[44px] flex items-center justify-center -m-2.5"
+                           >
+                             <span className={cx(
                                "w-5 h-5 rounded flex items-center justify-center border transition-all",
                                (log.completed || log.consumed) ? "bg-ec-violet border-ec-violet text-white" : "bg-white/5 border-white/10"
-                             )}
-                           >
-                             {(log.completed || log.consumed) && <Check size={12} />}
+                             )}>
+                               {(log.completed || log.consumed) && <Check size={12} />}
+                             </span>
                            </button>
                            <div>
                               <p className={cx("text-xs font-bold", (log.completed || log.consumed) ? "text-text-muted line-through" : "text-white")}>
@@ -152,9 +154,9 @@ export function DietDayScreen() {
                               <p className="text-[10px] text-text-muted">{log.amount || log.quantity} {log.unit}</p>
                            </div>
                         </div>
-                        <button 
+                        <button
                           onClick={() => setSubstitutionTarget({ mealId, food: log })}
-                          className="p-2 text-text-muted hover:text-ec-violet transition-colors"
+                          className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-text-muted hover:text-ec-violet transition-colors"
                         >
                           <RefreshCw size={14} />
                         </button>
@@ -190,7 +192,7 @@ export function DietDayScreen() {
           <V2Card className="w-full max-w-md p-6 animate-in slide-in-from-bottom-8 duration-300">
              <div className="flex justify-between items-center mb-6">
                 <h3 className="text-xl font-black italic text-white uppercase">Substituir</h3>
-                <button onClick={() => setSubstitutionTarget(null)} className="text-text-muted"><X size={24} /></button>
+                <button onClick={() => setSubstitutionTarget(null)} className="text-text-muted min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg hover:bg-white/5 transition-colors"><X size={24} /></button>
              </div>
              
              <p className="text-sm text-text-muted mb-6">Substitua <span className="text-white font-bold">{substitutionTarget.food.foodName}</span> por uma opção equivalente em macronutrientes.</p>

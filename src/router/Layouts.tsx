@@ -52,6 +52,9 @@ export function MentorLayout() {
     '/mentor/financeiro': 'Financeiro',
     '/mentor/influencers': 'Influencers',
     '/mentor/agenda': 'Agenda',
+    '/mentor/prescriptions': 'Prescrições',
+    '/mentor/treinos/prescritor': 'Treinos',
+    '/mentor/dietas/prescritor': 'Dietas',
     '/mentor/relatorios': 'Relatórios',
     '/mentor/configuracoes': 'Configurações'
   }

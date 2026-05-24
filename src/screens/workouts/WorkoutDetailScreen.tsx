@@ -311,7 +311,7 @@ function ExerciseVideoModal({
             <p className="text-xs font-black uppercase tracking-widest text-ec-violet">Vídeo demonstrativo</p>
             <h3 className="mt-1 text-lg font-black italic uppercase text-white">{exercise.exerciseName}</h3>
           </div>
-          <button type="button" onClick={onClose} className="rounded-full border border-white/10 px-3 py-2 text-xs font-black uppercase tracking-widest text-text-muted">
+          <button type="button" onClick={onClose} className="rounded-full border border-white/10 px-3 py-2 min-h-[44px] text-xs font-black uppercase tracking-widest text-text-muted">
             Fechar
           </button>
         </div>

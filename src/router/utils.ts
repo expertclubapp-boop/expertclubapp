@@ -67,6 +67,48 @@ export function isLowTicket(tier: PlanTier): boolean {
   return tier === 'low_ticket'
 }
 
+// ─── Capability helpers ────────────────────────────────────────────────────────
+// These express WHAT a user can do, not WHICH paths they're allowed to visit.
+// The router uses these to decide whether to gate or allow access.
+
+/** User has an active subscription and has completed onboarding. */
+export function canUseApp(user: User | null, profile?: UserProfile | null, subscription?: Subscription | null): boolean {
+  if (!user) return false
+  return hasActiveSubscriptionStatus(getSubscriptionStatus(user, subscription)) && isOnboardingCompleted(user, profile)
+}
+
+/** User has selected both a workout and a diet (plan is configured). */
+export function hasPlanConfigured(profile?: UserProfile | null): boolean {
+  return Boolean(profile?.selectedWorkoutId && profile?.selectedDietId)
+}
+
+/** Paths that are accessible even when no plan has been configured yet.
+ *  These are "browse-mode" routes — the user can explore but cannot
+ *  start a specific workout session or log a diet day without a plan.
+ *  Prefer startsWith() so nested routes (e.g. /app/workouts/123) are covered.
+ */
+export function isAccessibleWithoutPlan(pathname: string): boolean {
+  const OPEN_PREFIXES = [
+    '/app/recommendations',
+    '/app/anamnese-mentoria',
+    '/app/today',
+    '/app/workouts',
+    '/app/diets',
+    '/app/challenges',
+    '/app/community',
+    '/app/evolution',
+    '/app/billing',
+    '/app/indicar',
+    '/app/carteira',
+    '/app/profile',
+    '/app/checkin',
+    '/app/hydration',
+    '/app/store',
+    '/app/content',
+  ] as const
+  return OPEN_PREFIXES.some(prefix => pathname.startsWith(prefix))
+}
+
 export function getDefaultRouteForUser(
   user: User | null,
   profile?: UserProfile | null,

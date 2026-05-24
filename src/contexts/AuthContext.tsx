@@ -3,6 +3,8 @@ import {
   useContext,
   useState,
   useEffect,
+  useCallback,
+  useMemo,
   type ReactNode,
 } from 'react'
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth'
@@ -118,7 +120,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  const loginWithGoogle = async () => {
+  const loginWithGoogle = useCallback(async () => {
     setIsLoading(true)
     try {
       await signInWithGoogle()
@@ -127,9 +129,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsLoading(false)
       throw error
     }
-  }
+  }, [])
 
-  const loginWithEmail = async (email: string, password: string) => {
+  const loginWithEmail = useCallback(async (email: string, password: string) => {
     setIsLoading(true)
     try {
       await signInWithEmail(email, password)
@@ -138,9 +140,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsLoading(false)
       throw error
     }
-  }
+  }, [])
 
-  const signupWithEmail = async (email: string, password: string, displayName: string) => {
+  const signupWithEmail = useCallback(async (email: string, password: string, displayName: string) => {
     setIsLoading(true)
     try {
       await createAccountWithEmail(email, password, displayName)
@@ -149,13 +151,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsLoading(false)
       throw error
     }
-  }
+  }, [])
 
-  const resetPassword = async (email: string) => {
+  const resetPassword = useCallback(async (email: string) => {
     await sendResetPasswordEmail(email)
-  }
+  }, [])
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
       track('user_signed_out')
       resetAnalyticsUser()
@@ -163,24 +165,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       throw error
     }
-  }
+  }, [])
+
+  const contextValue = useMemo(() => ({
+    user,
+    firebaseUser,
+    isAuthenticated: !!firebaseUser,
+    isLoading,
+    isQaBypass,
+    isFirebaseConfigured: firebaseEnvReady,
+    loginWithGoogle,
+    loginWithEmail,
+    signupWithEmail,
+    resetPassword,
+    logout,
+  }), [user, firebaseUser, isLoading, isQaBypass, loginWithGoogle, loginWithEmail, signupWithEmail, resetPassword, logout])
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        firebaseUser,
-        isAuthenticated: !!firebaseUser,
-        isLoading,
-        isQaBypass,
-        isFirebaseConfigured: firebaseEnvReady,
-        loginWithGoogle,
-        loginWithEmail,
-        signupWithEmail,
-        resetPassword,
-        logout,
-      }}
-    >
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   )

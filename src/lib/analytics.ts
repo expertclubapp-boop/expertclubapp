@@ -48,28 +48,52 @@ export type AnalyticsEvent =
   | 'user_signed_out'
   | 'password_reset_requested'
   // Onboarding
+  | 'onboarding_step_viewed'
   | 'onboarding_step_completed'
   | 'onboarding_completed'
+  | 'onboarding_back_navigation'
+  // Plan selection (critical funnel step)
+  | 'recommendations_viewed'
+  | 'plan_workout_selected'
+  | 'plan_diet_selected'
+  | 'plan_confirmed'
   // Workout
   | 'workout_session_started'
+  | 'workout_set_completed'
   | 'workout_session_completed'
   | 'workout_session_abandoned'
+  | 'workout_exercise_substituted'
   // Diet
   | 'diet_day_logged'
   | 'diet_meal_checked'
+  | 'diet_food_substitution_used'
+  | 'diet_adherence_milestone'
+  // Hydration
+  | 'hydration_logged'
+  | 'hydration_goal_reached'
   // Check-in
   | 'daily_checkin_submitted'
   | 'weekly_checkin_submitted'
   | 'body_checkin_submitted'
-  // Subscription
+  // Community
+  | 'community_post_created'
+  | 'community_post_liked'
+  | 'community_comment_added'
+  | 'community_feed_load_error'
+  // Subscription + billing funnel
+  | 'billing_lock_reached'
   | 'subscription_plan_viewed'
   | 'subscription_checkout_started'
   // Gamification
   | 'challenge_joined'
   | 'badge_earned'
   | 'streak_milestone'
-  // Hydration
-  | 'hydration_logged'
   // Push notifications
   | 'push_notification_granted'
   | 'push_notification_denied'
+  // Profile
+  | 'profile_updated'
+  | 'profile_photo_uploaded'
+  // Errors (for observability)
+  | 'error_wallet_load'
+  | 'error_referral_load'

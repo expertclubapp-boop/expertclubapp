@@ -16,6 +16,7 @@ import { NotificationsDrawer } from '../../components/ui/NotificationsDrawer'
 import { useCommunityFeed } from '../../hooks/useCommunityFeed'
 import { communityFeedService } from '../../services/communityFeedService'
 import { useAuth } from '../../contexts/AuthContext'
+import { track } from '../../lib/analytics'
 import { Button } from '../../components/ui/Button'
 import { PageShell } from '../../components/ui/Premium'
 import { toastError, toastInfo, toastSuccess } from '../../components/ui/Toast'
@@ -24,7 +25,7 @@ import type { CommunityPost, CommunityComment } from '../../types/domain'
 const POST_COOLDOWN_MS = 30_000
 
 export function CommunityScreen() {
-  const { posts, isLoading, isLoadingMore, hasMore, reload, loadMore } = useCommunityFeed()
+  const { posts, isLoading, isLoadingMore, hasMore, error, reload, loadMore } = useCommunityFeed()
   const { firebaseUser } = useAuth()
   const [newPostContent, setNewPostContent] = useState('')
   const [isPosting, setIsPosting] = useState(false)
@@ -54,9 +55,11 @@ export function CommunityScreen() {
         status: 'published'
       })
       setNewPostContent('')
+      track('community_post_created')
       reload()
-    } catch (error) {
-      console.error("Error posting:", error)
+    } catch (err) {
+      console.error('Error posting:', err)
+      toastError('Não foi possível publicar. Tente novamente.')
     } finally {
       setIsPosting(false)
     }
@@ -65,6 +68,7 @@ export function CommunityScreen() {
   const handleLike = async (postId: string) => {
     if (!firebaseUser) return
     await communityFeedService.toggleLike(postId, firebaseUser.uid)
+    track('community_post_liked')
     reload()
   }
 
@@ -75,8 +79,50 @@ export function CommunityScreen() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-[60vh]">
-        <div className="w-10 h-10 border-4 border-ec-violet/30 border-t-ec-violet rounded-full animate-spin" />
+      <div className="flex flex-col gap-4 pt-4">
+        {[...Array(3)].map((_, i) => (
+          <div key={i} className="rounded-3xl bg-white/5 border border-white/5 p-6 space-y-3 animate-pulse">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-white/10 shrink-0" />
+              <div className="flex-1 space-y-2">
+                <div className="h-3 bg-white/10 rounded w-1/3" />
+                <div className="h-2 bg-white/10 rounded w-1/4" />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <div className="h-3 bg-white/10 rounded" />
+              <div className="h-3 bg-white/10 rounded w-4/5" />
+            </div>
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  if (error) {
+    const isPermissions = error === 'permissions'
+    const isOffline = error === 'offline'
+    return (
+      <div className="flex flex-col items-center justify-center h-[50vh] gap-4 text-center px-4">
+        <div className="w-12 h-12 rounded-2xl bg-accent-red/10 border border-accent-red/20 flex items-center justify-center">
+          <MessageCircle className="w-6 h-6 text-accent-red" />
+        </div>
+        <div>
+          <p className="font-bold text-white text-sm">
+            {isOffline ? 'Sem conexão' : isPermissions ? 'Acesso temporariamente restrito' : 'Comunidade indisponível'}
+          </p>
+          <p className="text-text-muted text-xs mt-1">
+            {isOffline ? 'Verifique sua internet e tente novamente.' : 'Tente novamente em alguns instantes.'}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={reload}
+          className="flex items-center gap-2 px-4 py-2 min-h-[44px] rounded-xl bg-ec-violet/10 border border-ec-violet/20 text-ec-violet text-xs font-bold uppercase tracking-widest"
+        >
+          <Loader2 className="w-3.5 h-3.5" />
+          Tentar novamente
+        </button>
       </div>
     )
   }
@@ -122,7 +168,7 @@ export function CommunityScreen() {
                    <span className="text-[10px] text-text-muted/50 font-bold">{newPostContent.length}/1000</span>
                 </div>
                 <div className="flex items-center justify-between border-t border-white/5 pt-4 mt-2">
-                  <button className="flex items-center gap-2 text-text-muted hover:text-ec-violet transition-colors text-xs font-bold uppercase tracking-widest">
+                  <button className="flex items-center gap-2 min-h-[44px] text-text-muted hover:text-ec-violet transition-colors text-xs font-bold uppercase tracking-widest">
                     <ImageIcon className="w-4 h-4" />
                     <span>Anexar Foto</span>
                   </button>
@@ -320,7 +366,7 @@ function PostCard({ post, onLike, onReport, currentUserId, currentUserName, relo
             </div>
           </div>
           {/* Report button */}
-          <button onClick={onReport} className="p-2 rounded-lg text-text-muted/30 hover:text-accent-red hover:bg-accent-red/5 transition-all" title="Reportar">
+          <button onClick={onReport} className="p-2 min-h-[44px] min-w-[44px] rounded-lg text-text-muted/30 hover:text-accent-red hover:bg-accent-red/5 transition-all flex items-center justify-center" title="Reportar">
             <Flag className="w-4 h-4" />
           </button>
         </div>

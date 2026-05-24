@@ -16,6 +16,7 @@ import { StatusPill } from '../../components/ui/StatusPill'
 import { WhatsAppIcon } from '../../components/icons/WhatsAppIcon'
 import { useAuth } from '../../contexts/AuthContext'
 import { billingService } from '../../services/billingService'
+import { track } from '../../lib/analytics'
 import { useNavigate } from 'react-router-dom'
 import type { SubscriptionStatus } from '../../types/domain'
 
@@ -107,6 +108,7 @@ export function SubscriptionLockScreen() {
       try {
         const sub = await billingService.getSubscription(firebaseUser.uid)
         setSubscription(sub)
+        track('billing_lock_reached', { status: sub?.status ?? 'unknown' })
       } catch (e) {
         console.error(e)
       } finally {
