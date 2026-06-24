@@ -133,9 +133,33 @@ export function RecommendationsScreen() {
     }
   }
 
+  // Show "last step" progression strip when the user arrives from onboarding
+  // (no plan selected yet) and is NOT refreshing an existing plan.
+  const isFirstTimeSetup = !profile?.selectedWorkoutId && !profile?.selectedDietId && !profile?.recommendationsNeedRefresh
+
   return (
     <ExpertClubMobileShell active="Início" title="Recomendações" subtitle={headerSubtitle}>
       <div className="flex flex-col gap-5 pb-28">
+
+        {/* ── Last-step progression strip (only shown on first setup) ── */}
+        {isFirstTimeSetup && !isLoading && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mx-0 flex items-center gap-3 rounded-2xl border border-accent-lime/25 bg-accent-lime/8 px-4 py-3"
+          >
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent-lime/20 text-accent-lime">
+              <CheckCircle2 className="h-4 w-4" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-bold text-accent-lime uppercase tracking-widest">Último passo</p>
+              <p className="text-xs text-text-secondary mt-0.5 leading-snug">
+                Selecione um treino e uma dieta para liberar toda a plataforma.
+              </p>
+            </div>
+          </motion.div>
+        )}
+
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}

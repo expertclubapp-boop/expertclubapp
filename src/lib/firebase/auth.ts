@@ -10,8 +10,7 @@ import {
   User as FirebaseUser
 } from 'firebase/auth'
 import { auth, db, firebaseEnvReady } from './firebase'
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore'
-import { nowTimestamp, toFirestoreDate } from './date'
+import { doc, getDoc, setDoc, serverTimestamp, Timestamp } from 'firebase/firestore'
 import { COLLECTIONS } from './paths'
 
 const googleProvider = new GoogleAuthProvider()
@@ -26,17 +25,8 @@ function getFirebaseServices() {
 
 export const signInWithGoogle = async () => {
   const { auth } = getFirebaseServices()
-  try {
-    const result = await signInWithPopup(auth, googleProvider)
-    const user = result.user
-    
-    // Check if user exists in Firestore, if not create
-    await ensureUserExists(user)
-    
-    return user
-  } catch (error) {
-    throw error
-  }
+  const result = await signInWithPopup(auth, googleProvider)
+  return result.user
 }
 
 export const createAccountWithEmail = async (
@@ -45,29 +35,17 @@ export const createAccountWithEmail = async (
   displayName: string
 ) => {
   const { auth } = getFirebaseServices()
-  try {
-    const result = await createUserWithEmailAndPassword(auth, email, password)
-
-    if (displayName.trim()) {
-      await updateProfile(result.user, { displayName: displayName.trim() })
-    }
-
-    await ensureUserExists(result.user, displayName.trim())
-    return result.user
-  } catch (error) {
-    throw error
+  const result = await createUserWithEmailAndPassword(auth, email, password)
+  if (displayName.trim()) {
+    await updateProfile(result.user, { displayName: displayName.trim() })
   }
+  return result.user
 }
 
 export const signInWithEmail = async (email: string, password: string) => {
   const { auth } = getFirebaseServices()
-  try {
-    const result = await signInWithEmailAndPassword(auth, email, password)
-    await ensureUserExists(result.user)
-    return result.user
-  } catch (error) {
-    throw error
-  }
+  const result = await signInWithEmailAndPassword(auth, email, password)
+  return result.user
 }
 
 export const sendResetPasswordEmail = async (email: string) => {
@@ -138,17 +116,18 @@ export async function ensureUserExists(user: FirebaseUser, fallbackDisplayName =
       updatedAt: serverTimestamp(),
     })
   }
-
+  // Create a pending subscription so admin can see and activate the user
+  // Status 'pending' matches the Firestore rule for user-created subscriptions
   const subscriptionRef = doc(db, COLLECTIONS.SUBSCRIPTIONS, user.uid)
   const subscriptionSnap = await getDoc(subscriptionRef)
   if (!subscriptionSnap.exists()) {
-    const now = nowTimestamp()
-    const nextMonth = toFirestoreDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000))
+    const now = Timestamp.now()
+    const nextMonth = Timestamp.fromDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000))
     await setDoc(subscriptionRef, {
       uid: user.uid,
       planId: 'founder',
       planName: 'Expert Club Fundador',
-      status: 'trialing',
+      status: 'pending',
       provider: 'manual',
       price: 49,
       currency: 'BRL',

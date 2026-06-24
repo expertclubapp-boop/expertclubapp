@@ -60,10 +60,10 @@ export function ExpertClubMobileTop({
   return (
     <header className="ec-v2-mobile-top">
       {back && (
-        <button 
-          onClick={() => navigate(-1)} 
-          aria-label="Voltar" 
-          className="p-2 -ml-2 text-text-primary"
+        <button
+          onClick={() => navigate(-1)}
+          aria-label="Voltar"
+          className="p-2 -ml-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-text-primary"
         >
           <Home size={24} />
         </button>
@@ -86,7 +86,7 @@ export function ExpertClubMobileTop({
       )}
       
       <div className="ec-v2-mobile-actions ml-auto flex items-center gap-3">
-        <button className="text-text-muted hover:text-white transition-colors">
+        <button className="min-h-[44px] min-w-[44px] flex items-center justify-center text-text-muted hover:text-white transition-colors rounded-lg">
           <Bell size={24} aria-hidden="true" />
         </button>
         <V2Avatar uid={firebaseUser?.uid} name={firebaseUser?.displayName || 'User'} size="md" />

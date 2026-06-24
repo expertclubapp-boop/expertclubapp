@@ -1,5 +1,6 @@
 import { lazy } from 'react'
 import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom'
+import { RouteErrorPage } from './RouteErrorPage'
 import { AppShell } from '../components/layout/AppShell'
 import { useAuth } from '../contexts/AuthContext'
 import { useProfile } from '../hooks/useProfile'
@@ -184,6 +185,7 @@ export const router = createBrowserRouter([
         <Outlet />
       </AppRoute>
     ),
+    errorElement: <RouteErrorPage />,
     children: [
       {
         path: 'anamnese-mentoria',
@@ -343,6 +345,7 @@ export const router = createBrowserRouter([
         <MentorLayout />
       </MentorRoute>
     ),
+    errorElement: <RouteErrorPage />,
     children: [
       {
         index: true,
@@ -398,6 +401,10 @@ export const router = createBrowserRouter([
       },
       {
         path: 'workouts/prescriptor',
+        element: <Navigate to="/mentor/treinos/prescritor" replace />,
+      },
+      {
+        path: 'prescriptions',
         element: <Navigate to="/mentor/treinos/prescritor" replace />,
       },
       {

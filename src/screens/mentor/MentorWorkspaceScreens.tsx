@@ -8,6 +8,9 @@ import {
   Users,
   Search,
   User,
+  Dumbbell,
+  Utensils,
+  TrendingUp,
 } from 'lucide-react'
 import { AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
@@ -18,6 +21,7 @@ import {
   useMentorCheckins,
   useMentorFinance,
   useMentorInfluencers,
+  useMentorOverview,
   useMentorReports,
   useMentorStudents,
 } from '../../hooks/mentor/useMentorWorkspace'
@@ -63,24 +67,63 @@ function SlicingNotice() {
 }
 
 export function MentorOverviewScreen() {
+  const { user } = useAuth()
+  const { data, isLoading } = useMentorOverview()
+
+  if (isLoading) {
+    return <div className="py-20 flex justify-center"><div className="w-8 h-8 border-4 border-ec-violet/30 border-t-ec-violet rounded-full animate-spin" /></div>
+  }
+
   return (
-    <div className="space-y-8 max-w-2xl mx-auto py-20 text-center">
-      <SectionHeader 
-        title="Área Deprecada" 
-        eyebrow="AVISO IMPORTANTE" 
-        subtitle="O Expert Club B2C unificou a operação no perfil de Administrador." 
+    <div className="space-y-8">
+      <SectionHeader
+        title="Visão Geral"
+        eyebrow="MENTOR DASHBOARD"
+        subtitle={data?.scopeNote || 'Painel de mentoria do Expert Club'}
+        isPartial={data?.isPartial}
       />
-      <V2Card className="p-8">
-        <AlertTriangle className="w-12 h-12 text-accent-yellow mx-auto mb-4" />
-        <h2 className="text-xl font-black italic text-white uppercase mb-2">Painel de Mentor Desativado</h2>
-        <p className="text-sm text-text-muted mb-6">
-          A estrutura de múltiplos mentores não faz parte do escopo operacional atual do Expert Club.
-          Todas as ferramentas de prescrição, acompanhamento de alunos e check-ins foram movidas para o painel de <strong>Administrador</strong>.
-        </p>
-        <p className="text-[10px] font-bold uppercase tracking-widest text-ec-violet">
-          Se você é o operador do sistema, acesse com uma conta Admin.
-        </p>
-      </V2Card>
+
+      {/* KPI Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
+        <V2StatCard icon={Users} label="Alunos Ativos" value={data?.activeStudents ?? '--'} tone="violet" />
+        <V2StatCard icon={ClipboardCheck} label="Check-ins Pendentes" value={data?.pendingCheckins ?? '--'} warning={(data?.pendingCheckins ?? 0) > 5} />
+        <V2StatCard icon={Dumbbell} label="Treinos / Semana" value={data?.completedWorkoutsWeek ?? '--'} tone="info" />
+        <V2StatCard icon={Utensils} label="Aderência Dieta" value={data?.averageDietAdherence != null ? `${Math.round(data.averageDietAdherence)}%` : '--'} tone="violet" />
+        <V2StatCard icon={CircleDollarSign} label="MRR Estimado" value={formatCurrency(data?.estimatedMrr ?? 0)} tone="violet" />
+        <V2StatCard icon={TrendingUp} label="Afiliados Ativos" value={data?.activeAffiliates ?? '--'} tone="info" />
+      </div>
+
+      {/* Alunos que precisam de atenção */}
+      {(data?.attentionStudents?.length ?? 0) > 0 && (
+        <V2Card className="p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <AlertTriangle className="w-4 h-4 text-accent-yellow" />
+            <h3 className="text-sm font-black uppercase tracking-widest text-accent-yellow">Alunos que precisam de atenção</h3>
+          </div>
+          <div className="space-y-3">
+            {data!.attentionStudents.map((s) => (
+              <div key={s.uid} className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.03] border border-white/5">
+                <V2Avatar uid={s.uid} name={s.displayName} size="sm" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-white truncate">{s.displayName}</p>
+                  <p className="text-[10px] text-text-muted uppercase tracking-widest">{s.planName}</p>
+                </div>
+                <V2Badge tone={s.subscriptionStatus === 'active' ? 'violet' : 'danger'}>
+                  {s.subscriptionStatus}
+                </V2Badge>
+              </div>
+            ))}
+          </div>
+        </V2Card>
+      )}
+
+      {/* Boas vindas quando não há dados */}
+      {!data && (
+        <V2Card className="p-8 text-center">
+          <User className="w-10 h-10 text-text-muted mx-auto mb-3" />
+          <p className="text-sm text-text-muted">Bem-vindo, {user?.displayName || 'Mentor'}. Os dados serão carregados em instantes.</p>
+        </V2Card>
+      )}
     </div>
   )
 }

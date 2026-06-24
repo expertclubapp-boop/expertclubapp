@@ -7503,13 +7503,20 @@ select {
   backdrop-filter: blur(18px);
 }
 
-.ec-v2-bottom-nav a {
+.ec-v2-bottom-nav a,
+.ec-v2-bottom-nav button {
   min-height: 54px;
   display: grid;
   place-items: center;
   color: #52607a;
   font-size: 12px;
   font-weight: 750;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font-family: inherit;
+  width: 100%;
 }
 
 .ec-v2-bottom-nav svg {
@@ -7517,11 +7524,13 @@ select {
   height: 25px;
 }
 
-.ec-v2-bottom-nav a.is-active {
+.ec-v2-bottom-nav a.is-active,
+.ec-v2-bottom-nav button.is-active {
   color: var(--v2-violet);
 }
 
-.ec-v2-bottom-nav a.is-active svg {
+.ec-v2-bottom-nav a.is-active svg,
+.ec-v2-bottom-nav button.is-active svg {
   fill: rgba(108, 77, 255, 0.12);
 }
 
@@ -9095,7 +9104,7 @@ select {
 
 .ec-student-app-main .ec-card button,
 .ec-student-app-main .ec-v2-card button {
-  min-height: 40px;
+  min-height: 44px;
 }
 
 .ec-student-app-main .sticky.top-24 {

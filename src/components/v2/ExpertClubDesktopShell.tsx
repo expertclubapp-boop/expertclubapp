@@ -1,4 +1,4 @@
-import { type ReactNode } from 'react'
+import { type ReactNode, useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import {
   Home,
@@ -25,6 +25,8 @@ import {
   DollarSign,
   UserCheck,
   Activity,
+  Menu,
+  X,
 } from 'lucide-react'
 import { ExpertLogo } from '../ui/ExpertLogo'
 import { V2Avatar, V2IconBubble, V2Card, cx } from './ExpertClubV2Base'
@@ -94,23 +96,48 @@ const adminNav = [
 ] as const
 
 // === SIDEBAR ===
-export function ExpertClubSidebar({ active, admin = false }: { active: ActiveNav; admin?: boolean }) {
+export function ExpertClubSidebar({
+  active,
+  admin = false,
+  onClose,
+}: {
+  active: ActiveNav
+  admin?: boolean
+  onClose?: () => void
+}) {
   const navigate = useNavigate()
   const location = useLocation()
   const items = admin ? adminNav : mentorNav
   const currentPath = location.pathname
 
+  function handleNavClick(href: string) {
+    navigate(href)
+    onClose?.()
+  }
+
   return (
-    <aside className="ec-v2-sidebar">
-      <button onClick={() => navigate('/')} className="ec-v2-logo-link w-full text-left p-6">
-        <ExpertLogo color="dark" variant="full" animate={false} className="ec-v2-logo" />
-      </button>
-      
+    <aside className="ec-v2-sidebar overflow-y-auto">
+      <div className="flex items-center justify-between p-6 shrink-0">
+        <button onClick={() => { navigate('/'); onClose?.() }} className="ec-v2-logo-link text-left">
+          <ExpertLogo color="dark" variant="full" animate={false} className="ec-v2-logo" />
+        </button>
+        {onClose && (
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-2 text-[#53607a] hover:text-[#101828] transition-colors md:hidden"
+            aria-label="Fechar menu"
+          >
+            <X size={20} />
+          </button>
+        )}
+      </div>
+
       <nav aria-label={admin ? 'Navegação admin' : 'Navegação mentor'} className="px-3 flex-1">
         {items.map(({ label, icon: Icon, href }) => (
           <button
             key={label}
-            onClick={() => navigate(href)}
+            onClick={() => handleNavClick(href)}
             className={cx(
               'ec-v2-side-link w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all',
               (active === label || currentPath === href) ? 'is-active bg-ec-violet text-white' : 'text-text-muted hover:text-white hover:bg-white/5'
@@ -122,14 +149,14 @@ export function ExpertClubSidebar({ active, admin = false }: { active: ActiveNav
         ))}
       </nav>
 
-      <div className="ec-v2-sidebar-bottom p-6 space-y-4">
+      <div className="ec-v2-sidebar-bottom p-6 space-y-4 shrink-0">
         <V2Card className="ec-v2-plan-card p-4 bg-ec-violet-dim border-ec-violet-border rounded-2xl">
           <V2IconBubble icon={Star} className="mb-2" />
           <strong className="block text-white text-sm">Expert Club Pro</strong>
           <span className="block text-text-muted text-xs mb-2">Seu plano está ativo</span>
-          <button onClick={() => navigate('/billing/plans')} className="text-ec-violet text-xs font-bold hover:underline">Ver benefícios</button>
+          <button onClick={() => { navigate('/billing/plans'); onClose?.() }} className="text-ec-violet text-xs font-bold hover:underline">Ver benefícios</button>
         </V2Card>
-        
+
         <V2Card className="ec-v2-help-card p-4 flex items-center gap-3 bg-surface-2 border-white/5 rounded-2xl">
           <HelpCircle className="text-text-muted" size={24} aria-hidden="true" />
           <div>
@@ -231,28 +258,71 @@ export function ExpertClubDesktopShell({
   admin?: boolean
   children: ReactNode
 }) {
-  const { isQaBypass } = useAuth()
+  const { isQaBypass, firebaseUser } = useAuth()
+  const navigate = useNavigate()
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   return (
-    <main className="ec-v2-desktop flex min-h-screen bg-[#050A12]">
-      <ExpertClubSidebar active={active} admin={admin} />
-      <section className="ec-v2-main flex-1 flex flex-col">
+    <main className="ec-v2-desktop flex min-h-screen bg-[#050A12] overflow-hidden">
+      {/* Mobile overlay */}
+      <div
+        className={cx(
+          'fixed inset-0 z-40 bg-black/60 transition-opacity duration-200 md:hidden',
+          sidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none',
+        )}
+        onClick={() => setSidebarOpen(false)}
+        aria-hidden="true"
+      />
+
+      {/* Sidebar — static column on desktop, slide-over drawer on mobile */}
+      <div
+        className={cx(
+          'fixed inset-y-0 left-0 z-50 w-64',
+          'md:relative md:z-auto md:w-[220px] md:shrink-0',
+          'transition-transform duration-200 ease-in-out',
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0',
+        )}
+      >
+        <ExpertClubSidebar active={active} admin={admin} onClose={() => setSidebarOpen(false)} />
+      </div>
+
+      <section className="ec-v2-main flex-1 flex flex-col min-w-0">
+        {/* Mobile top bar */}
+        <div className="flex md:hidden items-center gap-3 px-4 h-14 shrink-0 border-b border-[#d4dbea] bg-[#f7f8fb]">
+          <button
+            type="button"
+            onClick={() => setSidebarOpen(true)}
+            className="p-2 -ml-2 text-[#53607a] hover:text-[#101828] transition-colors"
+            aria-label="Abrir menu"
+          >
+            <Menu size={22} />
+          </button>
+          <button type="button" onClick={() => navigate('/')} className="flex-1 text-left">
+            <ExpertLogo color="dark" variant="full" animate={false} className="h-6" />
+          </button>
+          <V2Avatar uid={firebaseUser?.uid} name={firebaseUser?.displayName || 'User'} size="sm" />
+        </div>
+
         {isQaBypass && (
           <div className="border-b border-amber-300/30 bg-amber-300/10 px-6 py-3 text-center text-[11px] font-black uppercase tracking-widest text-amber-200">
             QA BYPASS - Firestore real pode negar dados. Nao usar como prova de permissao Firebase.
           </div>
         )}
-        <header className="ec-v2-page-header p-8 pb-4">
+
+        <header className="ec-v2-page-header p-4 md:p-8 pb-4">
           <div className="flex justify-between items-start">
             <div>
-              <span className="text-[10px] font-black tracking-[0.2em] text-ec-violet uppercase mb-2 block">{eyebrow}</span>
-              <h1 className="text-4xl font-black italic text-white uppercase mb-2">{title}</h1>
-              <p className="text-text-muted text-lg">{subtitle}</p>
+              <span className="hidden md:block text-[10px] font-black tracking-[0.2em] text-ec-violet uppercase mb-2">{eyebrow}</span>
+              <h1 className="text-2xl md:text-4xl font-black italic text-white uppercase mb-1 md:mb-2">{title}</h1>
+              <p className="text-text-muted text-sm md:text-lg">{subtitle}</p>
             </div>
-            <ExpertClubDesktopTop admin={admin} />
+            <div className="hidden md:block">
+              <ExpertClubDesktopTop admin={admin} />
+            </div>
           </div>
         </header>
-        <div className="flex-1 p-8 pt-4 overflow-y-auto">
+
+        <div className="flex-1 p-4 md:p-8 pt-4 overflow-y-auto">
           {children}
         </div>
       </section>

@@ -139,7 +139,7 @@ export const referralService = {
       uniqueClicks: 0,
       totalConversions: 0,
       totalRevenueBrl: 0,
-      campaignId: params.campaignId,
+      ...(params.campaignId !== undefined && { campaignId: params.campaignId }),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     }

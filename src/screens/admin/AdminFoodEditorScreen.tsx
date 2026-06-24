@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { toastError } from '../../components/ui/Toast'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Zap } from 'lucide-react'
 import { PageShell } from '../../components/ui/Premium'

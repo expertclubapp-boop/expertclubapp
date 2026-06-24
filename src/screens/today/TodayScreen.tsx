@@ -147,7 +147,7 @@ export function TodayScreen() {
             <Flame className="h-3 w-3" />
             <span className="font-mono text-[11px] font-bold">{profile?.currentStreak ?? 0}d</span>
           </div>
-          <div className="w-8 h-8 rounded-full bg-ink-700 border border-white/10 flex items-center justify-center font-mono text-[10px] font-bold text-text-muted">
+          <div className="w-11 h-11 rounded-full bg-ink-700 border border-white/10 flex items-center justify-center font-mono text-[10px] font-bold text-text-muted">
             {firstName.charAt(0).toUpperCase()}
           </div>
         </div>
@@ -196,8 +196,8 @@ export function TodayScreen() {
             label="ÁGUA"
             value={dashboard.hydration.consumedMl}
             max={dashboard.hydration.goalMl}
-            display={`${Math.round(dashboard.hydration.consumedMl / 1000 * 10) / 10}L`}
-            sub={`/${Math.round(dashboard.hydration.goalMl / 1000)}L`}
+            display={`${(dashboard.hydration.consumedMl / 1000).toFixed(1)}L`}
+            sub={`/${(dashboard.hydration.goalMl / 1000).toFixed(1)}L`}
             color="#5DDCFF"
             onClick={() => navigate('/app/hydration')}
           />
@@ -233,16 +233,16 @@ export function TodayScreen() {
                 key={habit.label}
                 type="button"
                 onClick={() => navigate(habit.to)}
-                className="w-full flex items-center gap-2.5 text-left"
+                className="w-full flex items-center gap-3 text-left min-h-[44px] py-1"
               >
-                <div className={`w-4.5 h-4.5 rounded-[4px] border flex items-center justify-center shrink-0 transition-colors ${
+                <div className={`w-5 h-5 rounded-[5px] border flex items-center justify-center shrink-0 transition-colors ${
                   habit.done
                     ? 'border-volt-600 bg-volt-600 text-white'
                     : 'border-white/20 bg-transparent'
-                }`} style={{ width: 18, height: 18 }}>
-                  {habit.done && <span className="text-[9px] font-bold leading-none">✓</span>}
+                }`}>
+                  {habit.done && <span className="text-[10px] font-bold leading-none">✓</span>}
                 </div>
-                <span className={`text-sm font-body ${habit.done ? 'text-text-muted line-through' : 'text-white'}`}>
+                <span className={`text-sm font-body flex-1 ${habit.done ? 'text-text-muted line-through' : 'text-white'}`}>
                   {habit.label}
                 </span>
               </button>
@@ -283,7 +283,7 @@ export function TodayScreen() {
           <div className="rounded-2xl border border-accent-sky/20 bg-accent-sky/8 p-4 flex items-center gap-3">
             <RefreshCcw className="h-4 w-4 text-accent-sky shrink-0" />
             <p className="flex-1 text-sm text-text-secondary">Suas preferências mudaram. Novos planos disponíveis.</p>
-            <button type="button" onClick={() => navigate('/app/recommendations')} className="text-xs font-bold text-accent-sky whitespace-nowrap">Ver planos</button>
+            <button type="button" onClick={() => navigate('/app/recommendations')} className="min-h-[44px] px-2 text-xs font-bold text-accent-sky whitespace-nowrap flex items-center">Ver planos</button>
           </div>
         )}
 
@@ -322,7 +322,7 @@ export function TodayScreen() {
               <p className="text-sm font-bold text-white">Nenhuma dieta ativa</p>
               <p className="text-xs text-text-muted mt-0.5">Escolha um plano para acompanhar refeições</p>
             </div>
-            <button type="button" onClick={() => navigate('/app/recommendations')} className="text-xs font-bold text-volt-400">Escolher</button>
+            <button type="button" onClick={() => navigate('/app/recommendations')} className="min-h-[44px] px-2 flex items-center text-xs font-bold text-volt-400">Escolher</button>
           </div>
         )}
 
@@ -369,7 +369,7 @@ export function TodayScreen() {
             <p className="text-xs text-text-muted mt-1">
               {dashboard.evolutionCheckin.isDue ? 'Envie peso e fotos.' : `Próxima janela: ${formatDate(dashboard.evolutionCheckin.nextDueAt)}`}
             </p>
-            <button type="button" onClick={() => navigate('/app/evolution/checkin')} className="mt-3 text-xs font-bold text-volt-400">Enviar evolução →</button>
+            <button type="button" onClick={() => navigate('/app/evolution/checkin')} className="mt-1 min-h-[44px] flex items-center text-xs font-bold text-volt-400">Enviar evolução →</button>
           </div>
 
           <div className="rounded-2xl border border-white/8 bg-ink-700 p-4">
@@ -388,7 +388,7 @@ export function TodayScreen() {
                 <p className="font-mono text-[9px] text-text-muted">ÁGUA</p>
               </div>
             </div>
-            <button type="button" onClick={() => navigate(summaryCtaTo)} className="mt-3 text-xs font-bold text-volt-400">Ver detalhe →</button>
+            <button type="button" onClick={() => navigate(summaryCtaTo)} className="mt-1 min-h-[44px] flex items-center text-xs font-bold text-volt-400">Ver detalhe →</button>
           </div>
         </div>
 
@@ -406,7 +406,7 @@ export function TodayScreen() {
                 key={s.to}
                 type="button"
                 onClick={() => navigate(s.to)}
-                className="flex items-center justify-between gap-2 rounded-xl border border-white/6 bg-black/20 px-3 py-2.5 text-left active:opacity-70 transition-opacity"
+                className="flex items-center justify-between gap-2 rounded-xl border border-white/6 bg-black/20 px-3 min-h-[44px] text-left active:opacity-70 transition-opacity"
               >
                 <span className="text-xs font-bold text-white">{s.label}</span>
                 <ArrowRight className="h-3 w-3 text-text-muted shrink-0" />

@@ -15,3 +15,5 @@ serviceAccountKey.json
 functions/node_modules
 functions/lib
 .claude/settings.local.json
+qa-screenshots/
+qa-audit-results.json

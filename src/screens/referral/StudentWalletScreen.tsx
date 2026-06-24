@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { Wallet, ArrowUpCircle, ArrowDownCircle, Clock, TrendingUp, Gift, ShoppingBag } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { walletService } from '../../services/walletService'
+import { track } from '../../lib/analytics'
 import {
   DashboardHero,
   FloatingPill,
@@ -31,6 +32,7 @@ export function StudentWalletScreen() {
       setLedger(entries)
     } catch (err) {
       console.error('Error loading wallet:', err)
+      track('error_wallet_load')
     } finally {
       setIsLoading(false)
     }

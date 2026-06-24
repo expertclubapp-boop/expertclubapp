@@ -405,9 +405,42 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // Habits — student-owned, sub-collection under users
+    match /users/{uid}/habits/{habitId} {
+      allow read: if (isOwner(uid) && canUseStudentApp()) || isAdmin() || isMentorOf(uid);
+      allow create, update: if isOwner(uid) && canUseStudentApp() && ownsWrittenDoc(uid);
+      allow delete: if isOwner(uid) || isAdmin();
+    }
+
+    // Top-level habits collection (global habit definitions, admin-managed)
+    match /habits/{habitId} {
+      allow read: if isAdmin() || isMentor() || canUseStudentApp();
+      allow write: if isAdmin();
+    }
+
     match /badges/{id} {
       allow read: if isAdmin() || isMentor() || canUseStudentApp();
       allow write: if isAdmin();
+    }
+
+    // Top-level notifications (admin-broadcast or system-generated)
+    match /notifications/{notifId} {
+      allow read: if isAdmin() || (isAuthenticated() && resource.data.recipientUid == request.auth.uid);
+      allow create: if isAdmin();
+      allow update: if isAdmin()
+        || (isAuthenticated()
+          && resource.data.recipientUid == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead', 'readAt'])
+          && request.resource.data.isRead == true);
+      allow delete: if isAdmin();
+    }
+
+    // Top-level challengeProgress (per-challenge aggregate across students)
+    match /challengeProgress/{progressId} {
+      allow read: if isAdmin() || isMentor() || (canUseStudentApp() && resource.data.uid == request.auth.uid);
+      allow create: if canUseStudentApp() && request.resource.data.uid == request.auth.uid;
+      allow update: if isAdmin() || (canUseStudentApp() && resource.data.uid == request.auth.uid);
+      allow delete: if isAdmin();
     }
 
     match /mentorAlerts/{alertId} {
@@ -426,13 +459,21 @@ service cloud.firestore {
         && request.resource.data.status == 'published'
         && request.resource.data.content.size() <= 1000
         && request.resource.data.content.size() > 0;
+      // Students may only update their own posts' likesCount and likedBy via toggleLike.
+      // All other field mutations require admin.
       allow update: if isAdmin()
         || (canUseStudentApp()
-          && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
-            'authorId', 'authorName', 'authorPhoto', 'content', 'type',
-            'createdAt', 'isPinned', 'isOfficial', 'status', 'imageUrl', 'commentsCount'
-          ]));
-      allow delete: if isAdmin();
+          && resource.data.authorId == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys()
+               .hasOnly(['content', 'updatedAt'])
+          && request.resource.data.content.size() <= 1000
+          && request.resource.data.content.size() > 0)
+        || (canUseStudentApp()
+          && request.resource.data.diff(resource.data).affectedKeys()
+               .hasOnly(['likesCount', 'likedBy'])
+          && request.resource.data.likesCount >= 0);
+      allow delete: if isAdmin()
+        || (canUseStudentApp() && resource.data.authorId == request.auth.uid);
 
       match /comments/{commentId} {
         allow read: if isAdmin() || canUseStudentApp();
@@ -478,7 +519,16 @@ service cloud.firestore {
 
     match /walletLedger/{entryId} {
       allow read: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      // Client creates are restricted to pending referral/welcome credits under 500 credits.
+      // Transfers, payouts, and bulk credits must go through admin/Cloud Functions.
+      allow create: if isAdmin()
+        || (canUseStudentApp()
+          && request.resource.data.userId == request.auth.uid
+          && request.resource.data.status == 'PENDING'
+          && request.resource.data.amount > 0
+          && request.resource.data.amount <= 500
+          && request.resource.data.entryType in ['REFERRAL_BONUS', 'WELCOME_BONUS', 'CHALLENGE_REWARD']
+          && !request.resource.data.keys().hasAny(['confirmedAt', 'confirmedBy', 'releasedBy']));
       // Admin may only update operational/reversal metadata — never the financial core
       allow update: if isAdmin()
         && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
@@ -489,10 +539,11 @@ service cloud.firestore {
 
     match /walletBalances/{uid} {
       allow read: if isOwner(uid) || isAdmin();
+      // Initial balance document created by student or admin
       allow create: if isOwner(uid) || isAdmin();
-      allow update: if isAdmin()
-        || (isOwner(uid)
-          && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['userId', 'accountType', 'currency']));
+      // Only admin can mutate the balance aggregate — no self-service balance manipulation.
+      // Client-side walletService updates go through walletLedger (append-only) then admin/CF releases.
+      allow update: if isAdmin();
       allow delete: if false;
     }
 

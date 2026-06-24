@@ -74,10 +74,10 @@ function buildAlerts(data: Omit<StudentTodayDashboard, 'alerts' | 'nextAction'>)
 
   if (!data.workout || !data.diet) {
     alerts.push({
-      type: 'warning',
-      title: 'Planos incompletos',
-      message: 'Escolha treino e dieta para destravar seu acompanhamento diário completo.',
-      actionLabel: 'Escolher planos',
+      type: 'info',
+      title: 'Finalize sua configuração',
+      message: 'Selecione um treino e uma dieta para desbloquear o acompanhamento diário completo.',
+      actionLabel: 'Concluir configuração →',
       actionTo: '/app/recommendations',
     })
   }
